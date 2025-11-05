@@ -21,6 +21,7 @@ export class CreateUserDto {
 
   @ApiProperty({ description: 'Phone number of the user' })
   @IsString()
+  @IsOptional()
   phone: string;
 
   @ApiProperty({ description: 'User password' })

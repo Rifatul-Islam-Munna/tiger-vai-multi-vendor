@@ -45,15 +45,7 @@ class ProductCategoryDto {
   category: string;
 }
 
-class ColorImageDto {
-  @ApiProperty()
-  @IsString()
-  name: string;
 
-  @ApiProperty({ type: [String] })
-  @IsArray()
-  images: string[];
-}
 
 class FeatureDto {
   @ApiProperty()
@@ -66,7 +58,6 @@ class FeatureDto {
   description?: string;
 }
 
-// ✅ NEW BRAND DTO
 class BrandInfoDto {
   @ApiProperty()
   @IsString()
@@ -75,6 +66,51 @@ class BrandInfoDto {
   @ApiProperty()
   @IsString()
   name: string;
+}
+
+// ✅ NEW VARIANT DTO
+class ProductVariantDto {
+  @ApiProperty({ description: 'Variant size (e.g., S, M, L, XL)' })
+  @IsString()
+  size: string;
+
+  @ApiProperty({ description: 'Variant color' })
+  @IsString()
+  color: string;
+
+  @ApiProperty({ description: 'Variant specific price' })
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  price: number;
+
+  @ApiProperty({ description: 'Variant stock quantity', required: false })
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  stock?: number;
+
+  @ApiProperty({ description: 'Variant discount price', required: false })
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  discountPrice?: number;
+
+  @ApiProperty({ type: ProductImageDto, required: false })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ProductImageDto)
+  image?: ProductImageDto;
+
+  @ApiProperty({ description: 'SKU code', required: false })
+  @IsOptional()
+  @IsString()
+  sku?: string;
+
+  @ApiProperty({ description: 'Is variant available', required: false })
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
+  isAvailable?: boolean;
 }
 
 export class CreateProductDto {
@@ -86,21 +122,25 @@ export class CreateProductDto {
   @IsOptional()
   description?: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Average price (auto-calculated from variants if provided)' })
   @Transform(({ value }) => Number(value))
   @IsNumber()
   price: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Total stock (auto-calculated from variants if provided)' })
   @Transform(({ value }) => Number(value))
   @IsNumber()
   stock: number;
 
-  @ApiProperty({ type: [ColorImageDto] })
+  // ✅ NEW VARIANTS ARRAY
+  @ApiProperty({ type: [ProductVariantDto], required: false, description: 'Product variants (size, color, price)' })
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => ColorImageDto)
-  colorsImage: ColorImageDto[];
+  @Type(() => ProductVariantDto)
+  variants?: ProductVariantDto[];
+
+  
 
   @ApiProperty({ type: [FeatureDto] })
   @IsArray()
@@ -158,13 +198,13 @@ export class CreateProductDto {
   @IsOptional()
   @Transform(({ value }) => Number(value))
   @IsNumber()
-  height?: string;
+  height?: number;
 
   @ApiProperty({ required: false })
   @IsOptional()
-   @Transform(({ value }) => Number(value))
+  @Transform(({ value }) => Number(value))
   @IsNumber()
-  width?: string;
+  width?: number;
 
   @ApiProperty({ required: false })
   @IsOptional()
@@ -181,7 +221,7 @@ export class CreateProductDto {
   @IsArray()
   colors?: string[];
 
-  @ApiProperty({ required: false })
+/*   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   metaTitle?: string;
@@ -189,7 +229,7 @@ export class CreateProductDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
-  metaDescription?: string;
+  metaDescription?: string; */
 
   @ApiProperty({ required: false })
   @IsOptional()
@@ -211,7 +251,7 @@ export class CreateProductDto {
   @IsBoolean()
   hasOffer?: boolean;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ description: 'Average offer price (auto-calculated from variants if provided)', required: false })
   @IsOptional()
   @Transform(({ value }) => Number(value))
   @IsNumber()
@@ -231,8 +271,8 @@ export class CreateProductDto {
   shippingTime?: string;
 
   @ApiProperty({ required: false })
-   @Transform(({ value }) => Number(value))
   @IsOptional()
+  @Transform(({ value }) => Number(value))
   @IsNumber()
   shippingCost?: number;
 
@@ -245,11 +285,10 @@ export class CreateProductDto {
   @IsOptional()
   @IsArray()
   certifications?: string[];
-  @ApiProperty({type:Boolean})
+
+  @ApiProperty({ type: Boolean })
   @Transform(({ value }) => value === 'true' || value === true)
   @IsOptional()
   @IsBoolean()
   isAdminCreated: boolean;
 }
-
-

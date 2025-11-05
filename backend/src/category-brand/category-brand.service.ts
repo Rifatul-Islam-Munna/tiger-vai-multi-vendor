@@ -72,26 +72,26 @@ export class CategoryBrandService {
 
   // ✅ BRAND CRUD
   async createBrand(dto: CreateBrandDto) {
-    const categoryModel = await this.getCategoryModel()
+    const categoryModel = await this.getBrandModel()
     return categoryModel.create(dto);
   }
 
   async updateBrand(id: string, dto: UpdateBrandDto) {
-    const categoryModel = await this.getCategoryModel()
+    const categoryModel = await this.getBrandModel()
     const brand = await categoryModel.findByIdAndUpdate(id, dto, { new: true });
     if (!brand) throw new HttpException('Brand not found', 404);
     return brand;
   }
 
   async deleteBrand(id: string) {
-     const categoryModel = await this.getCategoryModel()
+     const categoryModel = await this.getBrandModel()
     const deleted = await categoryModel.findByIdAndDelete(id);
     if (!deleted) throw new HttpException('Brand not found', 404);
     return { message: 'Brand deleted successfully' };
   }
 
   async getBrands({ page = 1, limit = 10 }: PaginationDto) {
-    const categoryModel = await this.getCategoryModel()
+    const categoryModel = await this.getBrandModel()
     const skip = (page - 1) * limit;
 
     const total = await categoryModel.countDocuments();

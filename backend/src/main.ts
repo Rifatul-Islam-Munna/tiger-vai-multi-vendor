@@ -6,6 +6,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
 import compression from 'compression';
+import { AllExceptionsFilter } from 'lib/all-exceptions.filter';
 
 
 async function bootstrap() {
@@ -20,6 +21,7 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     })
   );
+    app.useGlobalFilters(new AllExceptionsFilter());
  
 
   // Only setup Swagger if not in watch mode

@@ -1,122 +1,226 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Eye, EyeOff } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ShoppingBag } from "lucide-react"
+import { useState } from "react";
+import { Eye, EyeOff, ShoppingBag } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+import axios from "axios";
+import { CreateUserFormData, useAuthStore } from "@/zustan-hook/signup-hook";
+import { PostRequestAxios } from "@/api-hook/api-hook";
+import { toast } from "sonner";
+import { SignUpUser } from "@/actions/auth";
+import { useRouter } from "next/navigation";
 
 const SignUpPage = () => {
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [agreedToTerms, setAgreedToTerms] = useState(false)
+  const { formData, setFormData, resetForm, getCleanFormData } = useAuthStore();
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const router = useRouter();
+
+  // Mutation
+  const mutation = useMutation({
+    mutationFn: (data: Partial<CreateUserFormData>) => SignUpUser(data),
+    onSuccess: (data) => {
+      console.log("Registration data:", data.error);
+      if (data?.data) {
+        resetForm();
+        setConfirmPassword("");
+        setAgreedToTerms(false);
+        toast.success("Registration successful! Please log in.");
+        router.push("/auth/login");
+        return;
+      }
+      toast.error(data?.error?.message || "Registration failed");
+      return;
+    },
+    onError: (error) => {
+      console.error("Registration failed:", error);
+      toast.error(error.message || "Registration failed");
+    },
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(name as any, value);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (formData.password !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    if (!agreedToTerms) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    const cleanData = getCleanFormData();
+    mutation.mutate(cleanData);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-palette-bg flex flex-col">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 p-4">
-        <div className="max-w-md mx-auto flex items-center gap-2">
-          <div className="w-10 h-10 bg-[#e23636] rounded-lg flex items-center justify-center">
+      {/*  <div className="bg-white border-b border-gray-200 p-4 shadow-sm">
+        <div className="max-w-md mx-auto flex items-center gap-3">
+          <div className="w-11 h-11 bg-palette-btn rounded-lg flex items-center justify-center shadow-md">
             <ShoppingBag className="w-6 h-6 text-white" />
           </div>
-          <span className="text-xl font-bold text-gray-900">Company Logo</span>
+          <span className="text-xl font-bold text-palette-text">MarketHub</span>
         </div>
-      </div>
+      </div> */}
 
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center px-4 py-8">
-        <div className="w-full max-w-md bg-white rounded-2xl p-8 border border-gray-200">
-          <h1 className="text-3xl font-bold text-gray-900 text-center mb-2">Create Your Account</h1>
-          <p className="text-center text-gray-600 mb-8">Join us and start shopping today!</p>
+        <div className="w-full max-w-md bg-white rounded-xl p-8 shadow-lg border border-gray-100">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-palette-text mb-2">
+              Create Your Account
+            </h1>
+            <p className="text-gray-600 text-sm">
+              Join us and start shopping today!
+            </p>
+          </div>
 
-          <form className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Full Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">Full Name</label>
+              <label className="block text-sm font-semibold text-palette-text mb-2">
+                Full Name
+              </label>
               <Input
                 type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
                 placeholder="Enter your full name"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-[#e23636] focus:ring-1 focus:ring-[#e23636]"
+                className="w-full border-2 border-gray-200 h-11 focus:border-palette-btn focus:ring-palette-btn/10 transition"
               />
             </div>
 
-            {/* Email or Phone */}
+            {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">Email Address or Phone Number</label>
+              <label className="block text-sm font-semibold text-palette-text mb-2">
+                Email Address
+              </label>
               <Input
                 type="text"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
                 placeholder="Enter your email or phone"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-[#e23636] focus:ring-1 focus:ring-[#e23636]"
+                className="w-full border-2 border-gray-200 h-11 focus:border-palette-btn focus:ring-palette-btn/10 transition"
               />
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">Password</label>
+              <label className="block text-sm font-semibold text-palette-text mb-2">
+                Password
+              </label>
               <div className="relative">
                 <Input
                   type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
                   placeholder="Create a password"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-[#e23636] focus:ring-1 focus:ring-[#e23636]"
+                  className="w-full border-2 border-gray-200 h-11 pr-10 focus:border-palette-btn focus:ring-palette-btn/10 transition"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-palette-text transition"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </div>
 
             {/* Confirm Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">Confirm Password</label>
+              <label className="block text-sm font-semibold text-palette-text mb-2">
+                Confirm Password
+              </label>
               <div className="relative">
                 <Input
                   type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm your password"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-[#e23636] focus:ring-1 focus:ring-[#e23636]"
+                  className="w-full border-2 border-gray-200 h-11 pr-10 focus:border-palette-btn focus:ring-palette-btn/10 transition"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-palette-text transition"
                 >
-                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </div>
 
             {/* Terms & Conditions */}
-            <div className="flex items-center gap-2 py-2">
+            <div className="flex items-start gap-3 py-3">
               <input
                 type="checkbox"
                 id="terms"
                 checked={agreedToTerms}
                 onChange={(e) => setAgreedToTerms(e.target.checked)}
-                className="w-4 h-4 accent-[#e23636]"
+                className="w-5 h-5 mt-0.5 accent-palette-btn cursor-pointer border-2 border-gray-200 rounded"
               />
-              <label htmlFor="terms" className="text-sm text-gray-700">
+              <label
+                htmlFor="terms"
+                className="text-sm text-gray-700 leading-relaxed cursor-pointer"
+              >
                 I agree to the{" "}
-                <a href="#" className="text-[#e23636] font-medium hover:underline">
+                <a
+                  href="#"
+                  className="text-palette-btn font-semibold hover:underline transition"
+                >
                   Terms & Conditions
                 </a>{" "}
                 and{" "}
-                <a href="#" className="text-[#e23636] font-medium hover:underline">
+                <a
+                  href="#"
+                  className="text-palette-btn font-semibold hover:underline transition"
+                >
                   Privacy Policy
                 </a>
-                .
               </label>
             </div>
 
             {/* Sign Up Button */}
             <Button
-              className="w-full bg-[#e23636] hover:bg-red-700 text-white font-semibold py-2.5 h-auto rounded-lg mt-6"
-              disabled={!agreedToTerms}
+              type="submit"
+              disabled={!agreedToTerms || mutation.isPending}
+              className="w-full bg-palette-btn hover:bg-palette-btn/90 text-white font-semibold h-11 rounded-lg mt-6 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign Up
+              {mutation.isPending ? "Creating Account..." : "Sign Up"}
             </Button>
+
+            {/* Error Message */}
+            {mutation.isError && (
+              <p className="text-red-500 text-sm text-center">
+                {(mutation.error as any)?.response?.data?.message ||
+                  "Registration failed"}
+              </p>
+            )}
 
             {/* Divider */}
             <div className="relative my-6">
@@ -124,17 +228,19 @@ const SignUpPage = () => {
                 <div className="w-full border-t border-gray-300"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-600">OR</span>
+                <span className="px-3 bg-white text-gray-500 font-medium">
+                  OR
+                </span>
               </div>
             </div>
 
-            {/* Social Login */}
+            {/* Social Sign Up */}
             <Button
               type="button"
               variant="outline"
-              className="w-full border-2 border-gray-300 py-2.5 h-auto rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2 bg-transparent"
+              className="w-full border-2 border-gray-200 h-11 rounded-lg hover:border-palette-btn hover:bg-palette-bg transition font-medium text-palette-text bg-white"
             >
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                 <path
                   fill="currentColor"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -159,14 +265,17 @@ const SignUpPage = () => {
           {/* Sign In Link */}
           <p className="text-center text-gray-600 text-sm mt-6">
             Already have an account?{" "}
-            <a href="/auth/login" className="text-[#e23636] font-medium hover:underline">
+            <a
+              href="/auth/login"
+              className="text-palette-btn font-semibold hover:underline transition"
+            >
               Log In
             </a>
           </p>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default SignUpPage
+export default SignUpPage;

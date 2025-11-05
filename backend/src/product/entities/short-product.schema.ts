@@ -2,6 +2,23 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
 
 export type ShortProductDocument = HydratedDocument<ShortProduct>;
+@Schema({ _id: false })
+class ShortProductVariant {
+  @Prop({ required: true })
+  size: string;
+
+  @Prop({ required: true })
+  color: string;
+
+  @Prop({ required: true })
+  price: number;
+
+  @Prop()
+  discountPrice?: number;
+
+  @Prop({ default: 0 })
+  stock: number;
+}
 
 @Schema({ timestamps: true })
 export class ShortProduct {
@@ -59,6 +76,8 @@ export class ShortProduct {
 
   @Prop({type:mongoose.Schema.Types.ObjectId})
   vendorId:mongoose.Schema.Types.ObjectId
+    @Prop({ type: [ShortProductVariant], default: [] })
+  variants: ShortProductVariant[];
 }
 
 export const ShortProductSchema = SchemaFactory.createForClass(ShortProduct);

@@ -15,6 +15,10 @@ export class Brand {
 
   @Prop({ type: [String], default: [] })
   categories: string[];
+
+  @Prop()
+  isTop:boolean;
+
 }
 @Schema({ timestamps: true })
 export class Category {
@@ -27,6 +31,8 @@ export class Category {
 
   @Prop()
   logoUrl: string;
+  @Prop()
+  isTop:boolean;
 }
 
 export const BrandSchema = SchemaFactory.createForClass(Brand);

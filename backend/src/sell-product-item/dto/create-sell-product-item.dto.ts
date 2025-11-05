@@ -1,8 +1,45 @@
+// src/sell/dto/create-sell.dto.ts
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { IsArray, IsEnum, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsIn,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { PaymentMethod } from '../entities/sell-product-item.entity';
 
+
+// ✅ NEW: Variant DTO for orders
+class OrderProductVariantDto {
+  @ApiProperty({ description: 'Variant size' })
+  @IsString()
+  size: string;
+
+  @ApiProperty({ description: 'Variant color' })
+  @IsString()
+  color: string;
+
+  @ApiPropertyOptional({ description: 'SKU code' })
+  @IsOptional()
+  @IsString()
+  sku?: string;
+
+  @ApiProperty({ description: 'Variant price at time of order' })
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  price: number;
+
+  @ApiPropertyOptional({ description: 'Discount price if applicable' })
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  discountPrice?: number;
+}
 
 class SellProductItemDto {
   @ApiProperty()
@@ -18,14 +55,32 @@ class SellProductItemDto {
   name: string;
 
   @ApiProperty()
+  @Transform(({ value }) => Number(value))
   @IsNumber()
   quantity: number;
+
+  // ✅ NEW: Variant info required
+  @ApiProperty({ type: OrderProductVariantDto })
+  @ValidateNested()
+  @Type(() => OrderProductVariantDto)
+  variant: OrderProductVariantDto;
 
   @ApiPropertyOptional()
   @IsNumber()
   @Transform(({ value }) => Number(value))
   @IsOptional()
   totalPrice: number;
+
+  @ApiProperty({ description: 'Unit price at time of order' })
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  unitPrice: number;
+
+  @ApiPropertyOptional({ description: 'Discount applied to this item' })
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  discountApplied?: number;
 
   @ApiProperty({ required: false })
   @IsOptional()
@@ -97,9 +152,20 @@ export class CreateSellProductItemDto {
   @IsString()
   userId: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   isAdmin: boolean;
+
+  @ApiProperty({ description: 'Total order amount' })
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  orderTotal: number;
+
+  @ApiPropertyOptional({ description: 'Total discount/coupon applied' })
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  totalDiscount?: number;
 }
 
 export class GetOrdersDto {
@@ -113,21 +179,49 @@ export class GetOrdersDto {
   @Type(() => Number)
   limit?: number = 10;
 
-  @ApiPropertyOptional({ 
-    description: 'Sort order: asc or desc', 
-    default: 'desc', 
-    enum: ['asc', 'desc'] 
+  @ApiPropertyOptional({
+    description: 'Sort order: asc or desc',
+    default: 'desc',
+    enum: ['asc', 'desc'],
   })
   @IsOptional()
   @IsString()
   @IsIn(['asc', 'desc'])
   sortOrder?: 'asc' | 'desc' = 'desc';
 
-  @ApiPropertyOptional({ 
-    description: 'Field to sort by', 
-    default: 'createdAt' 
+  @ApiPropertyOptional({
+    description: 'Field to sort by',
+    default: 'createdAt',
   })
   @IsOptional()
   @IsString()
   sortBy?: string = 'createdAt';
 }
+
+
+
+//  {
+//   "products": [
+//     {
+//       "productId": "prod_123",
+//       "slug": "t-shirt",
+//       "name": "T-Shirt",
+//       "quantity": 2,
+//       "variant": {
+//         "size": "M",
+//         "color": "Red",
+//         "price": 500,           // ORIGINAL PRICE
+//         "discountPrice": 450    // DISCOUNT (optional)
+//       },
+//       "unitPrice": 450,         // ✅ USE discountPrice if exists, else price
+//       "totalPrice": 900,        // ✅ unitPrice × quantity = 450 × 2
+//       "discountApplied": 100,   // ✅ (500 - 450) × 2 = 100
+//       // ... other fields
+//     }
+//   ],
+//   "shipment": { /* ... */ },
+//   "userId": "user_123",
+//   "orderTotal": 900,            // ✅ SUM of all totalPrice
+//   "totalDiscount": 100          // ✅ SUM of all discountApplied
+// } 
+

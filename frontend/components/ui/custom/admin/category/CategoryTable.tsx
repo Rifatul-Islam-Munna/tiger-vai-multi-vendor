@@ -1,0 +1,232 @@
+"use client";
+
+import { useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Edit2, Trash2 } from "lucide-react";
+import Image from "next/image";
+import { EditCategoryModal } from "./EditCategoryModal";
+import { CategoryPaginationControls } from "./CategoryPaginationControls";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+interface Category {
+  _id: string;
+  name: string;
+  logoUrl?: string;
+  subCategory: string[];
+}
+
+interface CategoryTableProps {
+  data: Category[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+  onPaginationChange: (pagination: { page: number; limit: number }) => void;
+  isLoading?: boolean;
+  onRefresh: () => void;
+}
+
+export function CategoryTable({
+  data,
+  pagination,
+  onPaginationChange,
+  isLoading,
+  onRefresh,
+}: CategoryTableProps) {
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async (id: string) => {
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/category-brand/categories/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) throw new Error("Failed to delete");
+
+      setDeleteConfirm(null);
+      onRefresh();
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Failed to delete category");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="border border-palette-accent-3 rounded-lg overflow-hidden  ">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-palette-accent-3/10 border-palette-accent-3">
+              <TableHead className="text-palette-text">Logo</TableHead>
+              <TableHead className="text-palette-text">Name</TableHead>
+              <TableHead className="text-palette-text">Subcategories</TableHead>
+              <TableHead className="text-right text-palette-text">
+                Actions
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={4}
+                  className="text-center py-8 text-palette-text"
+                >
+                  Loading...
+                </TableCell>
+              </TableRow>
+            ) : data.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={4}
+                  className="text-center py-8 text-palette-accent-3"
+                >
+                  No categories found
+                </TableCell>
+              </TableRow>
+            ) : (
+              data.map((category) => (
+                <TableRow
+                  key={category._id}
+                  className="hover:bg-palette-accent-3/5 border-palette-accent-3/20"
+                >
+                  <TableCell>
+                    {category.logoUrl ? (
+                      <div className="relative w-10 h-10">
+                        <Image
+                          src={category.logoUrl}
+                          alt={category.name}
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 bg-palette-accent-3/20 rounded flex items-center justify-center text-xs text-palette-accent-3">
+                        No Logo
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell className="font-medium text-palette-text">
+                    {category.name}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {category.subCategory.slice(0, 2).map((sub, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-block bg-palette-accent-2/20  px-2 py-1 rounded text-xs text-palette-text"
+                        >
+                          {sub}
+                        </span>
+                      ))}
+                      {category.subCategory.length > 2 && (
+                        <span className="text-xs text-palette-accent-3 pt-1">
+                          +{category.subCategory.length - 2} more
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditingCategory(category)}
+                        className="border-palette-accent-3 text-palette-text hover:bg-palette-accent-3/10"
+                      >
+                        <Edit2 size={16} />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => setDeleteConfirm(category._id)}
+                        className="bg-palette-btn hover:opacity-90"
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <CategoryPaginationControls
+        page={pagination.page}
+        limit={pagination.limit}
+        total={pagination.total}
+        totalPages={pagination.totalPages}
+        onPageChange={(page) =>
+          onPaginationChange({ page, limit: pagination.limit })
+        }
+        onLimitChange={(limit) => onPaginationChange({ page: 1, limit })}
+      />
+
+      {editingCategory && (
+        <EditCategoryModal
+          category={editingCategory}
+          open={!!editingCategory}
+          onOpenChange={() => setEditingCategory(null)}
+          onSuccess={() => {
+            setEditingCategory(null);
+            onRefresh();
+          }}
+        />
+      )}
+
+      <AlertDialog
+        open={!!deleteConfirm}
+        onOpenChange={() => setDeleteConfirm(null)}
+      >
+        <AlertDialogContent className="bg-palette-bg border-palette-accent-3">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-palette-text">
+              Delete Category
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-palette-accent-3">
+              Are you sure you want to delete this category? This action cannot
+              be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel className="border-palette-accent-3 text-palette-text hover:bg-palette-accent-3/10">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteConfirm && handleDelete(deleteConfirm)}
+              disabled={isDeleting}
+              className="bg-palette-btn text-white hover:opacity-90"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}

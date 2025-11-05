@@ -1,7 +1,6 @@
 // src/product/schemas/product.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
-import { ReviewStats } from './review-stats.schema';
 
 export type ProductDocument = HydratedDocument<Product>;
 export type ProductStatsDocument = HydratedDocument<ProductStats>;
@@ -23,12 +22,6 @@ class ProductCategory {
   @Prop({ required: true })
   main: string;
 
-  @Prop()
-  subMain: string;
-
-  @Prop()
-  semiSub: string;
-
   @Prop({ required: true })
   category: string;
 }
@@ -41,7 +34,7 @@ export class ProductStats {
   @Prop({ default: 0 })
   soldCount: number;
 
-  @Prop({type: MongooseSchema.Types.ObjectId})
+  @Prop({ type: MongooseSchema.Types.ObjectId })
   userId: MongooseSchema.Types.ObjectId;
 }
 
@@ -63,14 +56,41 @@ class Feature {
   description: string;
 }
 
-// ✅ NEW BRAND TYPE
 @Schema({ _id: false })
 class BrandInfo {
   @Prop({ required: true })
-  id: string; // Mongo ID or custom ID
+  id: string;
 
   @Prop({ required: true })
   name: string;
+}
+
+// ✅ NEW VARIANT SCHEMA
+@Schema({ _id: false })
+class ProductVariant {
+  @Prop({ required: true })
+  size: string;
+
+  @Prop({ required: true })
+  color: string;
+
+  @Prop({ required: true })
+  price: number;
+
+  @Prop({ default: 0 })
+  stock: number;
+
+  @Prop()
+  discountPrice?: number;
+
+  @Prop({ type: ProductImage })
+  image?: ProductImage;
+
+  @Prop()
+  sku?: string;
+
+  @Prop({ default: true })
+  isAvailable: boolean;
 }
 
 @Schema({ timestamps: true, autoIndex: true })
@@ -81,11 +101,17 @@ export class Product {
   @Prop()
   description?: string;
 
+  // ✅ CHANGED: Now average price
   @Prop({ required: true })
-  price: number;
+  price: number; // Average price from variants
 
+  // ✅ CHANGED: Now average stock
   @Prop({ default: 0 })
-  stock: number;
+  stock: number; // Total stock from all variants
+
+  // ✅ NEW: Variants array
+  @Prop({ type: [ProductVariant], default: [] })
+  variants: ProductVariant[];
 
   @Prop({ type: [ColorImage], default: [] })
   colorsImage: ColorImage[];
@@ -101,15 +127,6 @@ export class Product {
 
   @Prop({ type: ProductCategory, required: true })
   category: ProductCategory;
-
-  @Prop()
-  main: string;
-
-  @Prop()
-  subMain: string;
-
-  @Prop()
-  semiSub: string;
 
   @Prop({ default: true })
   isActive: boolean;
@@ -136,12 +153,6 @@ export class Product {
   colors: string[];
 
   @Prop()
-  metaTitle: string;
-
-  @Prop()
-  metaDescription: string;
-
-  @Prop()
   warrantyPeriod: string;
 
   @Prop()
@@ -150,15 +161,15 @@ export class Product {
   @Prop({ default: false })
   isDigital: boolean;
 
-  // ✅ UPDATED
   @Prop({ type: BrandInfo, required: true })
   brand: BrandInfo;
 
   @Prop({ default: false })
   hasOffer: boolean;
 
+  // ✅ CHANGED: Now average offer price
   @Prop()
-  offerPrice: number;
+  offerPrice: number; // Average offer price from variants
 
   @Prop()
   offerExpiresAt: Date;
@@ -178,7 +189,7 @@ export class Product {
   @Prop({ type: [String], default: [] })
   certifications: string[];
 
-  @Prop({ type: MongooseSchema.Types.ObjectId})
+  @Prop({ type: MongooseSchema.Types.ObjectId })
   createdBy: MongooseSchema.Types.ObjectId;
 
   @Prop({ type: MongooseSchema.Types.ObjectId })
@@ -187,10 +198,9 @@ export class Product {
   @Prop({ type: MongooseSchema.Types.ObjectId })
   stats: MongooseSchema.Types.ObjectId;
 
-@Prop({default:false})
-isAdminCreated: boolean;
+  @Prop({ default: false })
+  isAdminCreated: boolean;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);
 export const ProductStatsSchema = SchemaFactory.createForClass(ProductStats);
-

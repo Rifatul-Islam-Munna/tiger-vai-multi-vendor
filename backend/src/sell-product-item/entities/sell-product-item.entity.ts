@@ -1,7 +1,6 @@
+// src/sell/entities/sell.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
-import { globalSells } from 'lib/global-db/globaldb';
-import { UserRole } from 'src/user/entities/user.schema';
 
 export type SellDocument = HydratedDocument<Sell>;
 
@@ -17,6 +16,25 @@ export enum OrderStatus {
   SHIPPED = 'SHIPPED',
   DELIVERED = 'DELIVERED',
   CANCELLED = 'CANCELLED',
+}
+
+// ✅ NEW: Variant info for order tracking
+@Schema({ _id: false })
+class OrderProductVariant {
+  @Prop({ required: true })
+  size: string;
+
+  @Prop({ required: true })
+  color: string;
+
+  @Prop()
+  sku?: string;
+
+  @Prop({ required: true })
+  price: number;
+
+  @Prop()
+  discountPrice?: number;
 }
 
 @Schema({ _id: false })
@@ -35,6 +53,10 @@ class SellProductItem {
 
   @Prop({ required: true })
   totalPrice: number;
+
+  // ✅ NEW: Variant info - if customer orders same product with different variants, it's separate line item
+  @Prop({ type: OrderProductVariant, required: true })
+  variant: OrderProductVariant;
 
   @Prop()
   brandName: string;
@@ -56,6 +78,14 @@ class SellProductItem {
 
   @Prop({ type: MongooseSchema.Types.ObjectId })
   shortSellRef: MongooseSchema.Types.ObjectId;
+
+  // ✅ NEW: Store actual price at time of purchase (for historical records)
+  @Prop({ required: true })
+  unitPrice: number; // Price per unit at time of order
+
+  // ✅ NEW: Discount applied at time of purchase
+  @Prop({ default: 0 })
+  discountApplied?: number;
 }
 
 @Schema({ _id: false })
@@ -92,7 +122,14 @@ export class Sell {
 
   @Prop({ enum: OrderStatus, default: OrderStatus.PENDING })
   orderStatus: OrderStatus;
+
+  // ✅ NEW: Track order total
+  @Prop({ required: true, default: 0 })
+  orderTotal: number;
+
+  // ✅ NEW: Track discount/coupon applied
+  @Prop({ default: 0 })
+  totalDiscount?: number;
 }
 
 export const SellSchema = SchemaFactory.createForClass(Sell);
-

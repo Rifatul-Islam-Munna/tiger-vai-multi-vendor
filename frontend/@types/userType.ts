@@ -1,3 +1,5 @@
+import { UserRole } from "@/zustan-hook/signup-hook";
+
 export type BasicUser = {
   id: string;
   name: string;
@@ -11,3 +13,5 @@ export type BasicUser = {
   shopLogo?: string;
   shopAddress?: string;
 };
+
+

@@ -1,8 +1,8 @@
+// src/sell/services/sell-product-item.service.ts
 import { Injectable, HttpException } from '@nestjs/common';
 import { TenantConnectionService } from 'lib/connection/mongooseConnection.service';
 import { globalProducts, globalSells } from 'lib/global-db/globaldb';
 import { ShortProductSchema, ShortProductDocument } from '../product/entities/short-product.schema';
-import { ProductSchema, ProductDocument } from '../product/entities/product.entity';
 import { OrderStatus, Sell, SellSchema, SellDocument } from './entities/sell-product-item.entity';
 import { CreateSellProductItemDto, GetOrdersDto } from './dto/create-sell-product-item.dto';
 
@@ -18,53 +18,95 @@ export class SellProductItemService {
     return this.tenant.getModel<ShortProductDocument>(globalProducts, 'ShortProduct', ShortProductSchema);
   }
 
-  private productModel() {
-    return this.tenant.getModel<ProductDocument>(globalProducts, 'Product', ProductSchema);
+  /**
+   * ✅ UPDATED: Case-insensitive variant matching
+   */
+  private findVariant(variants: any[], variantSize: string, variantColor: string) {
+    return variants?.find(
+      (v: any) => 
+        v.size.toLowerCase().trim() === variantSize.toLowerCase().trim() && 
+        v.color.toLowerCase().trim() === variantColor.toLowerCase().trim()
+    );
   }
 
   /**
-   * Create Sell(s) grouped by vendor
+   * ✅ UPDATED: Create Sell - Use ShortProduct ONLY
    */
   async createSell(dto: CreateSellProductItemDto) {
     const ShortProductModel = this.shortProductModel();
     const SellModel = this.sellModel();
 
-    // Group products by vendor
+    // Group products by vendor with variant tracking
     const vendorGroups: Record<string, any[]> = {};
 
     for (const item of dto.products) {
-      const product = await ShortProductModel.findOne({ slug: item.slug });
-      if (!product) throw new HttpException(`Product not found: ${item.slug}`, 404);
+      // ✅ CHANGED: Query ShortProduct (faster, already has variant info)
+      const shortProduct = await ShortProductModel.findOne({ slug: item.slug });
+      if (!shortProduct) throw new HttpException(`Product not found: ${item.slug}`, 404);
 
-      if (item.quantity > (product.stock || Infinity)) {
-        throw new HttpException(`Insufficient stock for product ${product.name}`, 400);
+      // ✅ NEW: Find specific variant from ShortProduct
+      const variant = this.findVariant(shortProduct.variants, item.variant.size, item.variant.color);
+      if (!variant) {
+        throw new HttpException(
+          `Variant not found: ${item.variant.size}-${item.variant.color} for product ${shortProduct.name}`,
+          404
+        );
       }
 
+      // ✅ NEW: Check stock of THAT specific variant
+      if (item.quantity > (variant.stock || 0)) {
+        throw new HttpException(
+          `Insufficient stock for variant ${variant.size}-${variant.color}. Available: ${variant.stock}`,
+          400
+        );
+      }
+
+      // ✅ NEW: Get price from variant
+      const unitPrice = variant.discountPrice || variant.price;
+
+      // ✅ NEW: Calculate total with variant-specific price
+      const totalPrice = unitPrice * item.quantity;
+
       const productData = {
-        productId: product._id,
-        slug: product.slug,
-        name: product.name,
+        productId: shortProduct._id,
+        slug: shortProduct.slug,
+        name: shortProduct.name,
         quantity: item.quantity,
-        totalPrice: product.price * item.quantity,
-        brandName: product.brandName,
-        brandId: product.brandId,
-        mainCategory: product.main,
-        category: product.category,
-        vendorId: product.vendorId || 'admin',
-        vendorSlug: product?.slug || 'admin',
-        isAdmin: product.isAdminCreated,
+        unitPrice, // Store unit price at time of order
+        totalPrice,
+        // ✅ CHANGED: Store variant info (NO SKU - you don't need it here)
+        variant: {
+          size: variant.size,
+          color: variant.color,
+          price: variant.price,
+          discountPrice: variant.discountPrice,
+        },
+        brandName: shortProduct.brandName,
+        brandId: shortProduct.brandId,
+        mainCategory: shortProduct.main,
+        category: shortProduct.category,
+        vendorId: shortProduct.vendorId?.toString() || 'admin',
+        vendorSlug: shortProduct.slug, // we dont have have yet so we saved product slog insted
+        isAdmin: shortProduct.isAdminCreated,
       };
 
-      const vendorKey = productData.vendorId.toString();
+      const vendorKey = productData.vendorId;
       if (!vendorGroups[vendorKey]) vendorGroups[vendorKey] = [];
       vendorGroups[vendorKey].push(productData);
     }
 
     const results: any = [];
+    let totalOrderAmount = 0;
+    let totalDiscount = 0;
 
-    // Bulk create per vendor - ONE Sell document per vendor
     for (const vendorId in vendorGroups) {
       const products = vendorGroups[vendorId];
+
+      // Calculate totals for this order
+      const orderTotal = products.reduce((sum, p) => sum + p.totalPrice, 0);
+      const discount = products.reduce((sum, p) => {
+        return sum + (p.variant.discountPrice ? (p.variant.price - p.variant.discountPrice) * p.quantity : 0);
+      }, 0);
 
       // Create sell document
       const sellDoc = await SellModel.create({
@@ -73,21 +115,28 @@ export class SellProductItemService {
         userId: dto.userId,
         isAdmin: products[0].isAdmin,
         orderStatus: OrderStatus.PENDING,
+        orderTotal,
+        totalDiscount: discount,
       });
 
       results.push(sellDoc);
+      totalOrderAmount += orderTotal;
+      totalDiscount += discount;
     }
 
-    return { message: 'Sell(s) created successfully', data: results };
+    return {
+      message: 'Sell(s) created successfully',
+      data: results,
+      summary: { totalOrderAmount, totalDiscount },
+    };
   }
 
   /**
-   * Update order status
+   * ✅ UPDATED: Update order status - Only update ShortProduct
    */
   async updateOrderStatus(sellId: string, newStatus: OrderStatus) {
     const SellModel = this.sellModel();
     const ShortProductModel = this.shortProductModel();
-    const ProductModel = this.productModel();
 
     const sell = await SellModel.findById(sellId);
     if (!sell) throw new HttpException('Sell not found', 404);
@@ -95,26 +144,40 @@ export class SellProductItemService {
     // Update order status
     sell.orderStatus = newStatus;
 
-    // If order is confirmed, deduct stock from all products
+    // ✅ UPDATED: If order is confirmed, deduct stock from ShortProduct variants only
     if (newStatus === OrderStatus.CONFIRMED) {
-      for (const product of sell.products) {
-        const shortProduct = await ShortProductModel.findOne({ slug: product.slug });
-        if (!shortProduct) throw new HttpException(`Product not found: ${product.slug}`, 404);
+      for (const orderItem of sell.products) {
+        const shortProduct = await ShortProductModel.findOne({ slug: orderItem.slug });
+        if (!shortProduct) throw new HttpException(`Product not found: ${orderItem.slug}`, 404);
 
-        // Deduct from short product
-        shortProduct.stock = (shortProduct.stock || 0) - product.quantity;
+        // ✅ NEW: Find the specific variant
+        const variant = this.findVariant(shortProduct.variants, orderItem.variant.size, orderItem.variant.color);
+        if (!variant) {
+          throw new HttpException(
+            `Variant not found during stock deduction: ${orderItem.variant.size}-${orderItem.variant.color}`,
+            404
+          );
+        }
+
+        // ✅ NEW: Deduct from specific variant stock
+        variant.stock = (variant.stock || 0) - orderItem.quantity;
+
+        // ✅ NEW: Recalculate total stock from all variants
+        shortProduct.stock = shortProduct.variants?.reduce(
+          (sum: number, v: any) => sum + (v.stock || 0), 
+          0
+        ) || 0;
+
+        // Save ShortProduct with updated stock
         await shortProduct.save();
-
-        // Also deduct from full product
-        await ProductModel.findOneAndUpdate(
-          { slug: product.slug },
-          { $inc: { stock: -product.quantity } }
-        );
       }
     }
 
     await sell.save();
-    return { message: `Order status updated to ${newStatus}` };
+    return { 
+      message: `Order status updated to ${newStatus}`, 
+      data: sell 
+    };
   }
 
   /**
@@ -162,7 +225,7 @@ export class SellProductItemService {
    */
   async getSellById(sellId: string) {
     const SellModel = this.sellModel();
-    
+
     const sell = await SellModel.findById(sellId);
     if (!sell) throw new HttpException('Sell not found', 404);
 
