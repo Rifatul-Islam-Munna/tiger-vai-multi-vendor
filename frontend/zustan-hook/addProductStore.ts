@@ -44,7 +44,7 @@ const initialFormData: Partial<CreateProduct> = {
   brand: { id: "", name: "" },
   thumbnail: undefined,
   images: [],
-  colorsImage: [],
+ 
   features: [],
   specifications: {},
   height: 0,

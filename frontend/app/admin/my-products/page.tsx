@@ -21,6 +21,8 @@ import {
 import { Eye, Edit2, Trash2, Plus } from "lucide-react";
 import Link from "next/link";
 import { ViewProductModal } from "@/components/ui/custom/admin/create-edit-product/ViewProductModal";
+import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
+import { Product, ProductApiResponse } from "@/@types/short-product";
 
 // Static product data
 const STATIC_PRODUCTS = [
@@ -142,10 +144,20 @@ export default function ProductManagementPage() {
   const [limit, setLimit] = useState(10);
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
-  const handleViewProduct = (product: any) => {
+  const query = new URLSearchParams();
+  query.set("page", page.toString());
+  query.set("limit", limit.toString());
+  query.set("sortBy", sortBy);
+  query.set("sortOrder", sortOrder);
+
+  const { data, isLoading } = useQueryWrapper<ProductApiResponse>(
+    ["products", page, limit, sortBy, sortOrder],
+    `/product/search?${query.toString()}`
+  );
+  const handleViewProduct = (product: Product) => {
     setSelectedProduct(product);
     setIsViewModalOpen(true);
   };
@@ -155,15 +167,14 @@ export default function ProductManagementPage() {
     setProducts(products.filter((p) => p._id !== productId));
   };
 
-  const total = products.length;
-  const totalPages = Math.ceil(total / limit);
+  const total = data?.total || 0;
+  const totalPages = data?.totalPages || 1;
   const paginatedProducts = products.slice((page - 1) * limit, page * limit);
 
   return (
     <div
       className="min-h-screen p-6"
       style={{
-        backgroundColor: "var(--palette-bg)",
         color: "var(--palette-text)",
       }}
     >
@@ -316,7 +327,7 @@ export default function ProductManagementPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedProducts.map((product) => (
+              {data?.data?.map((product) => (
                 <TableRow
                   key={product._id}
                   style={{ borderColor: "var(--palette-accent-3)" }}
@@ -325,39 +336,39 @@ export default function ProductManagementPage() {
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>
                     <span style={{ color: "var(--palette-accent-1)" }}>
-                      {product.category.main}
+                      {product?.main}
                     </span>
                     {" → "}
-                    {product.category.category}
+                    {product?.category}
                   </TableCell>
-                  <TableCell>{product.brand.name}</TableCell>
+                  <TableCell>{product?.brandName}</TableCell>
                   <TableCell>
-                    {product.offerPrice ? (
+                    {product?.offerPrice ? (
                       <div className="flex flex-col">
                         <span
                           className="line-through text-sm"
                           style={{ color: "var(--palette-accent-3)" }}
                         >
-                          ৳{product.price}
+                          ৳{product?.price}
                         </span>
                         <span
                           className="font-semibold"
                           style={{ color: "var(--palette-btn)" }}
                         >
-                          ৳{product.offerPrice}
+                          ৳{product?.offerPrice}
                         </span>
                       </div>
                     ) : (
-                      <span>৳{product.price}</span>
+                      <span>৳{product?.price}</span>
                     )}
                   </TableCell>
                   <TableCell>
                     <span className={product.stock < 20 ? "text-red-400" : ""}>
-                      {product.stock}
+                      {product?.stock}
                     </span>
                   </TableCell>
                   <TableCell>
-                    <span
+                    {/*  <span
                       className={`px-3 py-1 rounded-full text-xs font-medium ${
                         product.isActive
                           ? "bg-green-500/20 text-green-400"
@@ -365,7 +376,8 @@ export default function ProductManagementPage() {
                       }`}
                     >
                       {product.isActive ? "Active" : "Inactive"}
-                    </span>
+                    </span> */}
+                    N/A
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
@@ -380,7 +392,7 @@ export default function ProductManagementPage() {
                         />
                       </button>
                       <Link
-                        href={`/admin/my-products/edit-product/${product._id}`}
+                        href={`/admin/my-products/edit-product/${product.slug}`}
                       >
                         <button
                           className="p-2 hover:bg-yellow-500/20 rounded transition"

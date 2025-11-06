@@ -24,6 +24,8 @@ class ShortProductVariant {
 export class ShortProduct {
   @Prop({ required: true })
   name: string;
+  @Prop()
+  isActive: boolean;
 
   // ✅ Only string for thumbnail URL
   @Prop({ required: true })
@@ -49,7 +51,7 @@ export class ShortProduct {
   isDigital: boolean;
 
   // ✅ Minimal brand info
-  @Prop({ required: true })
+  @Prop()
   brandId: string;
 
   @Prop({ required: true })

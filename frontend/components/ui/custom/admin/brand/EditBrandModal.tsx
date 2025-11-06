@@ -25,8 +25,12 @@ import {
 } from "@/components/ui/command";
 import { Checkbox } from "@/components/ui/checkbox";
 import Image from "next/image";
-import { useQuery } from "@tanstack/react-query";
-import { X } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Loader2, X } from "lucide-react";
+import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
+import { toast } from "sonner";
+import { useUploadSingleImage } from "@/lib/useHandelImageUpload";
+import { UpdateBrand } from "@/actions/brand-category";
 
 interface Brand {
   _id: string;
@@ -49,7 +53,6 @@ export function EditBrandModal({
   onOpenChange,
   onSuccess,
 }: EditBrandModalProps) {
-  const [isLoading, setIsLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(
     brand.logoUrl || null
   );
@@ -58,27 +61,24 @@ export function EditBrandModal({
     name: brand.name,
     categories: brand.categories || [],
   });
+
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [openCombobox, setOpenCombobox] = useState(false);
 
-  const { data: categoriesData } = useQuery({
-    queryKey: ["categories-select"],
-    queryFn: async () => {
-      const res = await fetch("/api/category-brand/categories?limit=100");
-      return res.json();
-    },
-  });
+  const { data: categoriesData } = useQueryWrapper(
+    ["categories"],
+    `/category?page=${1}&limit=${50}`
+  );
+  const { mutate: uploadImage, isPending: isUploadingImage } =
+    useUploadSingleImage();
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+    if (!file) return toast.error("Please select a file");
+
+    const fromData = new FormData();
+    fromData.append("file", file!);
+    uploadImage(fromData);
   };
 
   const handleCategoryToggle = (categoryId: string) => {
@@ -89,55 +89,38 @@ export function EditBrandModal({
         : [...prev.categories, categoryId],
     }));
   };
+  const { mutate: UpdateBrandFN, isPending: isLoading } = useMutation({
+    mutationKey: ["updated-brand"],
+    mutationFn: (payload: any) => UpdateBrand(brand._id, payload),
+    onSuccess: (data) => {
+      if (data?.error) {
+        toast.success(data.error?.message);
+        return;
+      }
+
+      toast.success("Brand update successfully");
+      onSuccess?.();
+    },
+    onError: (data) => {
+      toast.error(data?.message || "Unknown error");
+    },
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      alert("Brand name is required");
+      toast.error("Brand name is required");
       return;
     }
+    const payload = {
+      name: formData.name,
+      logoUrl: imagePreview,
+      categories: formData.categories,
+    };
+    console.log("payload", payload);
 
-    setIsLoading(true);
-
-    try {
-      let logoUrl = brand.logoUrl;
-
-      if (imageFile) {
-        const formDataWithImage = new FormData();
-        formDataWithImage.append("file", imageFile);
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
-          body: formDataWithImage,
-        });
-        const uploadData = await uploadRes.json();
-        logoUrl = uploadData.url;
-      }
-
-      const response = await fetch(`/api/category-brand/brands/${brand._id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          logoUrl,
-          categories:
-            formData.categories.length > 0 ? formData.categories : undefined,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update brand");
-      }
-
-      onOpenChange(false);
-      onSuccess?.();
-    } catch (error) {
-      console.error("Error:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    UpdateBrandFN(payload);
   };
 
   return (
@@ -164,6 +147,8 @@ export function EditBrandModal({
                     className="object-contain"
                   />
                 </div>
+              ) : isUploadingImage ? (
+                <Loader2 className=" animate-spin" />
               ) : (
                 <div className="text-palette-accent-3">
                   <p className="font-medium">Click to upload logo</p>
@@ -227,12 +212,14 @@ export function EditBrandModal({
                       {categoriesData?.data?.map((category: any) => (
                         <CommandItem
                           key={category._id}
-                          value={category._id}
-                          onSelect={() => handleCategoryToggle(category._id)}
+                          value={category.name}
+                          onSelect={() => handleCategoryToggle(category?.name)}
                           className="text-palette-text hover:bg-palette-btn/20"
                         >
                           <Checkbox
-                            checked={formData.categories.includes(category._id)}
+                            checked={formData.categories.includes(
+                              category.name
+                            )}
                             className="mr-2 border-palette-accent-3"
                           />
                           {category.name}
@@ -247,15 +234,12 @@ export function EditBrandModal({
             {formData.categories.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-2">
                 {formData.categories.map((catId) => {
-                  const category = categoriesData?.data?.find(
-                    (c: any) => c._id === catId
-                  );
                   return (
                     <div
                       key={catId}
                       className="flex items-center gap-1 bg-palette-btn/20 text-palette-btn px-3 py-1 rounded-full text-sm"
                     >
-                      {category?.name}
+                      {catId}
                       <button
                         type="button"
                         onClick={() => handleCategoryToggle(catId)}
@@ -292,4 +276,7 @@ export function EditBrandModal({
       </DialogContent>
     </Dialog>
   );
+}
+function onRefresh() {
+  throw new Error("Function not implemented.");
 }

@@ -5,6 +5,7 @@ import React from "react";
 
 import { ImageUploadField } from "../ImageUploadField";
 import { useAddProductStore } from "@/zustan-hook/addProductStore";
+import { useUploadSingleImage } from "@/lib/useHandelImageUpload";
 
 export default function StepMedia() {
   const { formData, updateField } = useAddProductStore();
@@ -13,6 +14,7 @@ export default function StepMedia() {
     images: Array<{ url: string; key: string; id: string }>
   ) => {
     if (images.length > 0) {
+      console.log("handleThumbnailSelected", images[0]);
       updateField("thumbnail", images[0]);
     }
   };

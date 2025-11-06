@@ -1,7 +1,7 @@
 // components/product/add-steps/StepBasicInfo.tsx
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +13,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAddProductStore } from "@/zustan-hook/addProductStore";
+import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
+import { BrandResponse, CategoryResponse } from "@/@types/category-brand";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 // Static categories and brands
 const CATEGORIES = [
@@ -21,19 +25,21 @@ const CATEGORIES = [
   { main: "KIDS", subcategories: ["T-Shirts", "Shoes", "Pants"] },
 ];
 
-const BRANDS = [
-  { id: "brand1", name: "Nike" },
-  { id: "brand2", name: "Adidas" },
-  { id: "brand3", name: "Levi's" },
-  { id: "brand4", name: "Zara" },
-  { id: "brand5", name: "Fossil" },
-  { id: "brand6", name: "H&M" },
-];
-
 export default function StepBasicInfo() {
   const { formData, updateField } = useAddProductStore();
   const [selectedMainCategory, setSelectedMainCategory] = React.useState(
     formData.category?.main || ""
+  );
+  const [isBrandInputMode, setIsBrandInputMode] = useState(false);
+  const {
+    data: brandsData,
+    isLoading,
+    refetch,
+  } = useQueryWrapper<BrandResponse>(["brands"], `/brand?page=1&limit=20`);
+
+  const { data: categoriesData } = useQueryWrapper<CategoryResponse>(
+    ["categories"],
+    `/category?page=1&limit=30`
   );
 
   const subcategories =
@@ -54,7 +60,10 @@ export default function StepBasicInfo() {
       category: value,
     });
   };
-
+  const findOneSubCategory = categoriesData?.data?.find(
+    (subcat) => subcat.name === formData.category?.main
+  );
+  console.log("findOneSubCategory", findOneSubCategory);
   return (
     <div className="space-y-6">
       {/* Product Name */}
@@ -122,9 +131,9 @@ export default function StepBasicInfo() {
               color: "var(--palette-text)",
             }}
           >
-            {CATEGORIES.map((cat) => (
-              <SelectItem key={cat.main} value={cat.main}>
-                {cat.main}
+            {categoriesData?.data?.map((cat) => (
+              <SelectItem key={cat.name} value={cat.name}>
+                {cat.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -132,7 +141,7 @@ export default function StepBasicInfo() {
       </div>
 
       {/* Sub Category */}
-      {subcategories.length > 0 && (
+      {(findOneSubCategory?.subCategory?.length ?? 0) > 0 && (
         <div>
           <label
             className="block text-sm font-semibold mb-2"
@@ -159,7 +168,7 @@ export default function StepBasicInfo() {
                 color: "var(--palette-text)",
               }}
             >
-              {subcategories.map((subcat) => (
+              {findOneSubCategory?.subCategory?.map((subcat) => (
                 <SelectItem key={subcat} value={subcat}>
                   {subcat}
                 </SelectItem>
@@ -171,43 +180,79 @@ export default function StepBasicInfo() {
 
       {/* Brand */}
       <div>
+        {/* Toggle Switch */}
+        <div className="flex items-center gap-2 mb-3">
+          <Switch
+            id="brand-mode"
+            checked={isBrandInputMode}
+            onCheckedChange={setIsBrandInputMode}
+          />
+          <Label
+            htmlFor="brand-mode"
+            className="text-sm"
+            style={{ color: "var(--palette-text)" }}
+          >
+            {isBrandInputMode ? "Custom Brand Name" : "Select from Existing"}
+          </Label>
+        </div>
+
+        {/* Brand Field Label */}
         <label
           className="block text-sm font-semibold mb-2"
           style={{ color: "var(--palette-accent-1)" }}
         >
           Brand *
         </label>
-        <Select
-          value={formData.brand?.id || ""}
-          onValueChange={(value) => {
-            const brand = BRANDS.find((b) => b.id === value);
-            if (brand) {
-              updateField("brand", { id: brand.id, name: brand.name });
-            }
-          }}
-        >
-          <SelectTrigger
+
+        {/* Conditional Rendering: Dropdown or Input */}
+        {!isBrandInputMode ? (
+          <Select
+            value={formData.brand?.id || ""}
+            onValueChange={(value) => {
+              const brand = brandsData?.data?.find((b) => b._id === value);
+              if (brand) {
+                updateField("brand", { id: brand._id, name: brand.name });
+              }
+            }}
+          >
+            <SelectTrigger
+              style={{
+                backgroundColor: "rgba(255, 255, 255, 0.05)",
+                borderColor: "var(--palette-accent-3)",
+                color: "var(--palette-text)",
+              }}
+            >
+              <SelectValue placeholder="Select brand" />
+            </SelectTrigger>
+            <SelectContent
+              style={{
+                backgroundColor: "var(--palette-bg)",
+                color: "var(--palette-text)",
+              }}
+            >
+              {brandsData?.data?.map((brand) => (
+                <SelectItem key={brand._id} value={brand._id}>
+                  {brand.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <Input
+            type="text"
+            placeholder="Enter custom brand name"
+            value={formData.brand?.name || ""}
+            onChange={(e) => {
+              updateField("brand", { id: "", name: e.target.value });
+            }}
             style={{
               backgroundColor: "rgba(255, 255, 255, 0.05)",
               borderColor: "var(--palette-accent-3)",
               color: "var(--palette-text)",
             }}
-          >
-            <SelectValue placeholder="Select brand" />
-          </SelectTrigger>
-          <SelectContent
-            style={{
-              backgroundColor: "var(--palette-bg)",
-              color: "var(--palette-text)",
-            }}
-          >
-            {BRANDS.map((brand) => (
-              <SelectItem key={brand.id} value={brand.id}>
-                {brand.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+            className="w-full"
+          />
+        )}
       </div>
     </div>
   );

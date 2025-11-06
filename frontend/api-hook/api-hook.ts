@@ -76,7 +76,7 @@ export const PatchRequestAxios = async <T>(url: string, payload: T) : Promise<[T
             }
             
         })
-       return data
+       return [ data,null]
 
     }catch(error ){
         if (axios.isAxiosError(error)) {
@@ -89,11 +89,11 @@ export const PatchRequestAxios = async <T>(url: string, payload: T) : Promise<[T
              const meg = parseAxiosError(error as any);
              
 
-        throw new Error(meg.message)
+        return [null, meg]; 
         }
         if (isRedirectError(error)) throw error;
        
-       throw new Error("Unknown error")
+       return [null, null];
     }
 }
 export const GetRequestAxios = async <T>(url: string, ) : Promise<[T | null, AxiosError | null]> => {
@@ -151,4 +151,40 @@ export const GetRequestNormal = async <T>(url: string,revalidate=3 ,revalidateTa
       
     }
 }
+
+export const DeleteRequestAxios = async <T>(url: string): 
+  Promise<[T | null, { message: string; statusCode: number } | null]> => {
+    
+    const { access_token } = await getToken();
+
+    try {
+        const { data } = await axios.delete<T>(`${baseUrl}${url}`, {
+            headers: {
+                access_token: access_token,
+            },
+        });
+
+        return [data, null];
+
+    } catch (error: any) {
+
+        if (axios.isAxiosError(error)) {
+
+            if (error.status === 401) {
+                throw redirect('/auth/login');
+            }
+
+            console.log("error->", error.response?.data);
+
+            const meg = parseAxiosError(error as any);
+
+            return [null, meg];
+        }
+
+        if (isRedirectError(error)) throw error;
+
+        return [null, null];
+    }
+};
+
 

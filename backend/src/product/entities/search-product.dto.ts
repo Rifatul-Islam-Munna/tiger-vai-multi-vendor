@@ -52,4 +52,9 @@ export class SearchProductDto {
   @IsOptional()
   @IsString()
   sortOrder?: 'asc' | 'desc';
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  sortBy?: string;
 }

@@ -61,6 +61,7 @@ class FeatureDto {
 class BrandInfoDto {
   @ApiProperty()
   @IsString()
+  @IsOptional()
   id: string;
 
   @ApiProperty()
@@ -291,4 +292,12 @@ export class CreateProductDto {
   @IsOptional()
   @IsBoolean()
   isAdminCreated: boolean;
+}
+
+
+export class GetProductDTo{
+  @ApiProperty({ required: false })
+ 
+  @IsString()
+  slug: string
 }

@@ -54,7 +54,7 @@ export default function StepAdditionalInfo() {
             <Input
               type="number"
               placeholder="0"
-              value={formData.height || 0}
+              value={(formData.height ?? 0) > 0 ? formData.height : ""}
               onChange={(e) =>
                 updateField("height", parseFloat(e.target.value) || 0)
               }
@@ -76,7 +76,7 @@ export default function StepAdditionalInfo() {
             <Input
               type="number"
               placeholder="0"
-              value={formData.width || 0}
+              value={(formData.width ?? 0) > 0 ? formData.width : ""}
               onChange={(e) =>
                 updateField("width", parseFloat(e.target.value) || 0)
               }

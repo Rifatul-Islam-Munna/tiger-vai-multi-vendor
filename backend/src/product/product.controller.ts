@@ -10,7 +10,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
-import { CreateProductDto } from './dto/create-product.dto';
+import { CreateProductDto, GetProductDTo } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { UpdateShortProductDto } from './entities/update-short-product.dto';
 import { SearchProductDto } from './entities/search-product.dto';
@@ -78,5 +78,10 @@ export class ProductController {
   @ApiOperation({ summary: 'Search products with filters and pagination' })
   async searchProducts(@Query() query: SearchProductDto) {
     return this.productService.searchProducts(query);
+  }
+  @Get('get-product')
+  @ApiOperation({ summary: 'Search products with filters and pagination' })
+  async getOneProduct(@Query() query: GetProductDTo) {
+    return this.productService.getProduct(query.slug);
   }
 }

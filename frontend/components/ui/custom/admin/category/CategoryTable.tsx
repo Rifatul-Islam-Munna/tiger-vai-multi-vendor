@@ -23,6 +23,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useMutation } from "@tanstack/react-query";
+import { DeleteCategory } from "@/actions/brand-category";
+import { toast } from "sonner";
 
 interface Category {
   _id: string;
@@ -53,25 +56,24 @@ export function CategoryTable({
 }: CategoryTableProps) {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDelete = async (id: string) => {
-    setIsDeleting(true);
-    try {
-      const response = await fetch(`/api/category-brand/categories/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) throw new Error("Failed to delete");
-
-      setDeleteConfirm(null);
+  const { mutate, isPending: isDeleting } = useMutation({
+    mutationKey: ["delete-category"],
+    mutationFn: (id: string) => DeleteCategory(id),
+    onSuccess: (data) => {
+      if (data?.error) {
+        toast.error(data.error.message);
+        return;
+      }
+      toast.success("Category deleted successfully");
       onRefresh();
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Failed to delete category");
-    } finally {
-      setIsDeleting(false);
-    }
+    },
+    onError: (error) => {
+      toast.error(error.message || "unknown error");
+    },
+  });
+  const handleDelete = async (id: string) => {
+    mutate(id);
   };
 
   return (

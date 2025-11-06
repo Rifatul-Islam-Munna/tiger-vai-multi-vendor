@@ -56,6 +56,13 @@ export class ProductService {
     return rawText;
   }
 
+
+  async getProduct(slug:string){
+    const ProductModel = this.productModel();
+    return ProductModel.findOne({slug});
+
+  }
+
   // ✅ UPDATED: Create Short Product DTO Helper
   private createShortProductData(product: any) {
     const averagePrice = ProductHelper.calculateAveragePrice(product.variants);
@@ -258,6 +265,7 @@ export class ProductService {
       page = 1,
       limit = 10,
       sortOrder = 'desc',
+      sortBy='createdAt'
     } = query;
 
     const filter: any = {};
@@ -277,10 +285,11 @@ export class ProductService {
     if (isDigital !== undefined) filter.isDigital = isDigital;
 
     const skip = (page - 1) * limit;
+    
     const total = await ShortProductModel.countDocuments(filter);
     const data = await ShortProductModel
       .find(filter)
-      .sort({ price: sortOrder === 'asc' ? 1 : -1 })
+      .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
       .skip(skip)
       .limit(limit)
       .lean();
@@ -344,4 +353,8 @@ export class ProductService {
       stats,
     };
   }
+
+
+
+
 }

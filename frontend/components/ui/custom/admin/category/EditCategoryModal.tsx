@@ -11,7 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
-import { X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
+import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
+import { updateCategory, uploadCategory } from "@/actions/brand-category";
 
 interface Category {
   _id: string;
@@ -33,7 +36,6 @@ export function EditCategoryModal({
   onOpenChange,
   onSuccess,
 }: EditCategoryModalProps) {
-  const [isLoading, setIsLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(
     category.logoUrl || null
   );
@@ -45,16 +47,53 @@ export function EditCategoryModal({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [subCategoryInput, setSubCategoryInput] = useState("");
 
+  const { mutate: uploadImage, isPending: IsImageUploadPending } = useMutation({
+    mutationKey: ["upload-brand-image"],
+    mutationFn: (formData: FormData) => uploadCategory(formData),
+    onSuccess: (data) => {
+      if (data?.error) {
+        toast.error(data.error.message);
+      }
+      setImagePreview(data?.data?.url as string);
+      console.log(data);
+    },
+    onError: (error) => {
+      toast.error(error.message || "unknown error");
+    },
+  });
+  const { mutate, isPending: isLoading } = useMutation({
+    mutationKey: ["update-brand"],
+    mutationFn: (payload: any) => updateCategory(category._id, payload),
+    onSuccess: (data) => {
+      if (data?.error) {
+        toast.error(data.error.message);
+      }
+      onSuccess?.();
+      toast.success("Category updated successfully");
+      console.log(data);
+      onOpenChange(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "unknown error");
+    },
+  });
+
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (!file) return toast.error("Please select a file");
+
+    const formData = new FormData();
+    formData.append("file", file);
+    uploadImage(formData);
+
+    /*   if (file) {
       setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
-    }
+    } */
   };
 
   const addSubCategory = (e: React.KeyboardEvent) => {
@@ -82,58 +121,19 @@ export function EditCategoryModal({
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      alert("Category name is required");
+      toast.error("Category name is required");
       return;
     }
 
     if (formData.subCategory.length === 0) {
-      alert("At least one subcategory is required");
+      toast.error("At least one subcategory is required");
       return;
     }
-
-    setIsLoading(true);
-
-    try {
-      let logoUrl = category.logoUrl;
-
-      if (imageFile) {
-        const formDataWithImage = new FormData();
-        formDataWithImage.append("file", imageFile);
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
-          body: formDataWithImage,
-        });
-        const uploadData = await uploadRes.json();
-        logoUrl = uploadData.url;
-      }
-
-      const response = await fetch(
-        `/api/category-brand/categories/${category._id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: formData.name,
-            logoUrl,
-            subCategory: formData.subCategory,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to update category");
-      }
-
-      onOpenChange(false);
-      onSuccess?.();
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Failed to update category");
-    } finally {
-      setIsLoading(false);
-    }
+    mutate({
+      name: formData.name,
+      subCategory: formData.subCategory,
+      logoUrl: imagePreview,
+    });
   };
 
   return (
@@ -160,6 +160,8 @@ export function EditCategoryModal({
                     className="object-contain"
                   />
                 </div>
+              ) : IsImageUploadPending ? (
+                <Loader2 className="animate-spin" />
               ) : (
                 <div className="text-palette-accent-3">
                   <p className="font-medium">Click to upload logo</p>
@@ -211,7 +213,7 @@ export function EditCategoryModal({
                 {formData.subCategory.map((sub, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-2 bg-palette-accent-2/20 text-palette-accent-2 px-3 py-1.5 rounded-full text-sm"
+                    className="flex items-center gap-2 bg-palette-accent-2/20 text-palette-text px-3 py-1.5 rounded-full text-sm"
                   >
                     {sub}
                     <button

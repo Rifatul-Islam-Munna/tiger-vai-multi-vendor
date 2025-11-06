@@ -23,6 +23,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useMutation } from "@tanstack/react-query";
+import { DeleteBrand, UpdateBrand } from "@/actions/brand-category";
+import { toast } from "sonner";
 
 interface Brand {
   _id: string;
@@ -54,40 +57,48 @@ export function BrandTable({
 }: BrandTableProps) {
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDelete = async (id: string) => {
-    setIsDeleting(true);
-    try {
-      const response = await fetch(`/api/category-brand/brands/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) throw new Error("Failed to delete");
-
+  const { mutate: ShouldDelete, isPending: isDeleting } = useMutation({
+    mutationKey: ["delete-brand"],
+    mutationFn: (id: string) => DeleteBrand(id),
+    onSuccess: (data) => {
+      if (data?.error) {
+        toast.success(data.error?.message);
+      }
+      toast.success("Brand deleted successfully");
       setDeleteConfirm(null);
       onRefresh();
-    } catch (error) {
-      console.error("Error:", error);
-    } finally {
-      setIsDeleting(false);
-    }
+    },
+    onError: (data) => {
+      toast.error(data?.message || "Unknown error");
+    },
+  });
+  const { mutate: UpdateToTop } = useMutation({
+    mutationKey: ["delete-brand"],
+    mutationFn: ({ id, payload }: { id: string; payload: any }) =>
+      UpdateBrand(id, payload),
+    onSuccess: (data) => {
+      if (data?.error) {
+        toast.success(data.error?.message);
+        return;
+      }
+      onRefresh();
+      toast.success("Brand update successfully");
+    },
+    onError: (data) => {
+      toast.error(data?.message || "Unknown error");
+    },
+  });
+
+  const handleDelete = async (id: string) => {
+    ShouldDelete(id);
   };
 
   const handleToggleTop = async (brand: Brand) => {
-    try {
-      const response = await fetch(`/api/category-brand/brands/${brand._id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isTop: !brand.isTop }),
-      });
-
-      if (!response.ok) throw new Error("Failed to update");
-
-      onRefresh();
-    } catch (error) {
-      console.error("Error:", error);
-    }
+    const payload = {
+      isTop: !brand.isTop,
+    };
+    UpdateToTop({ id: brand._id, payload });
   };
 
   return (

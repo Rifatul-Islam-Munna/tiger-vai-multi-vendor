@@ -118,8 +118,8 @@ export default function StepVariants() {
             </label>
             <Input
               type="number"
-              placeholder="0"
-              value={newVariant.price}
+              placeholder="1000"
+              value={newVariant.price > 0 ? newVariant.price : ""}
               onChange={(e) =>
                 setNewVariant({
                   ...newVariant,
@@ -144,7 +144,7 @@ export default function StepVariants() {
             <Input
               type="number"
               placeholder="0"
-              value={newVariant.stock}
+              value={newVariant.stock > 0 ? newVariant.stock : ""}
               onChange={(e) =>
                 setNewVariant({
                   ...newVariant,
@@ -171,7 +171,11 @@ export default function StepVariants() {
             <Input
               type="number"
               placeholder="0"
-              value={newVariant.discountPrice || 0}
+              value={
+                (newVariant.discountPrice ?? 0) > 0
+                  ? newVariant.discountPrice
+                  : ""
+              }
               onChange={(e) =>
                 setNewVariant({
                   ...newVariant,

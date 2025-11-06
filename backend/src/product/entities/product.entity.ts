@@ -58,7 +58,7 @@ class Feature {
 
 @Schema({ _id: false })
 class BrandInfo {
-  @Prop({ required: true })
+  @Prop()
   id: string;
 
   @Prop({ required: true })

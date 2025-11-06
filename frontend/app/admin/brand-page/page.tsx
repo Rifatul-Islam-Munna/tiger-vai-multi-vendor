@@ -5,6 +5,7 @@ import { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CreateBrandModal } from "@/components/ui/custom/admin/brand/CreateBrandModal";
 import { BrandTable } from "@/components/ui/custom/admin/brand/BrandTable";
+import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
 
 export default function BrandPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -12,20 +13,14 @@ export default function BrandPage() {
     page: 1,
     limit: 10,
   });
-
   const {
     data: brandsData,
     isLoading,
     refetch,
-  } = useQuery({
-    queryKey: ["brands", pagination],
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/category-brand/brands?page=${pagination.page}&limit=${pagination.limit}`
-      );
-      return res.json();
-    },
-  });
+  } = useQueryWrapper(
+    ["brands", pagination],
+    `/brand?page=${pagination.page}&limit=${pagination.limit}`
+  );
 
   const handleCreateSuccess = useCallback(() => {
     setIsModalOpen(false);

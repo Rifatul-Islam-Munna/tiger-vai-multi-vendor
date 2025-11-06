@@ -15,6 +15,8 @@ import StepMedia from "@/components/ui/custom/admin/create-edit-product/create-p
 import StepShipping from "@/components/ui/custom/admin/create-edit-product/create-product/StepShipping";
 import StepAdditionalInfo from "@/components/ui/custom/admin/create-edit-product/create-product/StepAdditionalInfo";
 import StepReview from "@/components/ui/custom/admin/create-edit-product/create-product/StepReview";
+import { useApiMutation } from "@/api-hook/react-query-wrapper";
+import { postNewProduct } from "@/actions/product";
 
 // ✅ UPDATED: 7 steps instead of 6
 const STEPS = [
@@ -29,6 +31,7 @@ const STEPS = [
 
 export default function AddProductPage() {
   const router = useRouter();
+
   const {
     currentStep,
     nextStep,
@@ -37,8 +40,17 @@ export default function AddProductPage() {
     resetForm,
     calculateAndFinalize,
   } = useAddProductStore();
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
+  const onSuccess = (data) => {
+    resetForm();
+  };
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const { mutate, isPending } = useApiMutation(
+    postNewProduct,
+    undefined,
+    "new product",
+    onSuccess
+  );
   // ✅ UPDATED: Max step is now 7
   const handleSubmit = async () => {
     // ✅ Calculate and finalize prices from variants
@@ -58,9 +70,7 @@ export default function AddProductPage() {
     //   method: 'POST',
     //   body: JSON.stringify(finalData)
     // });
-
-    alert("✅ Product created successfully!");
-    /*  resetForm(); */
+    mutate(finalData);
   };
 
   return (

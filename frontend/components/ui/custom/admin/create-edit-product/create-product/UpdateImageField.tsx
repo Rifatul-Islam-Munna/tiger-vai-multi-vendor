@@ -8,6 +8,7 @@ import {
 } from "@/lib/useHandelImageUpload";
 import { useApiMutation } from "@/api-hook/react-query-wrapper";
 import { DeleteImage } from "@/actions/brand-category";
+import { useEditProductStore } from "@/zustan-hook/editProductStore";
 
 interface ImageUploadFieldProps {
   onImagesSelected: (
@@ -18,14 +19,16 @@ interface ImageUploadFieldProps {
   isThumbnail?: boolean;
 }
 
-export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
+export const ImageUploadFieldUpdate: React.FC<ImageUploadFieldProps> = ({
   onImagesSelected,
   maxFiles = 5,
   label = "Upload Images",
   isThumbnail = false,
 }) => {
   const [dragActive, setDragActive] = useState(false);
-  const { formData, updateField } = useAddProductStore();
+
+  const { formData, loadProduct, updateField, getChangedFields } =
+    useEditProductStore();
   const { mutate: UploadThumbnail, isPending: isThumbnailPending } =
     useUploadSingleImage();
   const { mutate: UploadMultipleImage } = useUploadMultipleImage();
@@ -75,13 +78,15 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
           if (data?.error) {
             toast.error(data.error.message);
           }
-          const dataReturn = data?.data?.map((item) => ({
-            ...item,
-            url: item.url,
-            key: item.key,
-            id: item.key,
-          }));
-          updateField("images", dataReturn);
+          const dataReturn =
+            data?.data?.map((item) => ({
+              ...item,
+              url: item.url,
+              key: item.key,
+              id: item.key,
+            })) ?? [];
+          const fullImages = [...(formData?.images ?? []), ...dataReturn];
+          updateField("images", fullImages);
           toast.dismiss(loadingUpload);
         },
         onError: (error) => {

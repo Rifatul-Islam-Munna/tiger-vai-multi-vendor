@@ -31,6 +31,12 @@ import {
   calculateAveragePrice,
   calculateTotalStock,
 } from "@/lib/calculation-helper";
+import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
+import { Product } from "@/@types/fullProduct";
+import { BrandResponse, CategoryResponse } from "@/@types/category-brand";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { ImageUploadFieldUpdate } from "@/components/ui/custom/admin/create-edit-product/create-product/UpdateImageField";
 
 // Static product data for demo
 const STATIC_PRODUCTS: Record<string, any> = {
@@ -89,6 +95,7 @@ export default function EditProductPage() {
   const productId = params.id as string;
   const { formData, loadProduct, updateField, getChangedFields } =
     useEditProductStore();
+  const [isBrandInputMode, setIsBrandInputMode] = useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [expandedSections, setExpandedSections] = useState({
     basic: true,
@@ -103,14 +110,28 @@ export default function EditProductPage() {
     price: 0,
     stock: 0,
   });
+  const { data: productDetails, isPending } = useQueryWrapper<Product>(
+    [productId],
+    `/product/get-product?slug=${productId}`
+  );
+
+  const {
+    data: brandsData,
+    isLoading,
+    refetch,
+  } = useQueryWrapper<BrandResponse>(["brands"], `/brand?page=1&limit=20`);
+
+  const { data: categoriesData } = useQueryWrapper<CategoryResponse>(
+    ["categories"],
+    `/category?page=1&limit=30`
+  );
   const [newSpec, setNewSpec] = useState({ key: "", value: "" });
 
   useEffect(() => {
-    const product = STATIC_PRODUCTS[productId];
-    if (product) {
-      loadProduct(product);
+    if (productDetails) {
+      loadProduct(productDetails);
     }
-  }, [productId, loadProduct]);
+  }, [loadProduct, productDetails]);
 
   const handleSave = async () => {
     setIsSubmitting(true);
@@ -204,7 +225,9 @@ export default function EditProductPage() {
   const subcategories =
     CATEGORIES.find((cat) => cat.main === formData.category?.main)
       ?.subcategories || [];
-
+  const findOneSubCategory = categoriesData?.data?.find(
+    (subcat) => subcat.name === formData.category?.main
+  );
   return (
     <div
       className="min-h-screen p-6"
@@ -344,16 +367,16 @@ export default function EditProductPage() {
                             color: "var(--palette-text)",
                           }}
                         >
-                          {CATEGORIES.map((cat) => (
-                            <SelectItem key={cat.main} value={cat.main}>
-                              {cat.main}
+                          {categoriesData?.data?.map((cat) => (
+                            <SelectItem key={cat.name} value={cat.name}>
+                              {cat.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
 
-                    {subcategories.length > 0 && (
+                    {(findOneSubCategory?.subCategory?.length ?? 0) > 0 && (
                       <div>
                         <label
                           className="block text-sm font-semibold mb-2"
@@ -385,7 +408,7 @@ export default function EditProductPage() {
                               color: "var(--palette-text)",
                             }}
                           >
-                            {subcategories.map((subcat) => (
+                            {findOneSubCategory?.subCategory?.map((subcat) => (
                               <SelectItem key={subcat} value={subcat}>
                                 {subcat}
                               </SelectItem>
@@ -398,46 +421,89 @@ export default function EditProductPage() {
 
                   {/* Brand */}
                   <div>
+                    {/* Toggle Switch */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <Switch
+                        id="brand-mode"
+                        checked={isBrandInputMode}
+                        onCheckedChange={setIsBrandInputMode}
+                      />
+                      <Label
+                        htmlFor="brand-mode"
+                        className="text-sm"
+                        style={{ color: "var(--palette-text)" }}
+                      >
+                        {isBrandInputMode
+                          ? "Custom Brand Name"
+                          : "Select from Existing"}
+                      </Label>
+                    </div>
+
+                    {/* Brand Field Label */}
                     <label
                       className="block text-sm font-semibold mb-2"
                       style={{ color: "var(--palette-accent-1)" }}
                     >
-                      Brand
+                      Brand *
                     </label>
-                    <Select
-                      value={formData.brand?.id || ""}
-                      onValueChange={(value) => {
-                        const brand = BRANDS.find((b) => b.id === value);
-                        if (brand) {
+
+                    {/* Conditional Rendering: Dropdown or Input */}
+                    {!isBrandInputMode ? (
+                      <Select
+                        value={formData.brand?.id || ""}
+                        onValueChange={(value) => {
+                          const brand = brandsData?.data?.find(
+                            (b) => b._id === value
+                          );
+                          if (brand) {
+                            updateField("brand", {
+                              id: brand._id,
+                              name: brand.name,
+                            });
+                          }
+                        }}
+                      >
+                        <SelectTrigger
+                          style={{
+                            backgroundColor: "rgba(255, 255, 255, 0.05)",
+                            borderColor: "var(--palette-accent-3)",
+                            color: "var(--palette-text)",
+                          }}
+                        >
+                          <SelectValue placeholder="Select brand" />
+                        </SelectTrigger>
+                        <SelectContent
+                          style={{
+                            backgroundColor: "var(--palette-bg)",
+                            color: "var(--palette-text)",
+                          }}
+                        >
+                          {brandsData?.data?.map((brand) => (
+                            <SelectItem key={brand._id} value={brand._id}>
+                              {brand.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        type="text"
+                        placeholder="Enter custom brand name"
+                        value={formData.brand?.name || ""}
+                        onChange={(e) => {
                           updateField("brand", {
-                            id: brand.id,
-                            name: brand.name,
+                            id: "",
+                            name: e.target.value,
                           });
-                        }
-                      }}
-                    >
-                      <SelectTrigger
+                        }}
                         style={{
                           backgroundColor: "rgba(255, 255, 255, 0.05)",
                           borderColor: "var(--palette-accent-3)",
                           color: "var(--palette-text)",
                         }}
-                      >
-                        <SelectValue placeholder="Select" />
-                      </SelectTrigger>
-                      <SelectContent
-                        style={{
-                          backgroundColor: "var(--palette-bg)",
-                          color: "var(--palette-text)",
-                        }}
-                      >
-                        {BRANDS.map((brand) => (
-                          <SelectItem key={brand.id} value={brand.id}>
-                            {brand.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        className="w-full"
+                      />
+                    )}
                   </div>
 
                   {/* Status */}
@@ -750,7 +816,7 @@ export default function EditProductPage() {
                       className="w-24 h-24 object-cover rounded-lg mb-3"
                     />
                   )}
-                  <ImageUploadField
+                  <ImageUploadFieldUpdate
                     label="Change Thumbnail"
                     isThumbnail={true}
                     onImagesSelected={(images) => {
@@ -780,7 +846,7 @@ export default function EditProductPage() {
                       ))}
                     </div>
                   )}
-                  <ImageUploadField
+                  <ImageUploadFieldUpdate
                     label="Add More Images"
                     isThumbnail={false}
                     onImagesSelected={(images) => {

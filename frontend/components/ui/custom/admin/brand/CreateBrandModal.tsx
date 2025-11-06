@@ -25,9 +25,13 @@ import {
 } from "@/components/ui/command";
 import { Checkbox } from "@/components/ui/checkbox";
 import Image from "next/image";
-import { useQuery } from "@tanstack/react-query";
-import { X, Check } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { X, Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
+import { useUploadSingleImage } from "@/lib/useHandelImageUpload";
+import { toast } from "sonner";
+import { postBrand } from "@/actions/brand-category";
 
 interface CreateBrandModalProps {
   open: boolean;
@@ -40,7 +44,6 @@ export function CreateBrandModal({
   onOpenChange,
   onSuccess,
 }: CreateBrandModalProps) {
-  const [isLoading, setIsLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
@@ -49,25 +52,34 @@ export function CreateBrandModal({
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [openCombobox, setOpenCombobox] = useState(false);
-
-  const { data: categoriesData } = useQuery({
-    queryKey: ["categories-select"],
-    queryFn: async () => {
-      const res = await fetch("/api/category-brand/categories?limit=100");
-      return res.json();
-    },
-  });
+  const { data: categoriesData } = useQueryWrapper(
+    ["categories"],
+    `/category?page=${1}&limit=${50}`
+  );
+  const { mutate, isPending } = useUploadSingleImage();
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (!file) return toast.error("Please select a file");
+    /*   if (file) {
       setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
-    }
+    } */
+    const fromData = new FormData();
+    fromData.append("file", file!);
+    mutate(fromData, {
+      onSuccess: (data) => {
+        if (data.error) {
+          toast.error(data.error.message);
+        }
+        setImagePreview(data?.data?.url as string);
+        console.log(data);
+      },
+    });
   };
 
   const handleCategoryToggle = (categoryId: string) => {
@@ -78,6 +90,20 @@ export function CreateBrandModal({
         : [...prev.categories, categoryId],
     }));
   };
+  const { mutate: PosBrand, isPending: isLoading } = useMutation({
+    mutationKey: ["categories"],
+    mutationFn: (data: Record<string, unknown>) => postBrand(data),
+    onSuccess: (data) => {
+      if (data?.error) {
+        toast.error(data.error.message);
+      }
+      onOpenChange(false);
+      onSuccess?.();
+    },
+    onError: (error) => {
+      toast.error(error.message || "unknown error");
+    },
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,50 +112,12 @@ export function CreateBrandModal({
       alert("Brand name is required");
       return;
     }
-
-    setIsLoading(true);
-
-    try {
-      let logoUrl = "";
-
-      if (imageFile) {
-        const formDataWithImage = new FormData();
-        formDataWithImage.append("file", imageFile);
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
-          body: formDataWithImage,
-        });
-        const uploadData = await uploadRes.json();
-        logoUrl = uploadData.url;
-      }
-
-      const response = await fetch("/api/category-brand/brands", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          logoUrl,
-          categories:
-            formData.categories.length > 0 ? formData.categories : undefined,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create brand");
-      }
-
-      onOpenChange(false);
-      setFormData({ name: "", categories: [] });
-      setImagePreview(null);
-      setImageFile(null);
-      onSuccess?.();
-    } catch (error) {
-      console.error("Error:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    const payload = {
+      name: formData.name,
+      logoUrl: imagePreview,
+      categories: formData.categories,
+    };
+    PosBrand(payload);
   };
 
   return (
@@ -156,6 +144,8 @@ export function CreateBrandModal({
                     className="object-contain"
                   />
                 </div>
+              ) : isPending ? (
+                <Loader2 className=" animate-spin" />
               ) : (
                 <div className="text-palette-accent-3">
                   <p className="font-medium">Click to upload logo</p>
@@ -219,12 +209,14 @@ export function CreateBrandModal({
                       {categoriesData?.data?.map((category: any) => (
                         <CommandItem
                           key={category._id}
-                          value={category._id}
-                          onSelect={() => handleCategoryToggle(category._id)}
+                          value={category?.name}
+                          onSelect={() => handleCategoryToggle(category.name)}
                           className="text-palette-text hover:bg-palette-btn/20"
                         >
                           <Checkbox
-                            checked={formData.categories.includes(category._id)}
+                            checked={formData.categories.includes(
+                              category.name
+                            )}
                             className="mr-2 border-palette-accent-3"
                           />
                           {category.name}
@@ -240,15 +232,12 @@ export function CreateBrandModal({
             {formData.categories.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-2">
                 {formData.categories.map((catId) => {
-                  const category = categoriesData?.data?.find(
-                    (c: any) => c._id === catId
-                  );
                   return (
                     <div
                       key={catId}
                       className="flex items-center gap-1 bg-palette-btn/20 text-palette-btn px-3 py-1 rounded-full text-sm"
                     >
-                      {category?.name}
+                      {catId}
                       <button
                         type="button"
                         onClick={() => handleCategoryToggle(catId)}
