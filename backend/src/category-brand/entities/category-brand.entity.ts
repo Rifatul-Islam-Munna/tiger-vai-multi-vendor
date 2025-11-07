@@ -20,14 +20,24 @@ export class Brand {
   isTop:boolean;
 
 }
+
+
+@Schema({_id:false})
+class Sub{
+  @Prop({required:true})
+  SubMain:string
+  @Prop({ type: [String], required: true })
+  subCategory: string[];
+}
+
+
 @Schema({ timestamps: true })
 export class Category {
   @Prop({ required: true })
   name: string;
 
-  // ✅ Now an array of subcategories
-  @Prop({ type: [String], required: true })
-  subCategory: string[];
+  @Prop({ type: [Sub], default: [] })
+  sub: Sub[];
 
   @Prop()
   logoUrl: string;

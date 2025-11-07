@@ -337,6 +337,10 @@ export default function ProductManagementPage() {
                   <TableCell>
                     <span style={{ color: "var(--palette-accent-1)" }}>
                       {product?.main}
+                    </span>{" "}
+                    {" → "}
+                    <span style={{ color: "var(--palette-accent-1)" }}>
+                      {product?.subMain}
                     </span>
                     {" → "}
                     {product?.category}

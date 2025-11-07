@@ -2,25 +2,39 @@ import { IsString, IsOptional, IsUrl, IsArray, ArrayNotEmpty, isBoolean, IsBoole
 import { Transform, Type } from 'class-transformer';
 import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
 
+
+
+export class SubDto {
+  @ApiProperty()
+  @IsString()
+  SubMain: string;
+
+  @ApiProperty({ type: [String] })
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsString({ each: true })
+  subCategory: string[];
+}
+
 export class CreateCategoryDto {
   @ApiProperty()
   @IsString()
   name: string;
 
-  @ApiProperty({ type: [String] })
+  @ApiProperty({ type: [SubDto] })
   @IsArray()
-  @ArrayNotEmpty()
-  subCategory: string[];
+
+  @Type(() => SubDto)
+  sub: SubDto[];
 
   @ApiPropertyOptional()
   @IsOptional()
-  
   logoUrl?: string;
-   @ApiPropertyOptional({ type: Boolean })
+
+  @ApiPropertyOptional({ type: Boolean })
   @Transform(({ value }) => value === 'true' || value === true)
   @IsBoolean()
   @IsOptional()
- 
   isTop?: boolean;
 }
 
@@ -30,22 +44,24 @@ export class UpdateCategoryDto {
   @IsString()
   name?: string;
 
-  @ApiPropertyOptional({ type: [String] })
+  @ApiPropertyOptional({ type: [SubDto] })
   @IsOptional()
   @IsArray()
-  subCategory?: string[];
+  
+  @Type(() => SubDto)
+  sub?: SubDto[];
 
   @ApiPropertyOptional()
   @IsOptional()
-
   logoUrl?: string;
-   @ApiPropertyOptional({ type: Boolean })
+
+  @ApiPropertyOptional({ type: Boolean })
   @Transform(({ value }) => value === 'true' || value === true)
   @IsBoolean()
-   @IsOptional()
- 
+  @IsOptional()
   isTop?: boolean;
 }
+
 
 // ✅ BRAND DTOS
 export class CreateBrandDto {

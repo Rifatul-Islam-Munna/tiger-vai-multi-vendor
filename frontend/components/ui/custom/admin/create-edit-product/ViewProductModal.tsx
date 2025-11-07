@@ -91,7 +91,7 @@ export const ViewProductModal: React.FC<ViewProductModalProps> = ({
               <div className="flex items-center gap-2">
                 <Tag size={16} />
                 <span>
-                  {product?.main} → {product?.category}
+                  {product?.main} → {product?.subMain} →{product?.category}
                 </span>
               </div>
             </div>

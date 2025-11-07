@@ -40,7 +40,7 @@ const initialFormData: Partial<CreateProduct> = {
   price: 0,
   stock: 0,
   variants: [],
-  category: { main: "", category: "" },
+  category: { main: "",subMain: "", category: "" },
   brand: { id: "", name: "" },
   thumbnail: undefined,
   images: [],

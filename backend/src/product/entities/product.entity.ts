@@ -24,6 +24,9 @@ class ProductCategory {
 
   @Prop({ required: true })
   category: string;
+
+  @Prop({ required: true })
+  subMain: string;
 }
 
 @Schema()

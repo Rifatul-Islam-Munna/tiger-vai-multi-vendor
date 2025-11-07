@@ -30,9 +30,16 @@ export interface CategoryResponse {
 export interface Category {
   _id: string;
   name: string;
-  subCategory: string[];
+  sub: Sub[];
   logoUrl: string;
-  createdAt: string; // or Date
-  updatedAt: string; // or Date
+  isTop: boolean;
+  createdAt: string; // ISO Date string
+  updatedAt: string; // ISO Date string
   __v: number;
 }
+
+export interface Sub {
+  SubMain: string;
+  subCategory: string[];
+}
+

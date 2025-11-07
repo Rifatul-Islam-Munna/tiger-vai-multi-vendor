@@ -24,7 +24,7 @@ class ShortProductVariant {
 export class ShortProduct {
   @Prop({ required: true })
   name: string;
-  @Prop()
+  @Prop({default:true})
   isActive: boolean;
 
   // ✅ Only string for thumbnail URL
@@ -37,6 +37,8 @@ export class ShortProduct {
 
   @Prop({ required: true })
   category: string; // Shirt / Shoes / Watch etc.
+  @Prop({ required: true })
+  subMain: string; // Shirt / Shoes / Watch etc.
 
   @Prop({ required: true })
   price: number;
@@ -75,6 +77,8 @@ export class ShortProduct {
 
   @Prop()
   stock: number;
+
+ 
 
   @Prop({type:mongoose.Schema.Types.ObjectId})
   vendorId:mongoose.Schema.Types.ObjectId

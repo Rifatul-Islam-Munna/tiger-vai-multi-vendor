@@ -12,6 +12,7 @@ export interface Product {
   thumbnail: string;
   main: string;
   category: string;
+  subMain: string;
   price: number;
   offerPrice: number;
   hasOffer: boolean;

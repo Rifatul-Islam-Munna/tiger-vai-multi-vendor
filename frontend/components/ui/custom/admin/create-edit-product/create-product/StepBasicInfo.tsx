@@ -60,10 +60,20 @@ export default function StepBasicInfo() {
       category: value,
     });
   };
-  const findOneSubCategory = categoriesData?.data?.find(
-    (subcat) => subcat.name === formData.category?.main
+  const handleSubCategoryChange = (value: string) => {
+    updateField("category", {
+      ...formData.category,
+      subMain: value,
+    });
+  };
+
+  const findOneSub = categoriesData?.data?.find(
+    (item) => item?.name === formData.category?.main
   );
-  console.log("findOneSubCategory", findOneSubCategory);
+  const findOneSubCategory = findOneSub?.sub?.find(
+    (item) => item?.SubMain === formData.category?.subMain
+  );
+  console.log("findOneSubCategory", findOneSubCategory, "su");
   return (
     <div className="space-y-6">
       {/* Product Name */}
@@ -139,6 +149,44 @@ export default function StepBasicInfo() {
           </SelectContent>
         </Select>
       </div>
+
+      {/* Sub main */}
+      {(findOneSub?.sub.length ?? 0) > 0 && (
+        <div>
+          <label
+            className="block text-sm font-semibold mb-2"
+            style={{ color: "var(--palette-accent-1)" }}
+          >
+            Sub Group *
+          </label>
+          <Select
+            value={formData.category?.subMain || ""}
+            onValueChange={handleSubCategoryChange}
+          >
+            <SelectTrigger
+              style={{
+                backgroundColor: "rgba(255, 255, 255, 0.05)",
+                borderColor: "var(--palette-accent-3)",
+                color: "var(--palette-text)",
+              }}
+            >
+              <SelectValue placeholder="Select sub category" />
+            </SelectTrigger>
+            <SelectContent
+              style={{
+                backgroundColor: "var(--palette-bg)",
+                color: "var(--palette-text)",
+              }}
+            >
+              {findOneSub?.sub?.map((subcat) => (
+                <SelectItem key={subcat.SubMain} value={subcat.SubMain}>
+                  {subcat.SubMain}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       {/* Sub Category */}
       {(findOneSubCategory?.subCategory?.length ?? 0) > 0 && (

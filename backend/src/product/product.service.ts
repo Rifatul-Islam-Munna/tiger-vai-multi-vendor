@@ -9,15 +9,17 @@ import { ReviewStatsSchema, ReviewStats, ReviewStatsDocument } from './entities/
 import { ReviewSchema, Review, ReviewDocument } from './entities/review.schema';
 import { Product, ProductDocument, ProductSchema } from './entities/product.entity';
 import { globalProducts } from 'lib/global-db/globaldb';
-import { ShortProduct, ShortProductSchema } from './entities/short-product.schema';
+import { ShortProduct, ShortProductDocument, ShortProductSchema } from './entities/short-product.schema';
 import { UpdateShortProductDto } from './entities/update-short-product.dto';
 import { SearchProductDto } from './entities/search-product.dto';
 import { ProductHelper } from 'lib/product.helper';
+import { MeilisearchService } from 'src/meilisearch/meilisearch.service';
 
 
 @Injectable()
 export class ProductService {
-  constructor(private tenant: TenantConnectionService) {}
+  constructor(private tenant: TenantConnectionService,private melieSeach:MeilisearchService) {}
+
 
   private productModel() {
     return this.tenant.getModel<ProductDocument>(
@@ -28,7 +30,7 @@ export class ProductService {
   }
 
   private shortProductModel() {
-    return this.tenant.getModel(
+    return this.tenant.getModel<ShortProductDocument>(
       globalProducts,
       ShortProduct.name,
       ShortProductSchema,
@@ -83,17 +85,42 @@ export class ProductService {
       thumbnail: product.thumbnail.url,
       main: product.category.main,
       category: product.category.category,
+      subMain: product.category.subMain,
       price: averagePrice || product.price,
       offerPrice: averageOfferPrice || product.offerPrice,
       hasOffer: product.hasOffer,
       isDigital: product.isDigital,
       brandId: product.brand.id,
+      isActive: product.isActive,
       brandName: product.brand.name,
       slug: product.slug,
       isAdminCreated: product.isAdminCreated,
       stock: totalStock || product.stock,
       variants: shortVariants,
     };
+  }
+  private convertToMiliProduct(product:ShortProductDocument){
+  return {
+    name: product.name,
+      thumbnail: product.thumbnail,
+      main: product.category,
+      category: product.category,
+      subMain: product.category,
+      price:  product.price ?? 0,
+      offerPrice:  product.offerPrice,
+      hasOffer: product.hasOffer,
+      isDigital: product.isDigital,
+      brandId: product.brandId,
+      brandName: product.brandName,
+      slug: product.slug,
+      isAdminCreated: product.isAdminCreated,
+      stock:  product.stock ?? 0,
+      id: product._id.toString(),
+      rating:0,
+      createdAt:Date.now().toString(),
+     
+
+  }
   }
 
   // ✅ UPDATED: Create Product (Admin OR Vendor)
@@ -153,10 +180,12 @@ export class ProductService {
     const ShortProductModel = this.shortProductModel();
     const shortProductData = this.createShortProductData(newProduct);
     
-    await ShortProductModel.create({
+   const shortProductCreated =  await ShortProductModel.create({
       ...shortProductData,
       vendorId: userId,
     });
+    const miliProduct  = this.convertToMiliProduct(shortProductCreated)
+    await this.melieSeach.create(miliProduct);
 
     return { message: 'Product created successfully', data: newProduct };
   }
@@ -180,14 +209,16 @@ export class ProductService {
     const ShortProductModel = this.shortProductModel();
     const shortProductData = this.createShortProductData(updated);
 
-    await ShortProductModel.findOneAndUpdate(
+   const updateProduct= await ShortProductModel.findOneAndUpdate(
       { slug: updated.slug },
       {
         ...shortProductData,
         vendorId: updated.createdBy,
       },
     );
-
+    if(!updateProduct) throw new HttpException('Short product not found', 404);
+    const updateMili = this.convertToMiliProduct(updateProduct)
+    await this.melieSeach.update(updateProduct._id.toString(),updateMili);
     return { message: 'Product updated by admin', data: updated };
   }
 
@@ -216,11 +247,15 @@ export class ProductService {
 
     // ✅ UPDATED: Sync ShortProduct with variants
     const shortProductData = this.createShortProductData(updated);
+  
 
-    await ShortProductModel.findOneAndUpdate(
+   const updateProduct =  await ShortProductModel.findOneAndUpdate(
       { slug: updated.slug },
       shortProductData,
     );
+       if(!updateProduct) throw new HttpException('Short product not found', 404);
+    const updateMili = this.convertToMiliProduct(updateProduct)
+    await this.melieSeach.update(updateProduct._id.toString(),updateMili);
 
     return {
       message: 'Product updated by vendor',
@@ -230,17 +265,18 @@ export class ProductService {
 
   // ✅ DELETE PRODUCT (Admin only)
   async deleteProduct(productId: string, role: UserRole) {
-    if (role !== UserRole.ADMIN) {
+  /*   if (role !== UserRole.ADMIN) {
       throw new ForbiddenException('Only admin can delete products');
-    }
+    } */
 
     const ProductModel = this.productModel();
-    const deleted = await ProductModel.findByIdAndDelete(productId);
+    const deleted = await ProductModel.findByIdAndUpdate(productId, { isActive: false }, { new: true });
     if (!deleted) throw new HttpException('Product not found', 404);
 
     // ✅ NEW: Also delete from ShortProduct
     const ShortProductModel = this.shortProductModel();
-    await ShortProductModel.findOneAndDelete({ slug: deleted.slug });
+    await ShortProductModel.findOneAndUpdate({ slug: deleted.slug }, { isActive: false });
+    await this.melieSeach.delete(productId)
 
     return { message: 'Product deleted successfully' };
   }

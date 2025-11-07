@@ -31,12 +31,16 @@ import {
   calculateAveragePrice,
   calculateTotalStock,
 } from "@/lib/calculation-helper";
-import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
+import {
+  useApiMutation,
+  useQueryWrapper,
+} from "@/api-hook/react-query-wrapper";
 import { Product } from "@/@types/fullProduct";
 import { BrandResponse, CategoryResponse } from "@/@types/category-brand";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { ImageUploadFieldUpdate } from "@/components/ui/custom/admin/create-edit-product/create-product/UpdateImageField";
+import { updateProductAdmin } from "@/actions/product";
 
 // Static product data for demo
 const STATIC_PRODUCTS: Record<string, any> = {
@@ -96,7 +100,7 @@ export default function EditProductPage() {
   const { formData, loadProduct, updateField, getChangedFields } =
     useEditProductStore();
   const [isBrandInputMode, setIsBrandInputMode] = useState(false);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
   const [expandedSections, setExpandedSections] = useState({
     basic: true,
     variants: true,
@@ -133,22 +137,13 @@ export default function EditProductPage() {
     }
   }, [loadProduct, productDetails]);
 
+  const { mutate, isPending: isSubmitting } = useApiMutation(
+    updateProductAdmin,
+    undefined,
+    "update-product"
+  );
   const handleSave = async () => {
-    setIsSubmitting(true);
-    try {
-      const changedFields = getChangedFields();
-      console.log("Changed fields:", changedFields);
-
-      alert("✅ Product updated successfully!");
-      router.push("/dashboard/products");
-    } catch (error) {
-      alert(
-        `❌ Error: ${
-          error instanceof Error ? error.message : "Failed to update product"
-        }`
-      );
-      setIsSubmitting(false);
-    }
+    mutate({ id: productDetails?._id!, payload: formData });
   };
 
   const toggleSection = (section: keyof typeof expandedSections) => {
@@ -222,11 +217,11 @@ export default function EditProductPage() {
     );
   }
 
-  const subcategories =
-    CATEGORIES.find((cat) => cat.main === formData.category?.main)
-      ?.subcategories || [];
-  const findOneSubCategory = categoriesData?.data?.find(
-    (subcat) => subcat.name === formData.category?.main
+  const findOneSub = categoriesData?.data?.find(
+    (item) => item?.name === formData.category?.main
+  );
+  const findOneSubCategory = findOneSub?.sub?.find(
+    (item) => item?.SubMain === formData.category?.subMain
   );
   return (
     <div
@@ -375,6 +370,50 @@ export default function EditProductPage() {
                         </SelectContent>
                       </Select>
                     </div>
+                    {(findOneSub?.sub.length ?? 0) > 0 && (
+                      <div>
+                        <label
+                          className="block text-sm font-semibold mb-2"
+                          style={{ color: "var(--palette-accent-1)" }}
+                        >
+                          Sub Group *
+                        </label>
+                        <Select
+                          value={formData.category?.subMain || ""}
+                          onValueChange={(value) =>
+                            updateField("category", {
+                              ...formData.category,
+                              subMain: value,
+                            })
+                          }
+                        >
+                          <SelectTrigger
+                            style={{
+                              backgroundColor: "rgba(255, 255, 255, 0.05)",
+                              borderColor: "var(--palette-accent-3)",
+                              color: "var(--palette-text)",
+                            }}
+                          >
+                            <SelectValue placeholder="Select sub category" />
+                          </SelectTrigger>
+                          <SelectContent
+                            style={{
+                              backgroundColor: "var(--palette-bg)",
+                              color: "var(--palette-text)",
+                            }}
+                          >
+                            {findOneSub?.sub?.map((subcat) => (
+                              <SelectItem
+                                key={subcat.SubMain}
+                                value={subcat.SubMain}
+                              >
+                                {subcat.SubMain}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
 
                     {(findOneSubCategory?.subCategory?.length ?? 0) > 0 && (
                       <div>

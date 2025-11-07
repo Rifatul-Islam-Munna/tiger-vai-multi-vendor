@@ -1,4 +1,4 @@
-import { GetRequestNormal, PostRequestAxios } from "@/api-hook/api-hook";
+import { GetRequestNormal, PatchRequestAxios, PostRequestAxios } from "@/api-hook/api-hook";
 
 export const postNewProduct = async (payload:any) => {
     const [data, error] = await PostRequestAxios("/product/create",payload)
@@ -6,4 +6,9 @@ export const postNewProduct = async (payload:any) => {
     
 }
 
+export const updateProductAdmin = async ({id,payload}:{id:string,payload:any}) => {
+    const [data, error] = await PatchRequestAxios(`/product/admin-update/${id}`,payload)
+    return {data, error}
+    
+}
 
