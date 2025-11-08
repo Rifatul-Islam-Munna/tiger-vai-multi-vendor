@@ -32,7 +32,7 @@ export class SellProductItemService {
   /**
    * ✅ UPDATED: Create Sell - Use ShortProduct ONLY
    */
-  async createSell(dto: CreateSellProductItemDto) {
+  async createSell(dto: CreateSellProductItemDto,userId:string) {
     const ShortProductModel = this.shortProductModel();
     const SellModel = this.sellModel();
 
@@ -112,7 +112,7 @@ export class SellProductItemService {
       const sellDoc = await SellModel.create({
         products,
         shipment: dto.shipment,
-        userId: dto.userId,
+        userId: userId,
         isAdmin: products[0].isAdmin,
         orderStatus: OrderStatus.PENDING,
         orderTotal,

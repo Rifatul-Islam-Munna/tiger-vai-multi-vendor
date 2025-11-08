@@ -7,11 +7,14 @@ import {
   Param, 
   Delete, 
   Query, 
-  Req 
+  Req, 
+  UseGuards
 } from '@nestjs/common';
 import { SellProductItemService } from './sell-product-item.service';
 import { CreateSellProductItemDto, GetOrdersDto } from './dto/create-sell-product-item.dto';
 import { OrderStatus } from './entities/sell-product-item.entity';
+import { AuthGuard, type ExpressRequest } from 'src/auth/auth.guard';
+import { RolesGuard } from 'src/auth/roles.guard';
 
 @Controller('sell-product-item')
 export class SellProductItemController {
@@ -21,8 +24,9 @@ export class SellProductItemController {
    * Create sell(s) (grouped by vendor)
    */
   @Post()
-  async create(@Body() dto: CreateSellProductItemDto) {
-    return this.sellProductItemService.createSell(dto);
+  @UseGuards(AuthGuard, RolesGuard)
+  async create(@Body() dto: CreateSellProductItemDto,@Req() req:ExpressRequest) {
+    return this.sellProductItemService.createSell(dto,req?.user?.id);
   }
 
   /**

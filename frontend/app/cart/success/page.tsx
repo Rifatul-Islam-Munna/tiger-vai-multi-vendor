@@ -2,8 +2,15 @@
 import { CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useEffect } from "react";
+import { useCartStore } from "@/zustan-hook/cart";
 
 export default function SuccessPage() {
+  const { clearCart } = useCartStore();
+
+  useEffect(() => {
+    clearCart();
+  }, [clearCart]);
   return (
     <div className="min-h-screen bg-palette-bg">
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
@@ -26,7 +33,7 @@ export default function SuccessPage() {
         </div>
 
         {/* Order Details */}
-        <Card className="border-0 shadow-lg mb-8">
+        {/* <Card className="border-0 shadow-lg mb-8">
           <CardContent className="p-6 md:p-8">
             <div className="grid md:grid-cols-2 gap-8">
               <div className="text-left md:text-center md:border-r md:border-gray-200">
@@ -47,7 +54,7 @@ export default function SuccessPage() {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Order Steps */}
         <div className="grid md:grid-cols-4 gap-4 mb-12">

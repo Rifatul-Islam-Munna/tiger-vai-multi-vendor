@@ -38,7 +38,7 @@ export default function CartSheet() {
 
   const handleCheckout = () => {
     setOpen(false);
-    router.push("/checkout");
+    router.push("/cart");
   };
 
   return (

@@ -150,6 +150,7 @@ export class CreateSellProductItemDto {
 
   @ApiProperty()
   @IsString()
+  @IsOptional()
   userId: string;
 
   @ApiProperty({ required: false })
