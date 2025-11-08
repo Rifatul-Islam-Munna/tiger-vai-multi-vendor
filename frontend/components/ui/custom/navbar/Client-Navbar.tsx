@@ -42,6 +42,7 @@ import { usePathname } from "next/navigation";
 import { BasicUser } from "@/@types/userType";
 import { getUserInfo } from "@/actions/auth";
 import { UserProfileDropdown } from "./common/UserProfileDropdown";
+import CartSheet from "./CartSheet";
 
 const ClientNavbar = ({ user }: { user: BasicUser | null }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -643,12 +644,8 @@ const ClientNavbar = ({ user }: { user: BasicUser | null }) => {
                 3
               </span>
             </Button>
-            <Button variant="ghost" size="icon" className="relative">
-              <ShoppingCart className="w-7 h-7" />
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#e23636] text-white text-xs rounded-full flex items-center justify-center">
-                5
-              </span>
-            </Button>
+            <CartSheet />
+
             <UserProfileDropdown user={user} />
           </div>
 
@@ -877,10 +874,7 @@ const ClientNavbar = ({ user }: { user: BasicUser | null }) => {
                 <Heart className="w-4 h-4 mr-2" />
                 Wishlist (3)
               </Button>
-              <Button variant="outline" className="w-full">
-                <ShoppingCart className="w-4 h-4 mr-2" />
-                Cart (5)
-              </Button>
+              <CartSheet />
 
               {/* View All Categories - Mobile */}
               <div className="border-t border-gray-200 pt-4 mt-4">

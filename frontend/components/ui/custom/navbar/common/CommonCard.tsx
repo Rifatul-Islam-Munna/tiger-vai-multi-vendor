@@ -39,28 +39,28 @@ export function ProductCard({
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  const discount = product.offerPrice
+  const discount = product?.offerPrice
     ? Math.round(((product.price - product.offerPrice) / product.price) * 100)
     : 0;
 
-  const rating = product.rating || 4.5;
-  const reviews = product.reviews || 0;
+  const rating = product?.rating || 4.5;
+  const reviews = product?.reviews || 0;
 
   // Handle actions with console logs
   const handleAddToCart = () => {
-    console.log("Add to cart:", product._id);
+    console.log("Add to cart:", product?._id);
     // Add your cart logic here
   };
 
   const handleWishlist = () => {
     setIsWishlisted(!isWishlisted);
-    console.log("Wishlist:", product._id);
+    console.log("Wishlist:", product?._id);
     // Add your wishlist logic here
   };
 
   const handleViewDetails = () => {
-    console.log("View details:", product.slug);
-    router.push(`/product-details/${product.slug}`);
+    console.log("View details:", product?.slug);
+    router.push(`/product-details/${product?.slug}`);
   };
 
   // Default variant
@@ -71,22 +71,22 @@ export function ProductCard({
         <div className="relative aspect-square bg-gray-100 overflow-hidden">
           {/* Badges */}
           <div className="absolute top-3 left-3 right-3 z-10 flex gap-2 flex-wrap">
-            {product.hotDeals && (
+            {product?.hotDeals && (
               <Badge className="bg-palette-btn text-white border-0 text-xs font-bold">
                 🔥 Hot Deal
               </Badge>
             )}
-            {product.hotOffer && (
+            {product?.hotOffer && (
               <Badge className="bg-palette-btn text-white border-0 text-xs font-bold">
                 ⚡ Offer
               </Badge>
             )}
-            {product.productOfTheDay && (
+            {product?.productOfTheDay && (
               <Badge className="bg-palette-btn text-white border-0 text-xs font-bold">
                 ⭐ Featured
               </Badge>
             )}
-            {product.hasOffer && discount > 0 && (
+            {product?.hasOffer && discount > 0 && (
               <Badge className="bg-palette-btn text-white border-0 text-xs font-bold">
                 {discount}% OFF
               </Badge>
@@ -98,10 +98,10 @@ export function ProductCard({
             src={
               imageError
                 ? "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop"
-                : product.thumbnail
+                : product?.thumbnail
             }
             onError={() => setImageError(true)}
-            alt={product.name}
+            alt={product?.name}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 aspect-square"
           />
 
@@ -123,10 +123,12 @@ export function ProductCard({
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
             <p
               className={`text-xs font-semibold ${
-                product.stock > 0 ? "text-green-400" : "text-red-400"
+                product?.stock > 0 ? "text-green-400" : "text-red-400"
               }`}
             >
-              {product.stock > 0 ? `${product.stock} in stock` : "Out of Stock"}
+              {product?.stock > 0
+                ? `${product?.stock} in stock`
+                : "Out of Stock"}
             </p>
           </div>
         </div>
@@ -135,17 +137,17 @@ export function ProductCard({
         <CardContent className="p-4 flex-1 flex flex-col">
           {/* Category */}
           <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-2">
-            {product.category}
+            {product?.category}
           </p>
 
           {/* Brand */}
           <p className="text-xs text-palette-text font-bold mb-2">
-            {product.brandName}
+            {product?.brandName}
           </p>
 
           {/* Product Name */}
           <h3 className="font-semibold text-palette-text text-sm mb-3 line-clamp-2 group-hover:text-palette-btn transition-colors">
-            {product.name}
+            {product?.name}
           </h3>
 
           {/* Rating */}
@@ -171,13 +173,13 @@ export function ProductCard({
           <div className="flex items-center gap-2 mt-auto">
             <span className="text-lg font-bold text-palette-btn">
               ৳
-              {product.offerPrice
-                ? product.offerPrice.toLocaleString()
-                : product.price.toLocaleString()}
+              {product?.offerPrice
+                ? product?.offerPrice?.toLocaleString()
+                : product?.price?.toLocaleString()}
             </span>
             {product.hasOffer && product.offerPrice && (
               <span className="text-sm text-gray-500 line-through">
-                ৳{product.price.toLocaleString()}
+                ৳{product?.price?.toLocaleString()}
               </span>
             )}
           </div>
@@ -187,14 +189,14 @@ export function ProductCard({
         <CardFooter className="p-4 pt-0 gap-2">
           <Button
             onClick={handleViewDetails}
-            disabled={product.stock === 0}
+            disabled={product?.stock === 0}
             className="flex-1 bg-palette-btn hover:bg-palette-btn/90 text-white h-9 text-sm font-semibold rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             View
           </Button>
           <Button
             onClick={handleAddToCart}
-            disabled={product.stock === 0}
+            disabled={product?.stock === 0}
             size="icon"
             className="h-9 w-9 bg-palette-btn hover:bg-palette-btn/90 text-white rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -218,14 +220,14 @@ export function ProductCard({
               src={
                 imageError
                   ? "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200&h=200&fit=crop"
-                  : product.thumbnail
+                  : product?.thumbnail
               }
               onError={() => setImageError(true)}
-              alt={product.name}
+              alt={product?.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
 
-            {product.hasOffer && discount > 0 && (
+            {product?.hasOffer && discount > 0 && (
               <div className="absolute top-2 left-2 bg-palette-btn text-white text-xs font-bold px-2 py-1 rounded">
                 -{discount}%
               </div>
@@ -233,14 +235,14 @@ export function ProductCard({
           </div>
 
           <h4 className="font-semibold text-palette-text text-xs line-clamp-2 mb-1 group-hover:text-palette-btn transition-colors">
-            {product.name}
+            {product?.name}
           </h4>
 
           <p className="text-palette-btn font-bold text-sm">
             ৳
-            {product.offerPrice
-              ? product.offerPrice.toLocaleString()
-              : product.price.toLocaleString()}
+            {product?.offerPrice
+              ? product?.offerPrice?.toLocaleString()
+              : product?.price?.toLocaleString()}
           </p>
         </CardContent>
       </Card>
@@ -257,14 +259,14 @@ export function ProductCard({
               src={
                 imageError
                   ? "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&h=600&fit=crop"
-                  : product.thumbnail
+                  : product?.thumbnail
               }
               onError={() => setImageError(true)}
-              alt={product.name}
+              alt={product?.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
 
-            {product.productOfTheDay && (
+            {product?.productOfTheDay && (
               <div className="absolute top-4 left-4">
                 <Badge className="bg-palette-btn text-white border-0 font-bold">
                   ⭐ Featured
@@ -276,10 +278,10 @@ export function ProductCard({
           <CardContent className="col-span-1 p-6 flex flex-col justify-between bg-palette-bg">
             <div>
               <p className="text-xs text-gray-500 font-bold uppercase mb-2">
-                {product.category}
+                {product?.category}
               </p>
               <h3 className="font-bold text-palette-text text-lg mb-3 line-clamp-3 group-hover:text-palette-btn transition-colors">
-                {product.name}
+                {product?.name}
               </h3>
 
               {reviews > 0 && (
@@ -300,13 +302,13 @@ export function ProductCard({
               <div className="space-y-1">
                 <p className="text-2xl font-bold text-palette-btn">
                   ৳
-                  {product.offerPrice
-                    ? product.offerPrice.toLocaleString()
-                    : product.price.toLocaleString()}
+                  {product?.offerPrice
+                    ? product?.offerPrice?.toLocaleString()
+                    : product?.price?.toLocaleString()}
                 </p>
-                {product.hasOffer && product.offerPrice && (
+                {product?.hasOffer && product?.offerPrice && (
                   <p className="text-sm text-gray-500 line-through">
-                    ৳{product.price.toLocaleString()}
+                    ৳{product?.price?.toLocaleString()}
                   </p>
                 )}
               </div>
@@ -314,7 +316,7 @@ export function ProductCard({
 
             <Button
               onClick={handleAddToCart}
-              disabled={product.stock === 0}
+              disabled={product?.stock === 0}
               className="w-full bg-palette-btn hover:bg-palette-btn/90 text-white font-semibold rounded transition-all disabled:opacity-50"
             >
               Add to Cart

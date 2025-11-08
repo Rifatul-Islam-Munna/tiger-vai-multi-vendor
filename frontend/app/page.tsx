@@ -15,6 +15,8 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { demoProducts } from "@/lib/demodata";
 import { ProductCard } from "@/components/ui/custom/navbar/common/CommonCard";
+import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
+import { ProductApiResponse } from "@/@types/short-product";
 
 const LandingPage = () => {
   const categories = [
@@ -101,6 +103,13 @@ const LandingPage = () => {
     },
     { id: 5, name: "Walton Air Cooler", price: 8750, image: "❄️", rating: 4.6 },
   ];
+
+  const { data, isPending } = useQueryWrapper<ProductApiResponse>(
+    ["get-normal-products"],
+    `/product/search?page=1&limit=10`
+  );
+
+  console.log("data-is-getting", data, "isPending", isPending);
 
   const brands = [
     { name: "Samsung", logo: "SAMSUNG" },
@@ -310,7 +319,7 @@ const LandingPage = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {demoProducts.map((product, index) => (
+            {data?.data?.map((product, index) => (
               <ProductCard key={index} product={product} variant="default" />
             ))}
           </div>

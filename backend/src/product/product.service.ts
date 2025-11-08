@@ -61,7 +61,10 @@ export class ProductService {
 
   async getProduct(slug:string){
     const ProductModel = this.productModel();
-    return ProductModel.findOne({slug});
+    return ProductModel.findOne({slug}).populate({
+      path:"stats",
+      model: this.reviewStatsModel(),
+    });
 
   }
 
@@ -165,7 +168,7 @@ export class ProductService {
 
     // ✅ Initialize ReviewStats
     const StatsModel = this.reviewStatsModel();
-    await StatsModel.create({
+    const createdReviw = await StatsModel.create({
       productId: newProduct._id,
       averageRating: 0,
       totalReviews: 0,
@@ -175,6 +178,8 @@ export class ProductService {
       count2: 0,
       count1: 0,
     });
+    newProduct.stats = createdReviw._id;
+    await newProduct.save();
 
     // ✅ UPDATED: Create ShortProduct with variants
     const ShortProductModel = this.shortProductModel();

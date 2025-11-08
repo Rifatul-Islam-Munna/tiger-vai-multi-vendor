@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/ui/custom/navbar/NavBar";
 import { QueryProvider } from "@/lib/React-query-setup";
 import { Toaster } from "@/components/ui/sonner";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -30,9 +31,11 @@ export default function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased bg-palette-bg`}
         >
-          <Navbar />
-          {children}
-          <Toaster />
+          <NuqsAdapter>
+            <Navbar />
+            {children}
+            <Toaster />
+          </NuqsAdapter>
         </body>
       </QueryProvider>
     </html>

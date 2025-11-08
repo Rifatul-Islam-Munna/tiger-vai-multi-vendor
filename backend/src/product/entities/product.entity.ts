@@ -1,6 +1,6 @@
 // src/product/schemas/product.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
+import { HydratedDocument, Schema as MongooseSchema,Types } from 'mongoose';
 
 export type ProductDocument = HydratedDocument<Product>;
 export type ProductStatsDocument = HydratedDocument<ProductStats>;
@@ -192,14 +192,14 @@ export class Product {
   @Prop({ type: [String], default: [] })
   certifications: string[];
 
-  @Prop({ type: MongooseSchema.Types.ObjectId })
-  createdBy: MongooseSchema.Types.ObjectId;
+  @Prop({ type: Types.ObjectId })
+  createdBy: Types.ObjectId;
 
-  @Prop({ type: MongooseSchema.Types.ObjectId })
-  updatedBy: MongooseSchema.Types.ObjectId;
+  @Prop({ type: Types.ObjectId })
+  updatedBy: Types.ObjectId;
 
-  @Prop({ type: MongooseSchema.Types.ObjectId })
-  stats: MongooseSchema.Types.ObjectId;
+  @Prop({ type: Types.ObjectId })
+  stats: Types.ObjectId;
 
   @Prop({ default: false })
   isAdminCreated: boolean;

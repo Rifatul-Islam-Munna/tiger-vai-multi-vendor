@@ -80,10 +80,27 @@ export interface CreateProduct {
   certifications?: string[];
 
   isAdminCreated: boolean;
+  stats?: ReviewStats;
+  slug?: string;
+
 }
 
 export interface Product extends CreateProduct {
   _id: string;
   createdAt: Date;
   updatedAt: Date;
+}
+export interface ReviewStats {
+  _id: string;            // or Types.ObjectId if you're using mongoose ObjectId
+  productId: string;      // same here, can be Types.ObjectId
+  averageRating: number;
+  totalReviews: number;
+  count5: number;
+  count4: number;
+  count3: number;
+  count2: number;
+  count1: number;
+  createdAt: string;      // ISO date string
+  updatedAt: string;      // ISO date string
+  __v: number;
 }
