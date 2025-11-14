@@ -87,14 +87,14 @@
   --primary-red: #e23636;
 
   /* === MAIN 3 COLORS === */
-  --palette-bg: #f8f9fb; /* Soft blue-white background */
-  --palette-btn: #6479d6; /* Muted royal blue (not bright) */
-  --palette-text: #1e293b; /* Soft charcoal (not pure black) */
+  --palette-bg: #f9f8f6; /* Soft warm-white background */
+  --palette-btn: #ee4a23; /* Vibrant orange-red (your client's choice) */
+  --palette-text: #2b2724; /* Warm charcoal */
 
   /* === ACCENT SHADES === */
-  --palette-accent-1: #222832; /* Subtle blue-gray background */
-  --palette-accent-2: #94a3de; /* Lighter soft blue */
-  --palette-accent-3: #4d5fb3; /* Deeper muted blue */
+  --palette-accent-1: #342f2c; /* Dark warm-gray background */
+  --palette-accent-2: #ff8566; /* Lighter coral-orange */
+  --palette-accent-3: #c43d1d; /* Deeper burnt orange-red */
 }
 
 .dark {

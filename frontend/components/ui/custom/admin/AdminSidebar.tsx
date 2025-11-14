@@ -37,7 +37,7 @@ const managementMenuItems = [
   },
   {
     title: "Order Management",
-    url: "/admin/orders",
+    url: "/admin/order-management",
     icon: Package,
   },
   {

@@ -15,8 +15,11 @@ import { CreateSellProductItemDto, GetOrdersDto } from './dto/create-sell-produc
 import { OrderStatus } from './entities/sell-product-item.entity';
 import { AuthGuard, type ExpressRequest } from 'src/auth/auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
+import { ApiTags } from '@nestjs/swagger';
+import { DeleteDto } from 'lib/pagination.dto';
 
 @Controller('sell-product-item')
+@ApiTags('Sell Product Item')
 export class SellProductItemController {
   constructor(private readonly sellProductItemService: SellProductItemService) {}
 
@@ -50,12 +53,22 @@ export class SellProductItemController {
     const role = req.user.role;
     return this.sellProductItemService.getOrders(userId, role, query);
   }
+  @Get('get-all-order')
+  async getAllMyOrders( @Query() query: GetOrdersDto) {
+   
+    return this.sellProductItemService.getAllOrders(query);
+  }
+  @Get('get-admin-order')
+  async getAdminOrder( @Query() query: GetOrdersDto) {
+   
+    return this.sellProductItemService.getAdminOrder(query);
+  }
 
   /**
    * Delete sell (both long & short)
    */
-  @Delete(':longSellId')
-  async deleteSell(@Param('longSellId') longSellId: string) {
-    return this.sellProductItemService.deleteSell(longSellId);
+  @Delete('delete-sell')
+  async deleteSell(@Query() longSellId: DeleteDto) {
+    return this.sellProductItemService.deleteSell(longSellId?.id!);
   }
 }

@@ -111,8 +111,8 @@ export default function OrderManagementPage() {
   query.set("orderStatus", selectedStatus);
 
   const { data: orders, isPending } = useQueryWrapper<OrdersResponse>(
-    ["orders-admin", page, limit, sortOrder, selectedSortBy, selectedStatus],
-    `/sell-product-item/get-admin-order?${query.toString()}`
+    ["orders", page, limit, sortOrder, selectedSortBy, selectedStatus],
+    `/sell-product-item/get-all-order?${query.toString()}`
   );
   const queryClient = useQueryClient();
   const { mutate, isPending: IsDeleting } = useCommonMutationApi({

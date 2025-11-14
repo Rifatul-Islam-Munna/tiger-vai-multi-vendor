@@ -197,6 +197,14 @@ export class GetOrdersDto {
   @IsOptional()
   @IsString()
   sortBy?: string = 'createdAt';
+  
+  @ApiPropertyOptional({
+    description: 'Field to sort by',
+    default: 'createdAt',
+  })
+  @IsOptional()
+  @IsString()
+  orderStatus?: string ;
 }
 
 

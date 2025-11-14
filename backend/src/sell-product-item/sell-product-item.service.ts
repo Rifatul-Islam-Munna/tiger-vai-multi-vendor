@@ -1,13 +1,15 @@
 // src/sell/services/sell-product-item.service.ts
-import { Injectable, HttpException } from '@nestjs/common';
+import { Injectable, HttpException, Logger } from '@nestjs/common';
 import { TenantConnectionService } from 'lib/connection/mongooseConnection.service';
 import { globalProducts, globalSells } from 'lib/global-db/globaldb';
 import { ShortProductSchema, ShortProductDocument } from '../product/entities/short-product.schema';
 import { OrderStatus, Sell, SellSchema, SellDocument } from './entities/sell-product-item.entity';
 import { CreateSellProductItemDto, GetOrdersDto } from './dto/create-sell-product-item.dto';
+import { randomBytes, randomUUID } from "crypto";
 
 @Injectable()
 export class SellProductItemService {
+  private logger = new Logger(SellProductItemService.name);
   constructor(private tenant: TenantConnectionService) {}
 
   private sellModel() {
@@ -17,6 +19,11 @@ export class SellProductItemService {
   private shortProductModel() {
     return this.tenant.getModel<ShortProductDocument>(globalProducts, 'ShortProduct', ShortProductSchema);
   }
+  private generateOrderUUID() {
+   const time = Date.now().toString(36).toUpperCase(); // compact timestamp
+  const rand = randomBytes(6).toString("hex").toUpperCase(); // 12 hex characters (48 bits)
+  return `ORD-${time}${rand}`;
+}
 
   /**
    * ✅ UPDATED: Case-insensitive variant matching
@@ -88,6 +95,7 @@ export class SellProductItemService {
         vendorId: shortProduct.vendorId?.toString() || 'admin',
         vendorSlug: shortProduct.slug, // we dont have have yet so we saved product slog insted
         isAdmin: shortProduct.isAdminCreated,
+       
       };
 
       const vendorKey = productData.vendorId;
@@ -117,12 +125,15 @@ export class SellProductItemService {
         orderStatus: OrderStatus.PENDING,
         orderTotal,
         totalDiscount: discount,
+        vendorId: products[0].vendorId ,
+        orderNumber: this.generateOrderUUID(),
       });
 
       results.push(sellDoc);
       totalOrderAmount += orderTotal;
       totalDiscount += discount;
     }
+    this.logger.debug(results)
 
     return {
       message: 'Sell(s) created successfully',
@@ -195,6 +206,70 @@ export class SellProductItemService {
       // Filter sells where at least one product belongs to this vendor
       filter['products.vendorId'] = userId;
     }
+
+    const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = dto;
+    const skip = (page - 1) * limit;
+
+    // Total count for pagination
+    const total = await SellModel.countDocuments(filter);
+
+    // Fetch paginated and sorted data
+    const sells = await SellModel
+      .find(filter)
+      .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    return {
+      message: 'Orders fetched successfully',
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      data: sells,
+    };
+  }
+  async getAllOrders( dto: GetOrdersDto) {
+    const SellModel = this.sellModel();
+    const filter: any = {};
+    if(dto?.orderStatus){
+      filter.orderStatus = dto.orderStatus
+    }
+
+    
+
+    const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = dto;
+    const skip = (page - 1) * limit;
+
+    // Total count for pagination
+    const total = await SellModel.countDocuments(filter);
+
+    // Fetch paginated and sorted data
+    const sells = await SellModel
+      .find(filter)
+      .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    return {
+      message: 'Orders fetched successfully',
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      data: sells,
+    };
+  }
+  async getAdminOrder( dto: GetOrdersDto) {
+    const SellModel = this.sellModel();
+    const filter: any = {isAdmin:true};
+    if(dto?.orderStatus){
+      filter.orderStatus = dto.orderStatus
+    }
+
+    
 
     const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = dto;
     const skip = (page - 1) * limit;

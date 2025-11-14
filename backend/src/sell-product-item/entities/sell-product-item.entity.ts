@@ -130,6 +130,11 @@ export class Sell {
   // ✅ NEW: Track discount/coupon applied
   @Prop({ default: 0 })
   totalDiscount?: number;
+
+  @Prop()
+  orderNumber?: string;
+  @Prop({type: MongooseSchema.Types.ObjectId})
+  vendorId?:  MongooseSchema.Types.ObjectId;
 }
 
 export const SellSchema = SchemaFactory.createForClass(Sell);
