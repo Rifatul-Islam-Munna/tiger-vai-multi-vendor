@@ -75,8 +75,10 @@ const ProductPage = ({ params }: { params: Product }) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
-  const [selectedSize, setSelectedSize] = useQueryState("size");
-  const [selectedColor, setSelectedColor] = useQueryState("color");
+  /*   const [selectedSize, setSelectedSize] = useQueryState("size");
+  const [selectedColor, setSelectedColor] = useQueryState("color"); */
+  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedColor, setSelectedColor] = useState("");
 
   // Extract unique colors and sizes from variants
   const colors =

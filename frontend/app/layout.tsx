@@ -5,6 +5,11 @@ import Navbar from "@/components/ui/custom/navbar/NavBar";
 import { QueryProvider } from "@/lib/React-query-setup";
 import { Toaster } from "@/components/ui/sonner";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import "core-js/stable";
+
+import "regenerator-runtime/runtime";
+import { Suspense } from "react";
+import ClientSideScrollRestorer from "@/components/ui/custom/common/ClientSideScrollRestorer";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -27,17 +32,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <QueryProvider>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased bg-palette-bg`}
-        >
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-palette-bg h-full`}
+      >
+        <ClientSideScrollRestorer />
+        <QueryProvider>
           <NuqsAdapter>
             <Navbar />
+
             {children}
             <Toaster />
           </NuqsAdapter>
-        </body>
-      </QueryProvider>
+        </QueryProvider>
+      </body>
     </html>
   );
 }

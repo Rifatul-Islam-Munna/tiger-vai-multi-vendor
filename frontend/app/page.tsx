@@ -1,4 +1,3 @@
-"use client";
 import {
   Zap,
   ChevronRight,
@@ -13,12 +12,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { demoProducts } from "@/lib/demodata";
-import { ProductCard } from "@/components/ui/custom/navbar/common/CommonCard";
-import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
-import { ProductApiResponse } from "@/@types/short-product";
+import TodayBestSell from "@/components/ui/custom/home/TodayBestSell";
 
-const LandingPage = () => {
+const Page = () => {
   const categories = [
     { name: "Electronics", icon: "📱" },
     { name: "Women's Fashion", icon: "👗" },
@@ -104,13 +100,6 @@ const LandingPage = () => {
     { id: 5, name: "Walton Air Cooler", price: 8750, image: "❄️", rating: 4.6 },
   ];
 
-  const { data, isPending } = useQueryWrapper<ProductApiResponse>(
-    ["get-normal-products"],
-    `/product/search?page=1&limit=10`
-  );
-
-  console.log("data-is-getting", data, "isPending", isPending);
-
   const brands = [
     { name: "Samsung", logo: "SAMSUNG" },
     { name: "Walton", logo: "WALTON" },
@@ -120,29 +109,10 @@ const LandingPage = () => {
     { name: "LG", logo: "LG" },
   ];
 
-  const renderStars = (rating) => {
-    return (
-      <div className="flex items-center gap-1">
-        {[...Array(5)].map((_, i) => (
-          <Star
-            key={i}
-            size={14}
-            className={`${
-              i < Math.floor(rating)
-                ? "fill-palette-btn text-palette-btn"
-                : "text-gray-300"
-            }`}
-          />
-        ))}
-        <span className="text-xs text-gray-500 ml-1">({rating})</span>
-      </div>
-    );
-  };
-
   return (
-    <div className="min-h-screen bg-palette-bg">
+    <div className=" bg-palette-bg h-full">
       {/* ============ HERO SECTION ============ */}
-      <section className="bg-palette-text text-white py-20 md:py-28">
+      <section id="hero" className="bg-palette-text text-white py-20 md:py-28">
         <div className=" container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
@@ -216,7 +186,10 @@ const LandingPage = () => {
       </section>
 
       {/* ============ PROMOTIONAL BANNERS ============ */}
-      <section className=" container mx-auto px-4 sm:px-6 lg:px-8 -mt-12 relative z-20 pb-16">
+      <section
+        id="PROMOTIONAL"
+        className=" container mx-auto px-4 sm:px-6 lg:px-8 -mt-12 relative z-20 pb-16"
+      >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="border-0 shadow-md hover:shadow-lg transition">
             <CardContent className="p-8">
@@ -275,7 +248,10 @@ const LandingPage = () => {
       </section>
 
       {/* ============ CATEGORIES ============ */}
-      <section className=" container mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <section
+        id="BANNERS"
+        className=" container mx-auto px-4 sm:px-6 lg:px-8 py-16"
+      >
         <h2 className="text-3xl font-bold text-palette-text mb-8">
           Shop by Category
         </h2>
@@ -297,37 +273,13 @@ const LandingPage = () => {
       </section>
 
       {/* ============ TODAY'S BEST DEALS ============ */}
-      <section className="bg-gray-50 py-16">
-        <div className=" container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold text-palette-text">
-              Today's Best Deals
-            </h2>
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-palette-text/70">Ends in:</span>
-              <div className="flex gap-2">
-                {["02", "18", "43"].map((time) => (
-                  <Badge
-                    key={time}
-                    className="bg-palette-btn text-white border-0"
-                  >
-                    {time}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {data?.data?.map((product, index) => (
-              <ProductCard key={index} product={product} variant="default" />
-            ))}
-          </div>
-        </div>
-      </section>
+      <TodayBestSell />
 
       {/* ============ TOP BRANDS ============ */}
-      <section className=" container mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <section
+        id="BRANDS"
+        className=" container mx-auto px-4 sm:px-6 lg:px-8 py-16"
+      >
         <h2 className="text-3xl font-bold text-palette-text mb-8">
           Top Brands
         </h2>
@@ -348,7 +300,7 @@ const LandingPage = () => {
       </section>
 
       {/* ============ FEATURED PRODUCTS ============ */}
-      <section className="bg-gray-50 py-16">
+      <section id="FEATURED" className="bg-gray-50 py-16">
         <div className=" container mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-palette-text mb-8">
             Featured Products
@@ -378,7 +330,7 @@ const LandingPage = () => {
       </section>
 
       {/* ============ VENDOR CTA SECTION ============ */}
-      <section className="bg-palette-text text-white py-16">
+      <section id="VENDOR" className="bg-palette-text text-white py-16">
         <div className=" container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
@@ -424,7 +376,7 @@ const LandingPage = () => {
       </section>
 
       {/* ============ FOOTER ============ */}
-      <footer className="bg-palette-text text-gray-300 pt-16 pb-8">
+      <footer id="FOOTER" className="bg-palette-text text-gray-300 pt-16 pb-8">
         <div className=" container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
             {/* Company Info */}
@@ -562,4 +514,4 @@ const LandingPage = () => {
   );
 };
 
-export default LandingPage;
+export default Page;
