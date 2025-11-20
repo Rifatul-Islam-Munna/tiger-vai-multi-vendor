@@ -126,7 +126,8 @@ const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
     successMessage: "Status updated successfully",
     onSuccess: () => {
       onClose();
-      query.refetchQueries({ queryKey: ["orders"] });
+      query.refetchQueries({ queryKey: ["orders"], exact: false });
+      query.refetchQueries({ queryKey: ["orders-admin"], exact: false });
 
       setSelectedStatus(null);
     },

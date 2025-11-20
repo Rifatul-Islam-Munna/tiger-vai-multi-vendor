@@ -13,6 +13,7 @@ import { loginUser } from "@/actions/auth";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import useProfilePopStore from "@/zustan-hook/profile-pop";
+import Link from "next/link";
 export default function LoginPage() {
   const { formData, setFormData, resetForm, getCleanFormData } =
     useLoginStore();
@@ -189,12 +190,12 @@ export default function LoginPage() {
             {/* Sign Up */}
             <p className="text-center text-gray-600 text-sm pt-4">
               Don't have an account?{" "}
-              <Button
-                variant="link"
+              <Link
+                href={"/auth/signup"}
                 className="text-palette-btn hover:text-palette-btn/80 p-0 h-auto font-semibold"
               >
                 Sign Up
-              </Button>
+              </Link>
             </p>
           </form>
         </CardContent>

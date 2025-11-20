@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto, LoginUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserRole } from './entities/user.schema';
 import { DeleteDto, PaginationDto } from 'lib/pagination.dto';
+import { AuthGuard, type ExpressRequest } from 'src/auth/auth.guard';
 
 @Controller('user')
 export class UserController {
@@ -30,6 +31,11 @@ export class UserController {
   @Get('find-one-user')
   findOneUSer(@Query() query:DeleteDto) {
     return this.userService.getSingleUser(query.id!);
+  }
+  @Get('get-my-profile')
+  @UseGuards(AuthGuard)
+  getMyProfile(@Req() req: ExpressRequest) {
+    return this.userService.getSingleUser(req?.user?.id!);
   }
   @Get('find-all-users')
   findAll(@Query() query:PaginationDto) {

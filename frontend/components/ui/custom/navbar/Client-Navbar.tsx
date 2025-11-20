@@ -43,6 +43,7 @@ import { BasicUser } from "@/@types/userType";
 import { getUserInfo } from "@/actions/auth";
 import { UserProfileDropdown } from "./common/UserProfileDropdown";
 import CartSheet from "./CartSheet";
+import { SearchModal } from "./SearchModal";
 
 const ClientNavbar = ({ user }: { user: BasicUser | null }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -606,7 +607,7 @@ const ClientNavbar = ({ user }: { user: BasicUser | null }) => {
       </div> */}
 
       {/* Main Navbar */}
-      <div className=" container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className=" container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href={"/"}>
@@ -621,20 +622,7 @@ const ClientNavbar = ({ user }: { user: BasicUser | null }) => {
           </Link>
 
           {/* Search Bar - Desktop */}
-          <div className="hidden md:flex flex-1 max-w-2xl mx-8">
-            <div className="relative w-full">
-              <Input
-                type="text"
-                placeholder="Search for products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-4 pr-12 h-11 rounded-full border-gray-300 focus:border-[#e23636] focus:ring-[#e23636]"
-              />
-              <button className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-[#e23636] rounded-full flex items-center justify-center hover:bg-red-700 transition">
-                <Search className="w-4 h-4 text-white" />
-              </button>
-            </div>
-          </div>
+          <SearchModal />
 
           {/* Right Side Actions - Desktop */}
           <div className="hidden md:flex items-center justify-center gap-4">
@@ -663,20 +651,6 @@ const ClientNavbar = ({ user }: { user: BasicUser | null }) => {
         </div>
 
         {/* Search Bar - Mobile */}
-        <div className="md:hidden pb-4">
-          <div className="relative">
-            <Input
-              type="text"
-              placeholder="Search for products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-4 pr-12 h-11 rounded-full"
-            />
-            <button className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-[#e23636] rounded-full flex items-center justify-center">
-              <Search className="w-4 h-4 text-white" />
-            </button>
-          </div>
-        </div>
 
         {/* Desktop Navigation with Categories */}
         <div className="border-t border-gray-200 py-3 hidden lg:flex items-center gap-4">

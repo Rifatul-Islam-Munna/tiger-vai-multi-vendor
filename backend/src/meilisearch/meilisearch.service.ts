@@ -81,12 +81,14 @@ export class MeilisearchService implements OnModuleInit{
     main,
     subMain,
     hasOffer,
-    sortBy,
+    sortBy = 'createdAt',
     sortOrder = 'desc',
     limit = 20,
     page = 1,  // ✅ Add page parameter (default: 1)
     minPrice,
     maxPrice, 
+    minRating,   // ✅ new
+    maxRating,
   } = dto;
 
   // ✅ Calculate offset based on page number
@@ -103,6 +105,10 @@ export class MeilisearchService implements OnModuleInit{
   // ✅ Add price range filter
   if (minPrice !== undefined) filters.push(`price >= ${minPrice}`);
   if (maxPrice !== undefined) filters.push(`price <= ${maxPrice}`);
+
+    // ✅ Rating range filter
+  if (minRating !== undefined) filters.push(`rating >= ${minRating}`);
+  if (maxRating !== undefined) filters.push(`rating <= ${maxRating}`);
   const filterStr = filters.length ? filters.join(' AND ') : undefined;
 
   const result = await this.index.search(q, {
@@ -110,7 +116,7 @@ export class MeilisearchService implements OnModuleInit{
     limit,
     offset,  // ✅ Add offset for pagination
     sort: sortBy ? [`${sortBy}:${sortOrder}`] : undefined,
-    facets: ['category', 'brandName', 'main', 'hasOffer'],
+    facets: ['category', 'brandName', 'main', 'hasOffer',"rating"],
   });
 
   // ✅ Calculate total pages

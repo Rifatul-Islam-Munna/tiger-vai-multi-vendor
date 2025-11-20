@@ -74,6 +74,18 @@ export class SearchProductsDto {
   @IsOptional()
 
   maxPrice?: number;
+      @ApiPropertyOptional()
+    @Transform(({ value }) => parseInt(value))
+    @IsNumber()
+  @IsOptional()
+
+  minRating?: number;
+      @ApiPropertyOptional()
+    @Transform(({ value }) => parseInt(value))
+    @IsNumber()
+  @IsOptional()
+
+  maxRating?: number;
 }
 
 export class CreateMeilisearchDto {

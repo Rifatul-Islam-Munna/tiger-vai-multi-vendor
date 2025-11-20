@@ -6,11 +6,12 @@ import { ShortProductSchema, ShortProductDocument } from '../product/entities/sh
 import { OrderStatus, Sell, SellSchema, SellDocument } from './entities/sell-product-item.entity';
 import { CreateSellProductItemDto, GetOrdersDto } from './dto/create-sell-product-item.dto';
 import { randomBytes, randomUUID } from "crypto";
+import { MeilisearchService } from 'src/meilisearch/meilisearch.service';
 
 @Injectable()
 export class SellProductItemService {
   private logger = new Logger(SellProductItemService.name);
-  constructor(private tenant: TenantConnectionService) {}
+  constructor(private tenant: TenantConnectionService,private milieSeach:MeilisearchService) {}
 
   private sellModel() {
     return this.tenant.getModel<SellDocument>(globalSells, Sell.name, SellSchema);
@@ -146,50 +147,122 @@ export class SellProductItemService {
    * ✅ UPDATED: Update order status - Only update ShortProduct
    */
   async updateOrderStatus(sellId: string, newStatus: OrderStatus) {
-    const SellModel = this.sellModel();
-    const ShortProductModel = this.shortProductModel();
+  const SellModel = this.sellModel();
+  const ShortProductModel = this.shortProductModel();
 
-    const sell = await SellModel.findById(sellId);
-    if (!sell) throw new HttpException('Sell not found', 404);
+  const sell = await SellModel.findById(sellId);
+  if (!sell) throw new HttpException('Sell not found', 404);
 
-    // Update order status
-    sell.orderStatus = newStatus;
+  // ✅ Store previous status for cancel logic
+  const previousStatus = sell.orderStatus;
 
-    // ✅ UPDATED: If order is confirmed, deduct stock from ShortProduct variants only
-    if (newStatus === OrderStatus.CONFIRMED) {
-      for (const orderItem of sell.products) {
-        const shortProduct = await ShortProductModel.findOne({ slug: orderItem.slug });
-        if (!shortProduct) throw new HttpException(`Product not found: ${orderItem.slug}`, 404);
+  // Update order status
+  sell.orderStatus = newStatus;
 
-        // ✅ NEW: Find the specific variant
-        const variant = this.findVariant(shortProduct.variants, orderItem.variant.size, orderItem.variant.color);
-        if (!variant) {
-          throw new HttpException(
-            `Variant not found during stock deduction: ${orderItem.variant.size}-${orderItem.variant.color}`,
-            404
-          );
-        }
+  // ✅ CONFIRMED: Deduct stock from both MongoDB and MeiliSearch
+  if (newStatus === OrderStatus.CONFIRMED) {
+    for (const orderItem of sell.products) {
+      const shortProduct = await ShortProductModel.findOne({ slug: orderItem.slug });
+      if (!shortProduct) throw new HttpException(`Product not found: ${orderItem.slug}`, 404);
 
-        // ✅ NEW: Deduct from specific variant stock
-        variant.stock = (variant.stock || 0) - orderItem.quantity;
-
-        // ✅ NEW: Recalculate total stock from all variants
-        shortProduct.stock = shortProduct.variants?.reduce(
-          (sum: number, v: any) => sum + (v.stock || 0), 
-          0
-        ) || 0;
-
-        // Save ShortProduct with updated stock
-        await shortProduct.save();
+      // Find the specific variant
+      const variant = this.findVariant(
+        shortProduct.variants, 
+        orderItem.variant.size, 
+        orderItem.variant.color
+      );
+      if (!variant) {
+        throw new HttpException(
+          `Variant not found: ${orderItem.variant.size}-${orderItem.variant.color}`,
+          404
+        );
       }
-    }
 
-    await sell.save();
-    return { 
-      message: `Order status updated to ${newStatus}`, 
-      data: sell 
-    };
+      // ✅ Check if enough stock
+      if (variant.stock < orderItem.quantity) {
+        throw new HttpException(
+          `Insufficient stock for ${shortProduct.name} (${orderItem.variant.size}-${orderItem.variant.color})`,
+          400
+        );
+      }
+
+      // Deduct from variant stock
+      variant.stock = (variant.stock || 0) - orderItem.quantity;
+
+      // Recalculate total stock
+      shortProduct.stock = shortProduct.variants?.reduce(
+        (sum: number, v: any) => sum + (v.stock || 0), 
+        0
+      ) || 0;
+
+      // Save MongoDB
+      await shortProduct.save();
+
+      // ✅ Update MeiliSearch
+      await this.milieSeach.update(shortProduct._id.toString(), {
+        stock: shortProduct.stock,
+      });
+
+      this.logger.log(
+        `✅ Stock deducted: ${shortProduct.name} - New stock: ${shortProduct.stock}`
+      );
+    }
   }
+
+  // ✅ CANCELLED: Add stock back ONLY if order was previously CONFIRMED
+  if (newStatus === OrderStatus.CANCELLED && previousStatus === OrderStatus.CONFIRMED) {
+    for (const orderItem of sell.products) {
+      const shortProduct = await ShortProductModel.findOne({ slug: orderItem.slug });
+      if (!shortProduct) {
+        this.logger.warn(`Product not found during cancellation: ${orderItem.slug}`);
+        continue; // Skip this product but continue with others
+      }
+
+      // Find the specific variant
+      const variant = this.findVariant(
+        shortProduct.variants, 
+        orderItem.variant.size, 
+        orderItem.variant.color
+      );
+      if (!variant) {
+        this.logger.warn(
+          `Variant not found during stock restoration: ${orderItem.variant.size}-${orderItem.variant.color}`
+        );
+        continue;
+      }
+
+      // ✅ Add stock back to variant
+      variant.stock = (variant.stock || 0) + orderItem.quantity;
+
+      // Recalculate total stock
+      shortProduct.stock = shortProduct.variants?.reduce(
+        (sum: number, v: any) => sum + (v.stock || 0), 
+        0
+      ) || 0;
+
+      // Save MongoDB
+      await shortProduct.save();
+
+      // ✅ Update MeiliSearch
+      await this.milieSeach.update(shortProduct._id.toString(), {
+        stock: shortProduct.stock,
+      });
+
+      this.logger.log(
+        `✅ Stock restored: ${shortProduct.name} - New stock: ${shortProduct.stock}`
+      );
+    }
+  }
+
+  await sell.save();
+  
+  return { 
+    message: `Order status updated to ${newStatus}`, 
+    data: sell,
+    previousStatus, // Include for debugging
+  };
+}
+
 
   /**
    * Get sells filtered by role
