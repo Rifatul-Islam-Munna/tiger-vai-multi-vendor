@@ -1,5 +1,8 @@
 "use client";
 
+import { useCommonMutationApi } from "@/api-hook/mutation-common";
+import { useWishHook } from "@/zustan-hook/wishListhook";
+import { useQueryClient } from "@tanstack/react-query";
 import { Heart } from "lucide-react";
 import { useState } from "react";
 
@@ -12,13 +15,23 @@ export function WishlistButton({
   productId,
   className = "",
 }: WishlistButtonProps) {
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const query = useQueryClient();
+  const { wishList, toggleWishList } = useWishHook((state) => state);
+  const { mutate, isPending } = useCommonMutationApi({
+    method: "POST",
+    url: "/cart",
+    successMessage: "updated to wishlist",
+    onSuccess(data) {
+      query.invalidateQueries({ queryKey: ["get-my-wish-list"], exact: false });
+    },
+  });
 
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent Link navigation
     e.stopPropagation();
-    setIsWishlisted(!isWishlisted);
+    toggleWishList({ productId });
     console.log("Wishlist:", productId);
+    mutate({ productId: productId, quantity: 1 });
 
     // TODO: Add your wishlist API call here
     // addToWishlist(productId);
@@ -31,7 +44,7 @@ export function WishlistButton({
     >
       <Heart
         className={`w-4 h-4 transition-all duration-300 ${
-          isWishlisted
+          wishList.cartProducts.some((item) => item.productId === productId)
             ? "fill-red-500 text-red-500"
             : "text-gray-400 hover:text-red-500"
         }`}

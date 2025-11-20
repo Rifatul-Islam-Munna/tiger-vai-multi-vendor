@@ -205,6 +205,13 @@ export class GetOrdersDto {
   @IsOptional()
   @IsString()
   orderStatus?: string ;
+  @ApiPropertyOptional({
+    description: 'Field to sort by',
+    default: 'createdAt',
+  })
+  @IsOptional()
+  @IsString()
+  search?: string ;
 }
 
 

@@ -25,37 +25,55 @@ export class CartService {
       ShortProductSchema,
     );
   }
-  async create(userId: string, createCartDto: CreateCartDto) {
-     const { productId, quantity } = createCartDto;
-     const cartModel = this.getCartModel();
-     let cart = await cartModel.findOne({ userId });
+async create(userId: string, createCartDto: CreateCartDto) {
+  const { productId, quantity } = createCartDto;
+  const cartModel = this.getCartModel();
+  let cart = await cartModel.findOne({ userId });
 
-    // ✅ CART DOES NOT EXIST → CREATE IT
-    if (!cart) {
-      cart = await cartModel.create({
-        userId,
-        cartProducts: [{ productId, quantity }],
-      });
-      return cart;
-    }
-
-    // ✅ CART EXISTS → Update or Push product
-    const existingProduct = cart.cartProducts.find(
-      (p) => p.productId.toString() === productId,
-    );
-
-    if (existingProduct) {
-      existingProduct.quantity = quantity; // update quantity
-    } else {
-      cart.cartProducts.push({
-        productId: new Types.ObjectId(productId),
-        quantity,
-      });
-    }
-
-    return await cart.save();
-    
+  // ✅ CART DOES NOT EXIST → CREATE IT
+  if (!cart) {
+    cart = await cartModel.create({
+      userId,
+      cartProducts: [{ productId, quantity }],
+    });
+    return { 
+      cart, 
+      action: 'added', 
+      message: 'Product added to cart' 
+    };
   }
+
+  // ✅ CART EXISTS → Check if product exists
+  const existingProductIndex = cart.cartProducts.findIndex(
+    (p) => p.productId.toString() === productId,
+  );
+
+  if (existingProductIndex !== -1) {
+    // ✅ Product EXISTS → REMOVE IT
+    cart.cartProducts.splice(existingProductIndex, 1);
+    
+    await cart.save();
+    return { 
+      cart, 
+      action: 'removed', 
+      message: 'Product removed from cart' 
+    };
+  } else {
+    // ✅ Product DOESN'T EXIST → ADD IT
+    cart.cartProducts.push({
+      productId: new Types.ObjectId(productId),
+      quantity,
+    });
+    
+    await cart.save();
+    return { 
+      cart, 
+      action: 'added', 
+      message: 'Product added to cart' 
+    };
+  }
+}
+
   async removeFromCart(userId: string, productId: string) {
       const cartModel = this.getCartModel();
     const cart = await cartModel.findOne({ userId });
@@ -78,6 +96,22 @@ export class CartService {
     if (!cart) {
       return {
         userId,
+        cartProducts: [],
+      };
+    }
+
+    return cart;
+  }
+    async getCartList(userId: string) {
+         const cartModel = this.getCartModel();
+        
+    const cart = await cartModel
+      .findOne({ userId }).select("cartProducts").lean();
+      
+
+    if (!cart) {
+      return {
+      
         cartProducts: [],
       };
     }

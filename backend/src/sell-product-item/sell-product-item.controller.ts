@@ -63,6 +63,12 @@ export class SellProductItemController {
    
     return this.sellProductItemService.getAdminOrder(query);
   }
+  @Get('get-my-order')
+  @UseGuards(AuthGuard)
+  async getOrder( @Query() query: GetOrdersDto,@Req() req:ExpressRequest) {
+   
+    return this.sellProductItemService.getMyOrder(query,req.user.id);
+  }
 
   /**
    * Delete sell (both long & short)

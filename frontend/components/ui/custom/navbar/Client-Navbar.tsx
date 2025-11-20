@@ -44,6 +44,10 @@ import { getUserInfo } from "@/actions/auth";
 import { UserProfileDropdown } from "./common/UserProfileDropdown";
 import CartSheet from "./CartSheet";
 import { SearchModal } from "./SearchModal";
+import { useQueryStates } from "nuqs";
+import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
+import { CartData } from "@/@types/wishlist";
+import { useWishHook } from "@/zustan-hook/wishListhook";
 
 const ClientNavbar = ({ user }: { user: BasicUser | null }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -51,6 +55,20 @@ const ClientNavbar = ({ user }: { user: BasicUser | null }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const pathName = usePathname();
+  const { setWishList } = useWishHook((state) => state);
+  const { data, isPending } = useQueryWrapper<CartData>(
+    ["get-my-wish-list"],
+    "/cart/get-cart-list",
+    {
+      enabled: !!user?.id,
+      staleTime: 1000 * 60 * 5,
+    }
+  );
+  useEffect(() => {
+    if (!data) return;
+    setWishList(data || []);
+  }, [data, setWishList]);
+  console.log(data);
 
   // All Categories with detailed subcategories and brands
   const allCategories = [
@@ -629,7 +647,7 @@ const ClientNavbar = ({ user }: { user: BasicUser | null }) => {
             <Button variant="ghost" size="icon" className="relative">
               <Heart className="w-7 h-7" />
               <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#e23636] text-white text-xs rounded-full flex items-center justify-center">
-                3
+                {data?.cartProducts?.length}
               </span>
             </Button>
             <CartSheet />
@@ -846,7 +864,7 @@ const ClientNavbar = ({ user }: { user: BasicUser | null }) => {
               </Button>
               <Button variant="outline" className="w-full">
                 <Heart className="w-4 h-4 mr-2" />
-                Wishlist (3)
+                Wishlist (5)
               </Button>
               <CartSheet />
 

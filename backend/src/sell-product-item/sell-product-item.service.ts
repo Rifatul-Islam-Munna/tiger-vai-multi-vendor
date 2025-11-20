@@ -367,6 +367,46 @@ export class SellProductItemService {
       data: sells,
     };
   }
+  async getMyOrder( dto: GetOrdersDto,id:string) {
+    const SellModel = this.sellModel();
+    const filter: any = {userId:id};
+ if (dto?.search) {
+  filter.$or = [
+    { orderNumber: { $regex: dto.search, $options: 'i' } },
+    { 'shipment.name': { $regex: dto.search, $options: 'i' } },
+    { 'shipment.phone': { $regex: dto.search, $options: 'i' } },
+  ];
+}
+
+    if(dto?.orderStatus){
+      filter.orderStatus = dto.orderStatus
+    }
+
+    
+
+    const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = dto;
+    const skip = (page - 1) * limit;
+
+    // Total count for pagination
+    const total = await SellModel.countDocuments(filter);
+
+    // Fetch paginated and sorted data
+    const sells = await SellModel
+      .find(filter)
+      .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    return {
+      message: 'Orders fetched successfully',
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      data: sells,
+    };
+  }
 
   /**
    * Get single sell by ID

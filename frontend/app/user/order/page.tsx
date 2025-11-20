@@ -1,10 +1,6 @@
-// app/account/orders/page.tsx
 "use client";
 
-import { useState, useMemo } from "react";
-import { Eye } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -13,679 +9,424 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Eye, Search, ShoppingBag, Filter, X } from "lucide-react";
+import { ViewOrderModal } from "@/components/ui/custom/admin/order-manage/ViewOrderModal";
+import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
+import { OrdersResponse } from "@/@types/order";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useDebounce } from "use-debounce";
 
-enum OrderStatus {
-  PENDING = "PENDING",
-  CONFIRMED = "CONFIRMED",
-  PROCESSING = "PROCESSING",
-  SHIPPED = "SHIPPED",
-  DELIVERED = "DELIVERED",
-  CANCELLED = "CANCELLED",
-}
+// Order Status Colors
+const STATUS_COLORS: Record<
+  string,
+  { bg: string; text: string; icon: string }
+> = {
+  PENDING: { bg: "bg-amber-50", text: "text-amber-700", icon: "⏳" },
+  CONFIRMED: { bg: "bg-blue-50", text: "text-blue-700", icon: "✓" },
+  PROCESSING: { bg: "bg-indigo-50", text: "text-indigo-700", icon: "📦" },
+  SHIPPED: { bg: "bg-purple-50", text: "text-purple-700", icon: "🚚" },
+  DELIVERED: { bg: "bg-green-50", text: "text-green-700", icon: "✅" },
+  CANCELLED: { bg: "bg-red-50", text: "text-red-700", icon: "❌" },
+};
 
-enum PaymentMethod {
-  COD = "COD",
-  ONLINE = "ONLINE",
-}
-
-interface SellProductItem {
-  productId: string;
-  slug: string;
-  name: string;
-  quantity: number;
-  totalPrice: number;
-  brandName: string;
-  category: string;
-}
-
-interface ShipmentDetails {
-  name: string;
-  phone: string;
-  house: string;
-  paymentMethod: PaymentMethod;
-  comment?: string;
-}
-
-interface Order {
-  _id: string;
-  products: SellProductItem[];
-  shipment: ShipmentDetails;
-  orderStatus: OrderStatus;
-  createdAt: string;
-  totalAmount: number;
-}
-
-// Demo data - 12 orders for pagination
-const demoOrders: Order[] = [
-  {
-    _id: "1",
-    products: [
-      {
-        productId: "p1",
-        slug: "premium-headphones",
-        name: "Premium Wireless Headphones",
-        quantity: 1,
-        totalPrice: 249.99,
-        brandName: "AudioTech Pro",
-        category: "Audio",
-      },
-    ],
-    shipment: {
-      name: "Masud Rana",
-      phone: "+880 1712345679",
-      house: "House 123, Road 4, Bashundhara, Dhaka",
-      paymentMethod: PaymentMethod.COD,
-      comment: "Please deliver in the morning",
-    },
-    orderStatus: OrderStatus.DELIVERED,
-    createdAt: "2025-11-01",
-    totalAmount: 249.99,
-  },
-  {
-    _id: "2",
-    products: [
-      {
-        productId: "p2",
-        slug: "smart-watch",
-        name: "Smart Watch Pro Max",
-        quantity: 1,
-        totalPrice: 299.99,
-        brandName: "TechWear",
-        category: "Watches",
-      },
-    ],
-    shipment: {
-      name: "Masud Rana",
-      phone: "+880 1712345679",
-      house: "House 123, Road 4, Bashundhara, Dhaka",
-      paymentMethod: PaymentMethod.ONLINE,
-    },
-    orderStatus: OrderStatus.SHIPPED,
-    createdAt: "2025-11-03",
-    totalAmount: 299.99,
-  },
-  {
-    _id: "3",
-    products: [
-      {
-        productId: "p4",
-        slug: "power-bank",
-        name: "Portable Power Bank 50000mAh",
-        quantity: 1,
-        totalPrice: 34.99,
-        brandName: "PowerTech",
-        category: "Accessories",
-      },
-    ],
-    shipment: {
-      name: "Masud Rana",
-      phone: "+880 1712345679",
-      house: "House 123, Road 4, Bashundhara, Dhaka",
-      paymentMethod: PaymentMethod.COD,
-    },
-    orderStatus: OrderStatus.PENDING,
-    createdAt: "2025-11-04",
-    totalAmount: 34.99,
-  },
-  {
-    _id: "4",
-    products: [
-      {
-        productId: "p5",
-        slug: "running-shoes",
-        name: "Professional Running Shoes",
-        quantity: 2,
-        totalPrice: 199.98,
-        brandName: "SportZone",
-        category: "Shoes",
-      },
-    ],
-    shipment: {
-      name: "Masud Rana",
-      phone: "+880 1712345679",
-      house: "House 123, Road 4, Bashundhara, Dhaka",
-      paymentMethod: PaymentMethod.COD,
-    },
-    orderStatus: OrderStatus.PROCESSING,
-    createdAt: "2025-10-28",
-    totalAmount: 199.98,
-  },
-  {
-    _id: "5",
-    products: [
-      {
-        productId: "p6",
-        slug: "wallet",
-        name: "Premium Leather Wallet",
-        quantity: 1,
-        totalPrice: 89.99,
-        brandName: "LuxeStyle",
-        category: "Accessories",
-      },
-    ],
-    shipment: {
-      name: "Masud Rana",
-      phone: "+880 1712345679",
-      house: "House 123, Road 4, Bashundhara, Dhaka",
-      paymentMethod: PaymentMethod.ONLINE,
-    },
-    orderStatus: OrderStatus.CONFIRMED,
-    createdAt: "2025-10-25",
-    totalAmount: 89.99,
-  },
-  {
-    _id: "6",
-    products: [
-      {
-        productId: "p7",
-        slug: "gaming-mouse",
-        name: "Wireless Gaming Mouse",
-        quantity: 1,
-        totalPrice: 59.99,
-        brandName: "GameGear",
-        category: "Gaming",
-      },
-    ],
-    shipment: {
-      name: "Masud Rana",
-      phone: "+880 1712345679",
-      house: "House 123, Road 4, Bashundhara, Dhaka",
-      paymentMethod: PaymentMethod.COD,
-    },
-    orderStatus: OrderStatus.DELIVERED,
-    createdAt: "2025-10-20",
-    totalAmount: 59.99,
-  },
-  {
-    _id: "7",
-    products: [
-      {
-        productId: "p8",
-        slug: "tshirt",
-        name: "Cotton T-Shirt Classic",
-        quantity: 3,
-        totalPrice: 59.97,
-        brandName: "ComfortWear",
-        category: "Clothing",
-      },
-    ],
-    shipment: {
-      name: "Masud Rana",
-      phone: "+880 1712345679",
-      house: "House 123, Road 4, Bashundhara, Dhaka",
-      paymentMethod: PaymentMethod.COD,
-    },
-    orderStatus: OrderStatus.DELIVERED,
-    createdAt: "2025-10-15",
-    totalAmount: 59.97,
-  },
-  {
-    _id: "8",
-    products: [
-      {
-        productId: "p9",
-        slug: "webcam",
-        name: "4K Webcam Ultra HD",
-        quantity: 1,
-        totalPrice: 179.99,
-        brandName: "CameraPro",
-        category: "Cameras",
-      },
-    ],
-    shipment: {
-      name: "Masud Rana",
-      phone: "+880 1712345679",
-      house: "House 123, Road 4, Bashundhara, Dhaka",
-      paymentMethod: PaymentMethod.ONLINE,
-    },
-    orderStatus: OrderStatus.CANCELLED,
-    createdAt: "2025-10-10",
-    totalAmount: 179.99,
-  },
-  {
-    _id: "9",
-    products: [
-      {
-        productId: "p10",
-        slug: "keyboard",
-        name: "Mechanical Gaming Keyboard",
-        quantity: 1,
-        totalPrice: 129.99,
-        brandName: "KeyMaster",
-        category: "Gaming",
-      },
-    ],
-    shipment: {
-      name: "Masud Rana",
-      phone: "+880 1712345679",
-      house: "House 123, Road 4, Bashundhara, Dhaka",
-      paymentMethod: PaymentMethod.COD,
-    },
-    orderStatus: OrderStatus.DELIVERED,
-    createdAt: "2025-10-05",
-    totalAmount: 129.99,
-  },
-  {
-    _id: "10",
-    products: [
-      {
-        productId: "p11",
-        slug: "monitor",
-        name: "27 Inch Gaming Monitor",
-        quantity: 1,
-        totalPrice: 399.99,
-        brandName: "DisplayPro",
-        category: "Electronics",
-      },
-    ],
-    shipment: {
-      name: "Masud Rana",
-      phone: "+880 1712345679",
-      house: "House 123, Road 4, Bashundhara, Dhaka",
-      paymentMethod: PaymentMethod.ONLINE,
-    },
-    orderStatus: OrderStatus.SHIPPED,
-    createdAt: "2025-09-30",
-    totalAmount: 399.99,
-  },
-  {
-    _id: "11",
-    products: [
-      {
-        productId: "p12",
-        slug: "charger",
-        name: "Fast USB-C Charger",
-        quantity: 2,
-        totalPrice: 39.98,
-        brandName: "ChargeFast",
-        category: "Accessories",
-      },
-    ],
-    shipment: {
-      name: "Masud Rana",
-      phone: "+880 1712345679",
-      house: "House 123, Road 4, Bashundhara, Dhaka",
-      paymentMethod: PaymentMethod.COD,
-    },
-    orderStatus: OrderStatus.DELIVERED,
-    createdAt: "2025-09-25",
-    totalAmount: 39.98,
-  },
-  {
-    _id: "12",
-    products: [
-      {
-        productId: "p13",
-        slug: "speaker",
-        name: "Portable Bluetooth Speaker",
-        quantity: 1,
-        totalPrice: 79.99,
-        brandName: "SoundWave",
-        category: "Audio",
-      },
-    ],
-    shipment: {
-      name: "Masud Rana",
-      phone: "+880 1712345679",
-      house: "House 123, Road 4, Bashundhara, Dhaka",
-      paymentMethod: PaymentMethod.ONLINE,
-    },
-    orderStatus: OrderStatus.PENDING,
-    createdAt: "2025-09-20",
-    totalAmount: 79.99,
-  },
+const STATUS_OPTIONS = [
+  "PENDING",
+  "CONFIRMED",
+  "PROCESSING",
+  "SHIPPED",
+  "DELIVERED",
+  "CANCELLED",
 ];
 
-const ITEMS_PER_PAGE = 5;
+export default function MyOrdersPage() {
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<string>("");
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [debouncedSearchQuery] = useDebounce(searchQuery, 1000);
+  const query = new URLSearchParams();
+  query.set("page", page.toString());
+  query.set("limit", limit.toString());
+  if (searchQuery) query.set("search", debouncedSearchQuery);
+  if (selectedStatus) query.set("orderStatus", selectedStatus);
 
-const getStatusColor = (status: OrderStatus) => {
-  const statusColors: Record<OrderStatus, string> = {
-    [OrderStatus.PENDING]: "bg-yellow-100 text-yellow-700",
-    [OrderStatus.CONFIRMED]: "bg-blue-100 text-blue-700",
-    [OrderStatus.PROCESSING]: "bg-palette-accent-1/20 text-palette-accent-1",
-    [OrderStatus.SHIPPED]: "bg-palette-accent-3/20 text-palette-accent-3",
-    [OrderStatus.DELIVERED]: "bg-palette-accent-2/30 text-palette-text",
-    [OrderStatus.CANCELLED]: "bg-red-100 text-red-700",
+  const { data: orders, isPending } = useQueryWrapper<OrdersResponse>(
+    ["my-orders", page, limit, debouncedSearchQuery, selectedStatus],
+    `/sell-product-item/get-my-order?${query.toString()}`
+  );
+
+  const handleViewOrder = (order: any) => {
+    setSelectedOrder(order);
+    setIsViewModalOpen(true);
   };
-  return statusColors[status];
-};
 
-const formatStatus = (status: OrderStatus) => {
-  return status.charAt(0) + status.slice(1).toLowerCase();
-};
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
 
-export default function OrdersPage() {
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "high" | "low">(
-    "newest"
-  );
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPage(1); // Reset to first page on new search
+  };
 
-  // Sort orders
-  const sortedOrders = useMemo(() => {
-    const sorted = [...demoOrders];
-    switch (sortBy) {
-      case "oldest":
-        return sorted.reverse();
-      case "high":
-        return sorted.sort((a, b) => b.totalAmount - a.totalAmount);
-      case "low":
-        return sorted.sort((a, b) => a.totalAmount - b.totalAmount);
-      case "newest":
-      default:
-        return sorted;
-    }
-  }, [sortBy]);
-
-  // Paginate
-  const totalPages = Math.ceil(sortedOrders.length / ITEMS_PER_PAGE);
-  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedOrders = sortedOrders.slice(
-    startIdx,
-    startIdx + ITEMS_PER_PAGE
-  );
-
-  return (
-    <div className="w-full space-y-6 container mx-auto">
-      {/* Header */}
-      <div>
-        <h2 className="text-3xl font-bold text-palette-text">My Orders</h2>
-        <p className="text-palette-text/60 text-sm mt-2">
-          View and track your orders
-        </p>
-      </div>
-
-      {/* Filters & Sort */}
-      <div className="flex justify-end">
-        <div className="flex items-center gap-3">
-          <label className="text-sm font-semibold text-palette-text">
-            Sort by:
-          </label>
-          <Select
-            value={sortBy}
-            onValueChange={(value: any) => {
-              setSortBy(value);
-              setCurrentPage(1);
-            }}
-          >
-            <SelectTrigger className="w-[180px] border border-gray-200">
-              <SelectValue placeholder="Select sort option" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest">Newest First</SelectItem>
-              <SelectItem value="oldest">Oldest First</SelectItem>
-              <SelectItem value="high">Highest Price</SelectItem>
-              <SelectItem value="low">Lowest Price</SelectItem>
-            </SelectContent>
-          </Select>
+  // Loading skeleton
+  if (isPending) {
+    return (
+      <div className="min-h-screen p-4 md:p-6 bg-palette-bg">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-96" />
         </div>
       </div>
+    );
+  }
 
-      {/* Orders Table */}
-      <Card className="border border-gray-200 shadow-none">
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-palette-bg border-b border-gray-200">
-                <TableRow className="hover:bg-palette-bg">
-                  <TableHead className="text-palette-text font-bold">
-                    Order ID
-                  </TableHead>
-                  <TableHead className="text-palette-text font-bold">
-                    Date
-                  </TableHead>
-                  <TableHead className="text-palette-text font-bold">
-                    Products
-                  </TableHead>
-                  <TableHead className="text-palette-text font-bold">
-                    Amount
-                  </TableHead>
-                  <TableHead className="text-palette-text font-bold">
-                    Status
-                  </TableHead>
-                  <TableHead className="text-palette-text font-bold">
-                    Action
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedOrders.map((order) => (
-                  <TableRow
-                    key={order._id}
-                    className="border-b border-gray-200 hover:bg-palette-bg/50 transition"
+  return (
+    <div className="min-h-screen p-4 md:p-6 bg-palette-bg">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-palette-text mb-2">
+            My Orders
+          </h1>
+          <p className="text-sm md:text-base text-palette-text/60">
+            Track and manage your orders
+          </p>
+        </div>
+
+        {/* Search & Filters */}
+        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
+          <form
+            onSubmit={handleSearch}
+            className="flex flex-col md:flex-row gap-3"
+          >
+            {/* Search Input */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-palette-text/40" />
+              <Input
+                placeholder="Search by order number..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 border-gray-200"
+              />
+            </div>
+
+            {/* Status Filter Popover */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="border-gray-200 justify-between min-w-[140px]"
+                >
+                  <span className="flex items-center gap-2">
+                    <Filter className="h-4 w-4" />
+                    {selectedStatus || "All Status"}
+                  </span>
+                  {selectedStatus && (
+                    <X
+                      className="h-3 w-3 ml-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedStatus("");
+                        setPage(1);
+                      }}
+                    />
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 bg-white border-gray-200">
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-sm text-palette-text">
+                    Filter by Status
+                  </h4>
+                  <RadioGroup
+                    value={selectedStatus}
+                    onValueChange={(value) => {
+                      setSelectedStatus(value);
+                      setPage(1);
+                    }}
                   >
-                    <TableCell className="font-medium text-palette-text">
-                      #{order._id.substring(0, 8).toUpperCase()}
-                    </TableCell>
-                    <TableCell className="text-palette-text/70">
-                      {new Date(order.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-palette-text/70">
-                      {order.products.length} item
-                      {order.products.length > 1 ? "s" : ""}
-                    </TableCell>
-                    <TableCell className="font-semibold text-palette-text">
-                      ৳{order.totalAmount.toFixed(2)}
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
-                          order.orderStatus
-                        )}`}
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="" id="status-all" />
+                      <Label
+                        htmlFor="status-all"
+                        className="text-sm cursor-pointer"
                       >
-                        {formatStatus(order.orderStatus)}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        onClick={() => setSelectedOrder(order)}
-                        variant="outline"
-                        size="sm"
-                        className="text-palette-btn border-palette-btn hover:bg-palette-btn/10 gap-2"
-                      >
-                        <Eye className="w-4 h-4" />
-                        View
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Pagination */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p className="text-sm text-palette-text/60">
-          Showing {startIdx + 1} to{" "}
-          {Math.min(startIdx + ITEMS_PER_PAGE, sortedOrders.length)} of{" "}
-          {sortedOrders.length} orders
-        </p>
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                className={
-                  currentPage === 1 ? "pointer-events-none opacity-50" : ""
-                }
-              />
-            </PaginationItem>
-
-            {Array.from({ length: totalPages }).map((_, idx) => (
-              <PaginationItem key={idx + 1}>
-                <PaginationLink
-                  onClick={() => setCurrentPage(idx + 1)}
-                  isActive={currentPage === idx + 1}
-                  className={
-                    currentPage === idx + 1
-                      ? "bg-palette-btn text-white hover:bg-palette-btn/90"
-                      : ""
-                  }
-                >
-                  {idx + 1}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
-
-            <PaginationItem>
-              <PaginationNext
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
-                }
-                className={
-                  currentPage === totalPages
-                    ? "pointer-events-none opacity-50"
-                    : ""
-                }
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
-
-      {/* Order Details Modal */}
-      {selectedOrder && (
-        <Dialog
-          open={!!selectedOrder}
-          onOpenChange={() => setSelectedOrder(null)}
-        >
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-palette-text">
-                Order Details #{selectedOrder._id.substring(0, 8).toUpperCase()}
-              </DialogTitle>
-            </DialogHeader>
-
-            <div className="space-y-6">
-              {/* Order Status */}
-              <div className="flex items-center justify-between bg-palette-bg p-4 rounded-lg">
-                <span className="font-semibold text-palette-text">Status:</span>
-                <span
-                  className={`px-4 py-2 rounded-full text-sm font-semibold ${getStatusColor(
-                    selectedOrder.orderStatus
-                  )}`}
-                >
-                  {formatStatus(selectedOrder.orderStatus)}
-                </span>
-              </div>
-
-              {/* Products */}
-              <div>
-                <h3 className="font-bold text-palette-text mb-4">Products</h3>
-                <div className="space-y-3">
-                  {selectedOrder.products.map((product, idx) => (
-                    <div
-                      key={idx}
-                      className="border border-gray-200 rounded-lg p-4"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <p className="font-semibold text-palette-text">
-                            {product.name}
-                          </p>
-                          <p className="text-sm text-palette-text/60">
-                            {product.brandName} • {product.category}
-                          </p>
-                        </div>
-                        <p className="font-bold text-palette-btn">
-                          ৳{product.totalPrice.toFixed(2)}
-                        </p>
-                      </div>
-                      <div className="flex justify-between text-sm text-palette-text/60">
-                        <span>Quantity: {product.quantity}</span>
-                        <span>SKU: {product.slug}</span>
-                      </div>
+                        All Orders
+                      </Label>
                     </div>
-                  ))}
+                    {STATUS_OPTIONS.map((status) => (
+                      <div key={status} className="flex items-center space-x-2">
+                        <RadioGroupItem
+                          value={status}
+                          id={`status-${status}`}
+                        />
+                        <Label
+                          htmlFor={`status-${status}`}
+                          className="text-sm cursor-pointer flex items-center gap-2"
+                        >
+                          <span>{STATUS_COLORS[status].icon}</span>
+                          <span>{status}</span>
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
                 </div>
-              </div>
+              </PopoverContent>
+            </Popover>
 
-              {/* Shipment Details */}
-              <div className="bg-palette-accent-2/10 border border-palette-accent-2/30 rounded-lg p-4">
-                <h3 className="font-bold text-palette-text mb-4">
-                  Shipment Details
-                </h3>
-                <div className="space-y-3 text-sm">
+            {/* Search Button - Mobile */}
+            <Button
+              type="submit"
+              className="md:hidden bg-palette-btn hover:bg-palette-btn/90"
+            >
+              <Search className="h-4 w-4 mr-2" />
+              Search
+            </Button>
+          </form>
+        </div>
+
+        {/* Mobile Orders List */}
+        <div className="space-y-4 md:hidden">
+          {orders?.data?.map((order) => (
+            <div
+              key={order._id}
+              className="bg-white border border-gray-200 rounded-lg p-4"
+            >
+              <div className="space-y-3">
+                {/* Order Header */}
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-mono text-xs text-palette-text/60 truncate">
+                      #{order.orderNumber}
+                    </p>
+                    <p className="font-bold text-lg text-palette-text mt-1">
+                      ৳{order.orderTotal.toLocaleString()}
+                    </p>
+                  </div>
+                  <Badge
+                    className={`${STATUS_COLORS[order.orderStatus]?.bg} ${
+                      STATUS_COLORS[order.orderStatus]?.text
+                    } border-0 whitespace-nowrap`}
+                  >
+                    {STATUS_COLORS[order.orderStatus]?.icon} {order.orderStatus}
+                  </Badge>
+                </div>
+
+                {/* Order Info */}
+                <div className="space-y-1.5 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-palette-text/70">Name:</span>
+                    <span className="text-palette-text/60">Items:</span>
                     <span className="font-medium text-palette-text">
-                      {selectedOrder.shipment.name}
+                      {order.products.length}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-palette-text/70">Phone:</span>
+                    <span className="text-palette-text/60">Date:</span>
                     <span className="font-medium text-palette-text">
-                      {selectedOrder.shipment.phone}
+                      {formatDate(order.createdAt)}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-palette-text/70">Address:</span>
-                    <span className="font-medium text-palette-text text-right">
-                      {selectedOrder.shipment.house}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-palette-text/70">Payment:</span>
-                    <span className="font-medium text-palette-text">
-                      {selectedOrder.shipment.paymentMethod}
-                    </span>
-                  </div>
-                  {selectedOrder.shipment.comment && (
+                  {order.totalDiscount > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-palette-text/70">Note:</span>
-                      <span className="font-medium text-palette-text">
-                        {selectedOrder.shipment.comment}
+                      <span className="text-palette-text/60">Saved:</span>
+                      <span className="font-medium text-green-600">
+                        ৳{order.totalDiscount.toLocaleString()}
                       </span>
                     </div>
                   )}
                 </div>
-              </div>
 
-              {/* Order Total */}
-              <div className="flex justify-between items-center bg-palette-bg p-4 rounded-lg border border-gray-200">
-                <span className="font-bold text-palette-text">
-                  Total Amount:
-                </span>
-                <span className="text-2xl font-bold text-palette-btn">
-                  ৳{selectedOrder.totalAmount.toFixed(2)}
-                </span>
+                {/* Actions */}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full border-gray-200"
+                  onClick={() => handleViewOrder(order)}
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Details
+                </Button>
               </div>
+            </div>
+          ))}
+        </div>
 
-              {/* Close Button */}
-              <Button
-                onClick={() => setSelectedOrder(null)}
-                className="w-full bg-palette-btn hover:bg-palette-btn/90 text-white"
-              >
-                Close
+        {/* Desktop Table */}
+        <div className="hidden md:block bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-palette-btn hover:bg-palette-btn">
+                <TableHead className="text-white font-semibold">
+                  Order Number
+                </TableHead>
+                <TableHead className="text-white font-semibold">
+                  Customer
+                </TableHead>
+                <TableHead className="text-white font-semibold text-center">
+                  Items
+                </TableHead>
+                <TableHead className="text-white font-semibold">
+                  Total
+                </TableHead>
+                <TableHead className="text-white font-semibold">
+                  Status
+                </TableHead>
+                <TableHead className="text-white font-semibold">Date</TableHead>
+                <TableHead className="text-white font-semibold text-center">
+                  Action
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {orders?.data?.map((order) => (
+                <TableRow
+                  key={order._id}
+                  className="hover:bg-palette-bg/50 transition-colors"
+                >
+                  <TableCell className="font-mono text-xs">
+                    #{order.orderNumber}
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <p className="font-medium text-palette-text">
+                        {order.shipment.name}
+                      </p>
+                      <p className="text-sm text-palette-text/60">
+                        {order.shipment.phone}
+                      </p>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-palette-btn text-white text-sm font-semibold">
+                      {order.products.length}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <p className="font-bold text-palette-text">
+                        ৳{order.orderTotal.toLocaleString()}
+                      </p>
+                      {order.totalDiscount > 0 && (
+                        <p className="text-xs text-green-600 font-medium">
+                          Saved ৳{order.totalDiscount}
+                        </p>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      className={`${STATUS_COLORS[order.orderStatus]?.bg} ${
+                        STATUS_COLORS[order.orderStatus]?.text
+                      } border-0`}
+                    >
+                      {STATUS_COLORS[order.orderStatus]?.icon}{" "}
+                      {order.orderStatus}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {formatDate(order.createdAt)}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleViewOrder(order)}
+                      className="border-gray-200"
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      View
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Empty State */}
+        {orders?.data?.length === 0 && (
+          <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+            <div className="flex flex-col items-center">
+              <div className="p-4 bg-palette-bg rounded-full mb-4">
+                <ShoppingBag className="h-12 w-12 text-palette-text/40" />
+              </div>
+              <h3 className="text-xl font-semibold text-palette-text mb-2">
+                No orders found
+              </h3>
+              <p className="text-palette-text/60 mb-6">
+                {searchQuery || selectedStatus
+                  ? "Try adjusting your filters"
+                  : "You haven't placed any orders yet"}
+              </p>
+              <Button className="bg-palette-btn hover:bg-palette-btn/90">
+                Start Shopping
               </Button>
             </div>
-          </DialogContent>
-        </Dialog>
-      )}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {orders && orders.totalPages > 1 && (
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 mt-6">
+            <p className="text-sm text-palette-text/60 text-center md:text-left">
+              Showing {(page - 1) * limit + 1} to{" "}
+              {Math.min(page * limit, orders.total)} of {orders.total} orders
+            </p>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setPage(Math.max(page - 1, 1))}
+                disabled={page === 1}
+                variant="outline"
+                size="sm"
+                className="border-gray-200"
+              >
+                Previous
+              </Button>
+              <div className="px-4 py-2 rounded-lg font-semibold bg-palette-btn text-white text-sm">
+                {page} / {orders.totalPages}
+              </div>
+              <Button
+                onClick={() => setPage(Math.min(page + 1, orders.totalPages))}
+                disabled={page === orders.totalPages}
+                variant="outline"
+                size="sm"
+                className="border-gray-200"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* View Order Modal */}
+      <ViewOrderModal
+        order={selectedOrder}
+        isOpen={isViewModalOpen}
+        onClose={() => {
+          setIsViewModalOpen(false);
+          setSelectedOrder(null);
+        }}
+      />
     </div>
   );
 }
