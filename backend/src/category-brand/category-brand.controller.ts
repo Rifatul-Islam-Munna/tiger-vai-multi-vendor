@@ -46,6 +46,18 @@ export class CategoryBrandController {
   getCategories(@Query() pagination: PaginationDto) {
     return this.service.getCategories(pagination);
   }
+  @Get('get-top-category')
+  getTopCategory() {
+    return this.service.getTopCategory();
+  }
+   @Get('brand')
+  getBrands(@Query() pagination: PaginationDto) {
+    return this.service.getBrands(pagination);
+  }
+    @Get('get-top-brand')
+  getTopBrand() {
+    return this.service.getTopBrand();
+  }
 
   // ✅ BRAND
   @Post('brand')
@@ -63,8 +75,6 @@ export class CategoryBrandController {
     return this.service.deleteBrand(id);
   }
 
-  @Get('brand')
-  getBrands(@Query() pagination: PaginationDto) {
-    return this.service.getBrands(pagination);
-  }
+ 
+
 }

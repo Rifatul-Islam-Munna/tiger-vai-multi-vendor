@@ -69,6 +69,15 @@ export class CategoryBrandService {
       data,
     };
   }
+  async getTopCategory() {
+    const categoryModel = await this.getCategoryModel()
+ 
+
+
+    const data = await categoryModel.find({isTop:true}).lean();
+
+    return data;
+  }
 
   // ✅ BRAND CRUD
   async createBrand(dto: CreateBrandDto) {
@@ -104,5 +113,14 @@ export class CategoryBrandService {
       totalPages: Math.ceil(total / limit),
       data,
     };
+  }
+  async getTopBrand() {
+    const categoryModel = await this.getBrandModel()
+   
+
+ 
+    const data = await categoryModel.find({isTop:true}).lean();
+
+    return data;
   }
 }

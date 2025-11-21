@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import TodayBestSell from "@/components/ui/custom/home/TodayBestSell";
+import TopBrand from "@/components/ui/custom/home/TopBrand";
 
 const Page = () => {
   const categories = [
@@ -276,28 +277,7 @@ const Page = () => {
       <TodayBestSell />
 
       {/* ============ TOP BRANDS ============ */}
-      <section
-        id="BRANDS"
-        className=" container mx-auto px-4 sm:px-6 lg:px-8 py-16"
-      >
-        <h2 className="text-3xl font-bold text-palette-text mb-8">
-          Top Brands
-        </h2>
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
-          {brands.map((brand, index) => (
-            <Card
-              key={index}
-              className="border-2 border-gray-200 hover:border-palette-btn transition cursor-pointer"
-            >
-              <CardContent className="p-6 aspect-square flex items-center justify-center">
-                <div className="text-sm font-bold text-center text-palette-text">
-                  {brand.logo}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
+      <TopBrand />
 
       {/* ============ FEATURED PRODUCTS ============ */}
       <section id="FEATURED" className="bg-gray-50 py-16">

@@ -48,7 +48,23 @@
   --color-palette-text: var(--palette-text); /* #263846 - Text */
   --color-palette-accent-1: var(--palette-accent-1); /* #edb57e - Warm accent */
   --color-palette-accent-2: var(--palette-accent-2); /* #c8d2c7 - Sage accent */
-  --color-palette-accent-3: var(--palette-accent-3); /* #86929c - Cool accent */
+  --color-palette-accent-3: var(--palette-accent-3); /* #86929c - Cool accent */ --animate-marquee: marquee var(--duration) infinite linear; --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+  @keyframes marquee {
+  from {
+    transform: translateX(0);
+    }
+  to {
+    transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+  @keyframes marquee-vertical {
+  from {
+    transform: translateY(0);
+    }
+  to {
+    transform: translateY(calc(-100% - var(--gap)));
+    }
+  }
 }
 
 :root {
