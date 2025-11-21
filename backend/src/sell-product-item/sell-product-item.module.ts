@@ -7,5 +7,6 @@ import { MeilisearchModule } from 'src/meilisearch/meilisearch.module';
   imports: [MeilisearchModule],
   controllers: [SellProductItemController],
   providers: [SellProductItemService],
+  exports: [SellProductItemService],
 })
 export class SellProductItemModule {}

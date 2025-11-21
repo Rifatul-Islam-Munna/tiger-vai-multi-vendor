@@ -137,7 +137,8 @@ const ProductDetailsPage = async ({
 }) => {
   const { slug } = await params;
   const product = await GetRequestNormal<Product>(
-    `/product/get-product?slug=${slug}`
+    `/product/get-product?slug=${slug}`,
+    100
   );
 
   if (!product) {

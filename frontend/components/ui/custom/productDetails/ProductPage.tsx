@@ -15,6 +15,10 @@ import { Product, ReviewStats } from "@/@types/fullProduct";
 import { useQueryState } from "nuqs";
 import { CartItem, useCartStore } from "@/zustan-hook/cart";
 import { toast } from "sonner";
+import ReviewForm from "./Rating-form";
+import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
+import { Reviews } from "@/@types/review";
+import ReviewsList from "./user-review";
 
 const RatingBreakdown = ({ stats }: { stats: ReviewStats | undefined }) => {
   const getCount = (rating: number): number => {
@@ -79,7 +83,14 @@ const ProductPage = ({ params }: { params: Product }) => {
   const [selectedColor, setSelectedColor] = useQueryState("color"); */
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
+  const [page, setPage] = useState(1);
+  console.log("params-stats", params.stats);
 
+  const { data, isPending } = useQueryWrapper<Reviews>(
+    ["get-review-of-product", params._id, page],
+    `/product/get-all-reviews-for-products?id=${params._id}&page=${page}`,
+    { enabled: activeTab === "reviews" }
+  );
   // Extract unique colors and sizes from variants
   const colors =
     (params?.variants?.length ?? 0) > 0
@@ -254,7 +265,7 @@ const ProductPage = ({ params }: { params: Product }) => {
   };
 
   return (
-    <div className="min-h-screen bg-palette-bg">
+    <div className="min-h-screen bg-palette-bg px-4 lg:px-2 xl:px-0">
       <div className="container mx-auto px-4 md:px-0 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Product Images Section */}
@@ -268,7 +279,7 @@ const ProductPage = ({ params }: { params: Product }) => {
                   ""
                 }
                 alt={params?.name ?? "Product image"}
-                className="w-full h-full object-cover"
+                className=" aspect-square "
               />
 
               {/* Navigation Arrows */}
@@ -737,60 +748,15 @@ const ProductPage = ({ params }: { params: Product }) => {
                     </div>
                     <RatingBreakdown stats={params?.stats} />
                   </div>
-
+                  <ReviewForm productId={params?._id} />
                   {/* Sample Reviews */}
-                  <div className="space-y-6">
-                    {[
-                      {
-                        name: "Sarah Johnson",
-                        rating: 5,
-                        date: "2024-09-15",
-                        review:
-                          "Excellent product quality and fast delivery. Highly recommended!",
-                      },
-                      {
-                        name: "Mike Chen",
-                        rating: 4,
-                        date: "2024-09-10",
-                        review:
-                          "Great value for money. The product exceeded my expectations.",
-                      },
-                      {
-                        name: "Lisa Rodriguez",
-                        rating: 5,
-                        date: "2024-09-05",
-                        review:
-                          "Perfect! Exactly what I was looking for. Will buy again.",
-                      },
-                    ].map((review, index) => (
-                      <div
-                        key={index}
-                        className="border-b border-gray-200 pb-6"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <h5 className="font-medium text-palette-text">
-                            {review.name}
-                          </h5>
-                          <span className="text-sm text-gray-500">
-                            {review.date}
-                          </span>
-                        </div>
-                        <div className="flex items-center mb-2">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              className={`w-4 h-4 ${
-                                star <= review.rating
-                                  ? "fill-palette-btn text-palette-btn"
-                                  : "text-gray-300"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <p className="text-gray-600">{review.review}</p>
-                      </div>
-                    ))}
-                  </div>
+                  <ReviewsList
+                    currentPage={page}
+                    onPageChange={setPage}
+                    reviews={data?.data}
+                    totalPages={data?.totalPage ?? 0}
+                    isLoading={isPending}
+                  />
                 </div>
               </div>
             )}

@@ -7,6 +7,7 @@ import { OrderStatus, Sell, SellSchema, SellDocument } from './entities/sell-pro
 import { CreateSellProductItemDto, GetOrdersDto } from './dto/create-sell-product-item.dto';
 import { randomBytes, randomUUID } from "crypto";
 import { MeilisearchService } from 'src/meilisearch/meilisearch.service';
+import { ObjectId } from 'mongoose';
 
 @Injectable()
 export class SellProductItemService {
@@ -432,5 +433,15 @@ export class SellProductItemService {
     await SellModel.findByIdAndDelete(sellId);
 
     return { message: 'Sell deleted successfully' };
+  }
+
+  async checkUserBuyTheProductOrNot  (userId:string,productId:string | ObjectId) {
+    this.logger.log("user-info",userId,productId)
+    const SellModel = this.sellModel();
+    const sell = await SellModel.findOne({userId:userId,products:{$elemMatch:{productId:productId}}}).lean();
+    this.logger.log("user-buth-product",sell)
+    if(sell){
+      return true
+    }
   }
 }

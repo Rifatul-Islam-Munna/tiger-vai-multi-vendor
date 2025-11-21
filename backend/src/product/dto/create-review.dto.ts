@@ -1,16 +1,16 @@
 // src/review/dto/create-review.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsNumber, Min, Max } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, Min, Max, IsOptional } from 'class-validator';
 
 export class CreateReviewDto {
   @ApiProperty({ description: 'User ID who writes the review' })
   @IsString()
-  @IsNotEmpty()
+ @IsOptional()
   userId: string;
 
   @ApiProperty({ description: 'Name of the user' })
   @IsString()
-  @IsNotEmpty()
+   @IsOptional()
   userName: string;
 
   @ApiProperty({ description: 'Product ID being reviewed' })

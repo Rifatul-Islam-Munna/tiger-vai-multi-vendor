@@ -21,6 +21,7 @@ import { UserRole } from 'src/user/entities/user.schema';
 import { AuthGuard, type ExpressRequest } from 'src/auth/auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
+import { DeleteDto, PaginationDto } from 'lib/pagination.dto';
 
 
 @ApiTags('Products')
@@ -68,8 +69,9 @@ export class ProductController {
   // ✅ Create Review
   @Post('review')
   @ApiOperation({ summary: 'Add a review to a product' })
-  async createReview(@Body() dto: CreateReviewDto) {
-    return this.productService.createReview(dto);
+  @UseGuards(AuthGuard)
+  async createReview(@Body() dto: CreateReviewDto,@Req() req:ExpressRequest) {
+    return this.productService.createReview(dto,req.user.id);
   }
 
   // ✅ Update ShortProduct Flags (hotDeals, hotOffer, productOfTheDay)
@@ -92,5 +94,10 @@ export class ProductController {
   @ApiOperation({ summary: 'Search products with filters and pagination' })
   async getOneProduct(@Query() query: GetProductDTo) {
     return this.productService.getProduct(query.slug);
+  }
+  @Get('get-all-reviews-for-products')
+  @ApiOperation({ summary: 'Search products with filters and pagination' })
+  async getAllReviews(@Query() query: PaginationDto) {
+    return this.productService.getAllReviews(query);
   }
 }

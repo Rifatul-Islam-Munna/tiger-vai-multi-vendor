@@ -109,11 +109,11 @@ export const GetRequestAxios = async <T>(url: string, ) : Promise<[T | null, Axi
         return [null, null];
     }
 }
-export const GetRequestNormal = async <T>(url: string,revalidate=3 ,revalidateTags="stumaps") : Promise<T> => {
+export const GetRequestNormal = async <T>(url: string,revalidate=0 ,revalidateTags="stumaps") : Promise<T> => {
     const {access_token} = await getToken()
     
     try{
-        const response = await fetch(`${baseUrl}${url}`,{next:{revalidate:0,tags:[revalidateTags]},headers:{
+        const response = await fetch(`${baseUrl}${url}`,{next:{revalidate:revalidate,tags:[revalidateTags]},headers:{
                
                 access_token:access_token ? access_token : '',
                 

@@ -1,24 +1,28 @@
 // src/product/product.service.ts
-import { HttpException, Injectable, ForbiddenException } from '@nestjs/common';
+import { HttpException, Injectable, ForbiddenException, Logger } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import slugify from '@sindresorhus/slugify';
-import { UserRole } from 'src/user/entities/user.schema';
+import { User, UserDocument, UserRole, UserSchema } from 'src/user/entities/user.schema';
 import { TenantConnectionService } from 'lib/connection/mongooseConnection.service';
 import { ReviewStatsSchema, ReviewStats, ReviewStatsDocument } from './entities/review-stats.schema';
 import { ReviewSchema, Review, ReviewDocument } from './entities/review.schema';
 import { Product, ProductDocument, ProductSchema } from './entities/product.entity';
-import { globalProducts } from 'lib/global-db/globaldb';
+import { globalProducts, globalUser } from 'lib/global-db/globaldb';
 import { ShortProduct, ShortProductDocument, ShortProductSchema } from './entities/short-product.schema';
 import { UpdateShortProductDto } from './entities/update-short-product.dto';
 import { SearchProductDto } from './entities/search-product.dto';
 import { ProductHelper } from 'lib/product.helper';
 import { MeilisearchService } from 'src/meilisearch/meilisearch.service';
+import { CreateReviewDto } from './dto/create-review.dto';
+import { PaginationDto } from 'lib/pagination.dto';
+import { SellProductItemService } from 'src/sell-product-item/sell-product-item.service';
 
 
 @Injectable()
 export class ProductService {
-  constructor(private tenant: TenantConnectionService,private melieSeach:MeilisearchService) {}
+  private logger = new Logger(ProductService.name)
+  constructor(private tenant: TenantConnectionService,private melieSeach:MeilisearchService, private salesService:SellProductItemService) {}
 
 
   private productModel() {
@@ -48,6 +52,14 @@ export class ProductService {
       ReviewStatsSchema,
     );
   }
+  private userModel(){
+    return this.tenant.getModel<UserDocument>(
+      globalUser,
+      User.name,
+      UserSchema
+      
+    )
+  }
 
   private rawSlugify(name: string, price: number, main: string, category: string, dbName: string) {
     return slugify(`${name}-${price}-${main}-${category}-${dbName}`);
@@ -65,6 +77,22 @@ export class ProductService {
       path:"stats",
       model: this.reviewStatsModel(),
     });
+
+  }
+  async getAllReviews(query:PaginationDto){
+    const {id,limit =5,page = 1} = query
+    const userModel = this.userModel()
+    const [CountProduct,getAllReviw] = await Promise.all([
+      await this.reviewModel().countDocuments({productId:id}).lean(),
+      await this.reviewModel().find({productId:id}).populate({
+      path:"userId",
+      model:userModel,
+      select:"name"
+    }).sort({createdAt:-1}).skip((page-1)*limit).limit(limit).lean()
+    ])
+
+ 
+    return {data:getAllReviw,totalPage:CountProduct / limit}
 
   }
 
@@ -346,12 +374,36 @@ export class ProductService {
   }
 
   // ✅ CREATE REVIEW
-  async createReview(dto: any) {
+
+  // have to like check here if user really buy this product or not
+  async createReview(dto: CreateReviewDto,id:string) {
+    this.logger.log(`Creating review for product ${JSON.stringify(dto)}`);
+    const ShortProductModel = this.shortProductModel();
+      const ProductModel = this.productModel();
     const ReviewModel = this.reviewModel();
     const StatsModel = this.reviewStatsModel();
+    const finalData ={
+      ...dto,
+      userId:id
+    }
 
+
+   const isUserAlreadyReviewed = await ReviewModel.exists({ userId: id, productId: dto.productId });
+    if (isUserAlreadyReviewed) {
+      throw new HttpException('You have already reviewed this product', 400);
+    }
+     const product = await ProductModel.findById(dto.productId);
+    if (!product) throw new HttpException('Product not found', 404);
+    const shortProduct = await ShortProductModel.findOne({ 
+      slug: product.slug  // ✅ Use slug to find ShortProduct
+    });
+    if (!shortProduct) throw new HttpException('Short product not found', 404);
+    this.logger.log(`Product found: ${JSON.stringify(shortProduct)}`);
+    const findOneinSals =  await this.salesService.checkUserBuyTheProductOrNot(id,shortProduct._id.toString()) // ✅ Check if user has already bought this product
+    this.logger.log("use buy this product or not",findOneinSals);
+    if (!findOneinSals) throw new HttpException('You have not bought this product', 400);
     // ✅ Create Review
-    const review = await ReviewModel.create(dto);
+    const review = await ReviewModel.create(finalData);
 
     // ✅ Update stats
     const stats = await StatsModel.findOne({ productId: dto.productId });
@@ -383,11 +435,20 @@ export class ProductService {
 
     // ✅ Recalculate average rating
     stats.averageRating =
-      (stats.count5 * 5 + stats.count4 * 4 + stats.count3 * 3 + stats.count2 * 2 + stats.count1 * 1) /
-      stats.totalReviews;
-
+     parseFloat(
+  (
+    (stats.count5 * 5 + stats.count4 * 4 + stats.count3 * 3 + 
+     stats.count2 * 2 + stats.count1 * 1) / stats.totalReviews
+  ).toFixed(2)
+);
+  
     await stats.save();
-
+     
+       await this.melieSeach.update(   shortProduct._id.toString(),{
+         
+        rating: stats.averageRating
+      });
+     
     return {
       message: 'Review added successfully',
       review,

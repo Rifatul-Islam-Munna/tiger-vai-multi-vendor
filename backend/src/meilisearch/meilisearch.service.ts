@@ -66,6 +66,18 @@ export class MeilisearchService implements OnModuleInit{
   async update(id: string, updatedData: UpdateMeilisearchDto) {
     return this.index.updateDocuments([{ id, ...updatedData }]);
   }
+  async updateProduct(updatedData: UpdateMeilisearchDto) {
+  // updatedData MUST include the 'id' field
+  if (!updatedData.id) {
+    throw new Error('Document must have an id field for update');
+  }
+  
+  this.logger.log('🟡 Updating document', updatedData.id);
+  const task = await this.index.updateDocuments([updatedData]);
+  this.logger.log('🟡 Document updated', task);
+  
+  return task;
+}
 
   /** 🔴 Delete document */
   async delete(id: string) {
