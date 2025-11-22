@@ -51,6 +51,8 @@ export class User {
   isDeleted: boolean;
   @Prop()
   slug: string;
+  @Prop({default:true})
+  isVerified: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

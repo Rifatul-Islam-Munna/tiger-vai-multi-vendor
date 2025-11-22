@@ -64,7 +64,7 @@ export class MeilisearchService implements OnModuleInit{
 
   /** 🟡 Update document */
   async update(id: string, updatedData: UpdateMeilisearchDto) {
-    return this.index.updateDocuments([{ id, ...updatedData }]);
+    return await this.index.updateDocuments([{ id, ...updatedData }]);
   }
   async updateProduct(updatedData: UpdateMeilisearchDto) {
   // updatedData MUST include the 'id' field

@@ -9,7 +9,7 @@ import {
   IsObject,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 class ProductImageDto {
   @ApiProperty()
@@ -300,4 +300,20 @@ export class GetProductDTo{
  
   @IsString()
   slug: string
+}
+
+export class getProductCsv{
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  main:string
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  subMain:string
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  category:string
+
 }

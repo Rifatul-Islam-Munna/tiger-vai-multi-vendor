@@ -31,8 +31,12 @@ export class UserService {
   // ✅ ************ USER SIGNUP (CUSTOMER) ************ //
   async userSignup(dto: CreateUserDto) {
     if (dto.role !== UserRole.USER) dto.role = UserRole.USER;
-
-    return this.createBaseUser(dto);
+   
+    const createUser ={
+      ...dto,
+      isVerified: true
+    }
+    return this.createBaseUser(createUser);
   }
 
   // ✅ ************ VENDOR SIGNUP ************ //
@@ -41,8 +45,12 @@ export class UserService {
 
     // vendor must have shop fields
     if (!dto.shopName) throw new HttpException('Shop name is required', 400);
+     const createUser ={
+      ...dto,
+      isVerified: false
+    }
 
-    return this.createBaseUser(dto);
+    return this.createBaseUser(createUser);
   }
 
   // ✅ ************ ADMIN CREATION ************ //

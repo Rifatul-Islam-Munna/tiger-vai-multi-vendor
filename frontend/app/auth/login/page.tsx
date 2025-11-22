@@ -32,7 +32,7 @@ export default function LoginPage() {
         if (data?.data?.user?.role === "admin") {
           setOpen(false);
 
-          return router.push("/admin");
+          return router.push("/admin/analytics");
         }
         if (data?.data?.user?.role === "user") {
           setOpen(false);

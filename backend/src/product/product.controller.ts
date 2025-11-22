@@ -9,9 +9,12 @@ import {
   Get,
   Query,
   UseGuards,
+  Res,
+  StreamableFile,
+  Header,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
-import { CreateProductDto, GetProductDTo } from './dto/create-product.dto';
+import { CreateProductDto, getProductCsv, GetProductDTo } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { UpdateShortProductDto } from './entities/update-short-product.dto';
 import { SearchProductDto } from './entities/search-product.dto';
@@ -22,8 +25,8 @@ import { AuthGuard, type ExpressRequest } from 'src/auth/auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { DeleteDto, PaginationDto } from 'lib/pagination.dto';
-
-
+import { format } from "fast-csv";
+import { type Response } from 'express';
 @ApiTags('Products')
 @ApiBearerAuth()
 @Controller('product')
@@ -58,12 +61,12 @@ export class ProductController {
   }
 
   // ✅ Delete product (Admin only)
-  @Delete(':id')
+  @Delete()
    @UseGuards(AuthGuard,RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.VENDOR)
   @ApiOperation({ summary: 'Delete a product (Admin only)' })
-  async delete(@Param('id') id: string, @Req()  req: ExpressRequest) {
-    return this.productService.deleteProduct(id, req?.user?.role as UserRole);
+  async delete(@Query() query: DeleteDto, @Req()  req: ExpressRequest) {
+    return this.productService.deleteProduct(query?.id!, req?.user?.role as UserRole);
   }
 
   // ✅ Create Review
@@ -90,6 +93,22 @@ export class ProductController {
   async searchProducts(@Query() query: SearchProductDto) {
     return this.productService.searchProducts(query);
   }
+  @Get('getProductVendorAdmin')
+  @ApiOperation({ summary: 'Search products with filters and pagination' })
+  @UseGuards(AuthGuard,RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.VENDOR)
+  async getProductAdminVendor(@Query() query: SearchProductDto, @Req() req: ExpressRequest) {
+    return this.productService.getProductAdminVendor(query,req?.user);
+  }
+
+
+  @Get('getAllProductsAdmin')
+  @ApiOperation({ summary: 'Search products with filters and pagination' })
+  @UseGuards(AuthGuard,RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async getAllProducts(@Query() query: SearchProductDto) {
+    return this.productService.getAllProducts(query);
+  }
   @Get('get-product')
   @ApiOperation({ summary: 'Search products with filters and pagination' })
   async getOneProduct(@Query() query: GetProductDTo) {
@@ -100,4 +119,40 @@ export class ProductController {
   async getAllReviews(@Query() query: PaginationDto) {
     return this.productService.getAllReviews(query);
   }
+
+
+
+
+  @Get('get-product-csv')
+  @Header('Content-Type', 'text/csv')
+  @Header('Content-Disposition', 'attachment; filename=data.csv')
+
+async getProductForCsv(@Query() query: getProductCsv, @Res() res: Response) {
+  const cursor = await this.productService.getProductInCSV(query);
+
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename=data.csv');
+
+  const csvStream = format({ headers: true });
+  
+  // Pipe CSV stream output into HTTP response stream
+  csvStream.pipe(res);
+
+  cursor.on('data', (doc) => {
+    const metaProduct = this.productService.convertToMetaProduct(doc);
+    csvStream.write(metaProduct);
+  });
+
+  cursor.on('end', () => {
+    csvStream.end();
+  });
+
+  cursor.on('error', (err) => {
+    console.error('Cursor stream error:', err);
+    res.status(500).end('Error streaming CSV');
+  });
+
+  
+}
+
 }

@@ -1,6 +1,6 @@
 // src/product/product.service.ts
 import { HttpException, Injectable, ForbiddenException, Logger } from '@nestjs/common';
-import { CreateProductDto } from './dto/create-product.dto';
+import { CreateProductDto, getProductCsv } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import slugify from '@sindresorhus/slugify';
 import { User, UserDocument, UserRole, UserSchema } from 'src/user/entities/user.schema';
@@ -17,7 +17,8 @@ import { MeilisearchService } from 'src/meilisearch/meilisearch.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { PaginationDto } from 'lib/pagination.dto';
 import { SellProductItemService } from 'src/sell-product-item/sell-product-item.service';
-
+import { json2csv } from "json-2-csv";
+import { jwts } from 'src/auth/auth.guard';
 
 @Injectable()
 export class ProductService {
@@ -301,14 +302,19 @@ export class ProductService {
   /*   if (role !== UserRole.ADMIN) {
       throw new ForbiddenException('Only admin can delete products');
     } */
+   this.logger.log("delete-product",productId)
 
     const ProductModel = this.productModel();
-    const deleted = await ProductModel.findByIdAndUpdate(productId, { isActive: false }, { new: true });
+      const ShortProductModel = this.shortProductModel();
+      const findId =  await ShortProductModel.findOneAndUpdate({ _id:productId }, { isActive: false });
+      if(!findId) throw new HttpException('Short product not found', 404);
+
+    const deleted = await ProductModel.findOneAndUpdate({slug:findId?.slug}, { isActive: false }, { new: true });
     if (!deleted) throw new HttpException('Product not found', 404);
 
     // ✅ NEW: Also delete from ShortProduct
-    const ShortProductModel = this.shortProductModel();
-    await ShortProductModel.findOneAndUpdate({ slug: deleted.slug }, { isActive: false });
+  
+
     await this.melieSeach.delete(productId)
 
     return { message: 'Product deleted successfully' };
@@ -337,7 +343,110 @@ export class ProductService {
       sortBy='createdAt'
     } = query;
 
-    const filter: any = {};
+    const filter: any = {isActive:true};
+
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { brandName: { $regex: search, $options: 'i' } },
+        { category: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    if (main) filter.main = main;
+    if (category) filter.category = category;
+    if (brandName) filter.brandName = brandName;
+    if (hasOffer !== undefined) filter.hasOffer = hasOffer;
+    if (isDigital !== undefined) filter.isDigital = isDigital;
+
+    const skip = (page - 1) * limit;
+    
+    const total = await ShortProductModel.countDocuments(filter);
+    const data = await ShortProductModel
+      .find(filter)
+      .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    return {
+      success: true,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      data,
+    };
+  }
+  async getProductAdminVendor(query: SearchProductDto,user:jwts) {
+    const ShortProductModel = this.shortProductModel();
+
+    const {
+      search,
+      main,
+      category,
+      brandName,
+      hasOffer,
+      isDigital,
+      page = 1,
+      limit = 10,
+      sortOrder = 'desc',
+      sortBy='createdAt'
+    } = query;
+
+    const filter: any = {isActive:true};
+     if(user.role === UserRole.VENDOR) filter.vendorId = user.id
+     if(user.role === UserRole.ADMIN) filter.isAdminCreated = true
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { brandName: { $regex: search, $options: 'i' } },
+        { category: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    if (main) filter.main = main;
+    if (category) filter.category = category;
+    if (brandName) filter.brandName = brandName;
+    if (hasOffer !== undefined) filter.hasOffer = hasOffer;
+    if (isDigital !== undefined) filter.isDigital = isDigital;
+
+    const skip = (page - 1) * limit;
+    
+    const total = await ShortProductModel.countDocuments(filter);
+    const data = await ShortProductModel
+      .find(filter)
+      .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    return {
+      success: true,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      data,
+    };
+  }
+  async getAllProducts(query: SearchProductDto) {
+    const ShortProductModel = this.shortProductModel();
+
+    const {
+      search,
+      main,
+      category,
+      brandName,
+      hasOffer,
+      isDigital,
+      page = 1,
+      limit = 10,
+      sortOrder = 'desc',
+      sortBy='createdAt'
+    } = query;
+
+    const filter: any = {isActive:true};
 
     if (search) {
       filter.$or = [
@@ -455,7 +564,49 @@ export class ProductService {
       stats,
     };
   }
+   convertToMetaProduct(product) {
+  const firstVariant = product.variants?.[0] || {};
 
+  return {
+    id: product._id,
+    title: product.name,
+    description: `${product.main || ""} ${product.subMain || ""}`.trim(),
+    availability: product.stock > 0 ? "in stock" : "out of stock",
+    condition: "new",
+
+    price: `${product.price}.00 BDT`,
+    sale_price: product.hasOffer ? `${product.offerPrice}.00 BDT` : "",
+
+    link: `https://your-website.com/product/${product.slug}`,
+    image_link: product.thumbnail,
+
+    brand: product.brandName,
+    category: product.category,
+    sub_category: product.subMain || "",
+
+    vendor_id: product.vendorId,
+    stock: product.stock,
+
+    color: firstVariant.color || "",
+    size: firstVariant.size || "",
+    additional_image_link: [], // if you add gallery later
+  };
+}
+  async getProductInCSV(query:getProductCsv) {
+    const shortProduct  =  this.shortProductModel();
+    const datQuery:Record<string,unknown> ={}
+    if(query.main) datQuery.main = query.main
+    if(query.category) datQuery.category = query.category
+    if(query.subMain) datQuery.subMain = query.subMain
+   
+     const data = await shortProduct.find(datQuery).lean().cursor();
+     return data;
+   /*  const metaProducts = data.map((product) => this.convertToMetaProduct(product));
+ 
+    return metaProducts */
+
+
+  }
 
 
 

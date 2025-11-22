@@ -23,6 +23,18 @@ import Link from "next/link";
 import { ViewProductModal } from "@/components/ui/custom/admin/create-edit-product/ViewProductModal";
 import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
 import { Product, ProductApiResponse } from "@/@types/short-product";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCommonMutationApi } from "@/api-hook/mutation-common";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 // Static product data
 const STATIC_PRODUCTS = [
@@ -146,7 +158,7 @@ export default function ProductManagementPage() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const query = new URLSearchParams();
   query.set("page", page.toString());
   query.set("limit", limit.toString());
@@ -155,16 +167,27 @@ export default function ProductManagementPage() {
 
   const { data, isLoading } = useQueryWrapper<ProductApiResponse>(
     ["products", page, limit, sortBy, sortOrder],
-    `/product/search?${query.toString()}`
+    `/product/getProductVendorAdmin?${query.toString()}`
   );
   const handleViewProduct = (product: Product) => {
     setSelectedProduct(product);
     setIsViewModalOpen(true);
   };
-
+  const queryClient = useQueryClient();
+  const { mutate, isPending } = useCommonMutationApi({
+    url: "/product",
+    method: "DELETE",
+    successMessage: "Product deleted successfully",
+    onSuccess(data) {
+      queryClient.invalidateQueries({
+        queryKey: ["products"],
+        exact: false,
+      });
+      setIsDeleteModalOpen(false);
+    },
+  });
   const handleDeleteProduct = (productId: string) => {
-    if (!confirm("Are you sure you want to delete this product?")) return;
-    setProducts(products.filter((p) => p._id !== productId));
+    mutate(productId);
   };
 
   const total = data?.total || 0;
@@ -408,13 +431,36 @@ export default function ProductManagementPage() {
                           />
                         </button>
                       </Link>
-                      <button
-                        onClick={() => handleDeleteProduct(product._id)}
-                        className="p-2 hover:bg-red-500/20 rounded transition"
-                        title="Delete Product"
+                      <Dialog
+                        open={isDeleteModalOpen}
+                        onOpenChange={setIsDeleteModalOpen}
                       >
-                        <Trash2 size={18} className="text-red-400" />
-                      </button>
+                        <DialogTrigger
+                          className="p-2 hover:bg-red-500/20 rounded transition"
+                          title="Delete Product"
+                        >
+                          <Trash2 size={18} className="text-red-400" />
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Are you absolutely sure?</DialogTitle>
+                            <DialogDescription></DialogDescription>
+                          </DialogHeader>
+                          <DialogFooter className="sm:justify-start">
+                            <DialogClose asChild>
+                              <Button type="button" variant="secondary">
+                                Close
+                              </Button>
+                            </DialogClose>
+                            <Button
+                              onClick={() => handleDeleteProduct(product._id)}
+                              className="  hover:bg-red-700 "
+                            >
+                              Delete
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   </TableCell>
                 </TableRow>
