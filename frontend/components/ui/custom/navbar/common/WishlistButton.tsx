@@ -1,10 +1,12 @@
 "use client";
 
+import { getUserInfo } from "@/actions/auth";
 import { useCommonMutationApi } from "@/api-hook/mutation-common";
 import { useWishHook } from "@/zustan-hook/wishListhook";
 import { useQueryClient } from "@tanstack/react-query";
 import { Heart } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface WishlistButtonProps {
   productId: string;
@@ -26,9 +28,14 @@ export function WishlistButton({
     },
   });
 
-  const handleWishlist = (e: React.MouseEvent) => {
+  const handleWishlist = async (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent Link navigation
     e.stopPropagation();
+    const user = await getUserInfo();
+    if (!user) {
+      toast.error("Please login to add to wishlist");
+      return;
+    }
     toggleWishList({ productId });
     console.log("Wishlist:", productId);
     mutate({ productId: productId, quantity: 1 });

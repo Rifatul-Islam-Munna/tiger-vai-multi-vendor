@@ -5,7 +5,6 @@ import { useState, useMemo } from "react";
 import { Trash2, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-
 import {
   Select,
   SelectContent,
@@ -22,6 +21,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { ProductCard } from "@/components/ui/custom/navbar/common/CommonCard";
+import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
 
 interface ShortProduct {
   _id: string;
@@ -42,155 +42,103 @@ interface ShortProduct {
   reviews?: number;
 }
 
-// Demo wishlist data
-const demoWishlistProducts: ShortProduct[] = [
-  {
-    _id: "1",
-    name: "Premium Wireless Bluetooth Headphones",
-    thumbnail:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop",
-    main: "ELECTRONICS",
-    category: "Audio",
-    price: 299.99,
-    offerPrice: 249.99,
-    hasOffer: true,
-    brandName: "AudioTech Pro",
-    slug: "premium-wireless-bluetooth-headphones",
-    stock: 25,
-    hotDeals: true,
-    rating: 4.8,
-    reviews: 128,
-  },
-  {
-    _id: "2",
-    name: "Smart Watch Pro Max",
-    thumbnail:
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop",
-    main: "ELECTRONICS",
-    category: "Watches",
-    price: 399.99,
-    offerPrice: 299.99,
-    hasOffer: true,
-    brandName: "TechWear",
-    slug: "smart-watch-pro-max",
-    stock: 15,
-    hotOffer: true,
-    rating: 4.6,
-    reviews: 95,
-  },
-  {
-    _id: "3",
-    name: "Professional Running Shoes",
-    thumbnail:
-      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop",
-    main: "FASHION",
-    category: "Shoes",
-    price: 129.99,
-    offerPrice: 99.99,
-    hasOffer: true,
-    brandName: "SportZone",
-    slug: "professional-running-shoes",
-    stock: 42,
-    productOfTheDay: true,
-    rating: 4.7,
-    reviews: 256,
-  },
-  {
-    _id: "4",
-    name: "4K Webcam Ultra HD",
-    thumbnail:
-      "https://images.unsplash.com/photo-1598657915753-b6b5ed74dba4?w=400&h=400&fit=crop",
-    main: "ELECTRONICS",
-    category: "Cameras",
-    price: 179.99,
-    hasOffer: false,
-    brandName: "CameraPro",
-    slug: "4k-webcam-ultra-hd",
-    stock: 8,
-    rating: 4.5,
-    reviews: 47,
-  },
-  {
-    _id: "5",
-    name: "Portable Power Bank 50000mAh",
-    thumbnail:
-      "https://images.unsplash.com/photo-1609429605320-6d410c47a236?w=400&h=400&fit=crop",
-    main: "ELECTRONICS",
-    category: "Accessories",
-    price: 45.99,
-    offerPrice: 34.99,
-    hasOffer: true,
-    brandName: "PowerTech",
-    slug: "portable-power-bank-50000mah",
-    stock: 120,
-    hotDeals: true,
-    rating: 4.9,
-    reviews: 312,
-  },
-  {
-    _id: "6",
-    name: "Premium Leather Wallet",
-    thumbnail:
-      "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&h=400&fit=crop",
-    main: "FASHION",
-    category: "Accessories",
-    price: 89.99,
-    hasOffer: false,
-    brandName: "LuxeStyle",
-    slug: "premium-leather-wallet",
-    stock: 0,
-    rating: 4.4,
-    reviews: 73,
-  },
-  {
-    _id: "7",
-    name: "Wireless Gaming Mouse",
-    thumbnail:
-      "https://images.unsplash.com/photo-1527814050087-3793815479db?w=400&h=400&fit=crop",
-    main: "ELECTRONICS",
-    category: "Gaming",
-    price: 79.99,
-    offerPrice: 59.99,
-    hasOffer: true,
-    brandName: "GameGear",
-    slug: "wireless-gaming-mouse",
-    stock: 33,
-    hotOffer: true,
-    rating: 4.7,
-    reviews: 189,
-  },
-  {
-    _id: "8",
-    name: "Cotton T-Shirt Classic",
-    thumbnail:
-      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop",
-    main: "FASHION",
-    category: "Clothing",
-    price: 29.99,
-    offerPrice: 19.99,
-    hasOffer: true,
-    brandName: "ComfortWear",
-    slug: "cotton-t-shirt-classic",
-    stock: 200,
-    productOfTheDay: true,
-    rating: 4.5,
-    reviews: 420,
-  },
-];
+export interface Root {
+  cartProducts: CartProductWrapper[];
+  totalPage: number;
+}
+
+export interface CartProductWrapper {
+  _id: string;
+  userId: string;
+  cartProducts: CartItem[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+export interface CartItem {
+  productId: Product;
+  quantity: number;
+}
+
+export interface Product {
+  _id: string;
+  name: string;
+  thumbnail: string;
+  main: string;
+  category: string;
+  subMain: string;
+  price: number;
+  offerPrice: number;
+  hasOffer: boolean;
+  isDigital: boolean;
+  brandId: string;
+  brandName: string;
+  slug: string;
+  isAdminCreated: boolean;
+  hotDeals: boolean;
+  hotOffer: boolean;
+  productOfTheDay: boolean;
+  stock: number;
+  vendorId: string;
+  variants: Variant[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  isActive: boolean;
+}
+
+export interface Variant {
+  size: string;
+  color: string;
+  price: number;
+  discountPrice: number;
+  stock: number;
+}
 
 const ITEMS_PER_PAGE = 8;
 
 export default function WishlistPage() {
-  const [wishlist, setWishlist] =
-    useState<ShortProduct[]>(demoWishlistProducts);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<
     "newest" | "price-low" | "price-high" | "popular"
   >("newest");
 
+  // Fetch wishlist data with page parameter
+  const { data, isPending, isError, refetch } = useQueryWrapper<Root>(
+    ["wish-list-for-user", currentPage],
+    `/cart/get-cart?page=${currentPage}`,
+    {},
+    120
+  );
+
+  // Transform API data to ShortProduct format
+  const transformedProducts: ShortProduct[] = useMemo(() => {
+    if (!data?.cartProducts?.[0]?.cartProducts) return [];
+
+    return data.cartProducts[0].cartProducts.map((item) => ({
+      _id: item.productId._id,
+      name: item.productId.name,
+      thumbnail: item.productId.thumbnail,
+      main: item.productId.main,
+      category: item.productId.category,
+      price: item.productId.price,
+      offerPrice: item.productId.hasOffer
+        ? item.productId.offerPrice
+        : undefined,
+      hasOffer: item.productId.hasOffer,
+      brandName: item.productId.brandName,
+      slug: item.productId.slug,
+      stock: item.productId.stock,
+      hotDeals: item.productId.hotDeals,
+      hotOffer: item.productId.hotOffer,
+      productOfTheDay: item.productId.productOfTheDay,
+    }));
+  }, [data]);
+
   // Sort products
   const sortedProducts = useMemo(() => {
-    const sorted = [...wishlist];
+    const sorted = [...transformedProducts];
     switch (sortBy) {
       case "price-low":
         return sorted.sort(
@@ -206,19 +154,17 @@ export default function WishlistPage() {
       default:
         return sorted;
     }
-  }, [wishlist, sortBy]);
+  }, [transformedProducts, sortBy]);
 
-  // Paginate
-  const totalPages = Math.ceil(sortedProducts.length / ITEMS_PER_PAGE);
-  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedProducts = sortedProducts.slice(
-    startIdx,
-    startIdx + ITEMS_PER_PAGE
-  );
+  const totalPages = data?.totalPage || 1;
+  const totalItems = transformedProducts.length;
 
-  const handleRemoveFromWishlist = (productId: string) => {
-    setWishlist((prev) => prev.filter((p) => p._id !== productId));
+  const handleRemoveFromWishlist = async (productId: string) => {
     console.log("Removed from wishlist:", productId);
+    // Add your API call to remove from wishlist here
+    // await removeFromWishlistAPI(productId);
+    // Then refetch the data
+    refetch();
   };
 
   const handleAddToCart = (productId: string) => {
@@ -231,17 +177,55 @@ export default function WishlistPage() {
     // Navigate to product details
   };
 
+  // Loading state
+  if (isPending) {
+    return (
+      <div className="w-full container mx-auto">
+        <div className="flex items-center justify-center h-96">
+          <div className="text-palette-text/60">Loading wishlist...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (isError) {
+    return (
+      <div className="w-full container mx-auto">
+        <Card className="border border-gray-200 shadow-none">
+          <CardContent className="p-12 text-center">
+            <div className="space-y-4">
+              <div className="text-6xl">⚠️</div>
+              <h3 className="text-2xl font-bold text-palette-text">
+                Failed to load wishlist
+              </h3>
+              <p className="text-palette-text/60">
+                There was an error loading your wishlist. Please try again.
+              </p>
+              <Button
+                onClick={() => refetch()}
+                className="bg-palette-btn hover:bg-palette-btn/90 text-white mt-4"
+              >
+                Retry
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full space-y-6 container mx-auto">
       {/* Header */}
       <div>
         <h2 className="text-3xl font-bold text-palette-text">My Wishlist</h2>
         <p className="text-palette-text/60 text-sm mt-2">
-          {wishlist.length} item{wishlist.length !== 1 ? "s" : ""} saved
+          {totalItems} item{totalItems !== 1 ? "s" : ""} saved
         </p>
       </div>
 
-      {wishlist.length === 0 ? (
+      {sortedProducts.length === 0 ? (
         // Empty State
         <Card className="border border-gray-200 shadow-none">
           <CardContent className="p-12 text-center">
@@ -264,11 +248,10 @@ export default function WishlistPage() {
           {/* Filters & Sort */}
           <div className="flex justify-between items-center gap-4">
             <div className="text-sm text-palette-text/60">
-              Showing {startIdx + 1} to{" "}
-              {Math.min(startIdx + ITEMS_PER_PAGE, sortedProducts.length)} of{" "}
-              {sortedProducts.length} items
+              Showing {totalItems} item{totalItems !== 1 ? "s" : ""} on page{" "}
+              {currentPage}
             </div>
-            <div className="flex items-center gap-3">
+            {/*  <div className="flex items-center gap-3">
               <label className="text-sm font-semibold text-palette-text">
                 Sort by:
               </label>
@@ -276,7 +259,6 @@ export default function WishlistPage() {
                 value={sortBy}
                 onValueChange={(value: any) => {
                   setSortBy(value);
-                  setCurrentPage(1);
                 }}
               >
                 <SelectTrigger className="w-[180px] border border-gray-200">
@@ -289,79 +271,69 @@ export default function WishlistPage() {
                   <SelectItem value="popular">Most Popular</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
           </div>
 
           {/* Products Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {paginatedProducts.map((product) => (
-              <div key={product._id} className="relative group">
-                <ProductCard
-                  product={product}
-                  variant="default"
-                  onAddToCart={() => handleAddToCart(product._id)}
-                  onAddToWishlist={() => handleRemoveFromWishlist(product._id)}
-                  onViewDetails={() => handleViewDetails(product.slug)}
-                />
-                {/* Remove from Wishlist Button */}
-                <button
-                  onClick={() => handleRemoveFromWishlist(product._id)}
-                  className="absolute top-2 right-2 bg-red-100 hover:bg-red-200 text-red-600 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-20"
-                  title="Remove from wishlist"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
+            {sortedProducts.map((product) => (
+              <div key={product._id} className="relative">
+                <ProductCard product={product} variant="default" />
               </div>
             ))}
           </div>
 
           {/* Pagination */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8">
-            <div className="text-sm text-palette-text/60">
-              Page {currentPage} of {totalPages}
-            </div>
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    className={
-                      currentPage === 1 ? "pointer-events-none opacity-50" : ""
-                    }
-                  />
-                </PaginationItem>
-
-                {Array.from({ length: totalPages }).map((_, idx) => (
-                  <PaginationItem key={idx + 1}>
-                    <PaginationLink
-                      onClick={() => setCurrentPage(idx + 1)}
-                      isActive={currentPage === idx + 1}
+          {totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8">
+              <div className="text-sm text-palette-text/60">
+                Page {currentPage} of {totalPages}
+              </div>
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                       className={
-                        currentPage === idx + 1
-                          ? "bg-palette-btn text-white hover:bg-palette-btn/90"
-                          : ""
+                        currentPage === 1
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
                       }
-                    >
-                      {idx + 1}
-                    </PaginationLink>
+                    />
                   </PaginationItem>
-                ))}
 
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() =>
-                      setCurrentPage((p) => Math.min(totalPages, p + 1))
-                    }
-                    className={
-                      currentPage === totalPages
-                        ? "pointer-events-none opacity-50"
-                        : ""
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </div>
+                  {Array.from({ length: totalPages }).map((_, idx) => (
+                    <PaginationItem key={idx + 1}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(idx + 1)}
+                        isActive={currentPage === idx + 1}
+                        className={
+                          currentPage === idx + 1
+                            ? "bg-palette-btn text-white hover:bg-palette-btn/90"
+                            : "cursor-pointer"
+                        }
+                      >
+                        {idx + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                      }
+                      className={
+                        currentPage === totalPages
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </>
       )}
     </div>

@@ -6,6 +6,7 @@ import { globalCart, globalProducts } from 'lib/global-db/globaldb';
 import { Cart, CartDocument, CartSchema } from './entities/cart.entity';
 import { Types } from 'mongoose';
 import { ShortProduct, ShortProductDocument, ShortProductSchema } from 'src/product/entities/short-product.schema';
+import { PaginationDto } from 'lib/pagination.dto';
 
 @Injectable()
 export class CartService {
@@ -86,21 +87,29 @@ async create(userId: string, createCartDto: CreateCartDto) {
 
     return cart.save();
   }
-    async getCart(userId: string) {
+    async getCart(query:PaginationDto,userId: string) {
          const cartModel = this.getCartModel();
          const shortProductModel = this.getShortProductModel()
+         const {page=1,limit=10} = query
+         const count = await cartModel.countDocuments({userId})
     const cart = await cartModel
-      .findOne({ userId })
-      .populate({ path: 'cartProducts.productId' ,model:shortProductModel});
+      .find({ userId }).skip((page-1)*limit).limit(limit)
+      .populate({ path: 'cartProducts.productId' ,model:shortProductModel}).lean();
 
-    if (!cart) {
+    if (!cart.length) {
       return {
-        userId,
+      
         cartProducts: [],
+
+        totalPage: Math.ceil(count / limit)
       };
     }
 
-    return cart;
+    return {
+  
+      cartProducts: cart,
+      totalPage: Math.ceil(count / limit)
+    };
   }
     async getCartList(userId: string) {
          const cartModel = this.getCartModel();

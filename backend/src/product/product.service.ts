@@ -134,9 +134,9 @@ export class ProductService {
   return {
     name: product.name,
       thumbnail: product.thumbnail,
-      main: product.category,
+      main: product.main,
       category: product.category,
-      subMain: product.category,
+      subMain: product.subMain,
       price:  product.price ?? 0,
       offerPrice:  product.offerPrice,
       hasOffer: product.hasOffer,

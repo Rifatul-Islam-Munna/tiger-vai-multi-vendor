@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Heart,
   Share2,
@@ -19,6 +19,23 @@ import ReviewForm from "./Rating-form";
 import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
 import { Reviews } from "@/@types/review";
 import ReviewsList from "./user-review";
+import { useWishHook } from "@/zustan-hook/wishListhook";
+import { useCommonMutationApi } from "@/api-hook/mutation-common";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { ShareProductDialog } from "./share-product-dialog";
+import { v4 as uuidv4 } from "uuid";
+import { getUserInfo } from "@/actions/auth";
+import {
+  addToCartEvent,
+  initiateCheckoutEvent,
+} from "@/lib/google-tag-manager";
+import {
+  addToCartServerEvent,
+  initiateCheckoutServerEvent,
+} from "@/actions/metaEvent";
+import { User } from "@/@types/auth-response";
+import { BasicUser } from "@/@types/userType";
 
 const RatingBreakdown = ({ stats }: { stats: ReviewStats | undefined }) => {
   const getCount = (rating: number): number => {
@@ -84,6 +101,16 @@ const ProductPage = ({ params }: { params: Product }) => {
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
   const [page, setPage] = useState(1);
+  const [getUser, setGetUser] = useState<BasicUser | null>(null);
+
+  /*   useEffect(() => {
+    const getUSer = async () => {
+      const user = await getUserInfo();
+      setGetUser(user);
+    };
+    getUSer();
+  }, []); */
+
   console.log("params-stats", params.stats);
 
   const { data, isPending } = useQueryWrapper<Reviews>(
@@ -198,9 +225,82 @@ const ProductPage = ({ params }: { params: Product }) => {
       </div>
     );
   };
+  const router = useRouter();
   const { addToCart } = useCartStore();
-  const handleAddToCart = () => {
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
     // Validate that color and size are selected
+    if (!selectedColor || !selectedSize) {
+      // You can add a toast notification here
+      toast.error("Please select both color and size");
+      return;
+    }
+
+    // Validate that a valid variant exists
+    if (!currentVariant) {
+      toast.error("This combination is not available");
+      return;
+    }
+
+    // Check stock availability
+    if (currentStock === 0) {
+      toast.error("This item is out of stock");
+      return;
+    }
+
+    // Check if requested quantity exceeds stock
+    if (quantity > currentStock) {
+      toast.error(`Only ${currentStock} items available`);
+      return;
+    }
+    const eventId = uuidv4();
+
+    // Create unique cart item ID
+    const cartItemId = `${params._id}-${selectedSize}-${selectedColor}`;
+
+    // Prepare cart item data
+    const cartItem: Omit<CartItem, "quantity"> = {
+      _id: cartItemId,
+      productId: params._id,
+      name: params.name ?? "Product",
+      thumbnail: params.thumbnail?.url ?? "",
+      brandName: params.brand?.name ?? "Unknown Brand",
+      slug: params.slug ?? "",
+
+      // Variant information
+      variant: {
+        size: selectedSize,
+        color: selectedColor,
+        price: currentVariant.price,
+        discountPrice: currentVariant.discountPrice,
+      },
+
+      // Unit price (use discount price if available)
+      unitPrice: currentVariant.discountPrice ?? currentVariant.price,
+
+      // Variant stock
+      variantStock: currentVariant.stock ?? 0,
+    };
+    const extraData = {
+      event_id: eventId,
+      userId: getUser?.id,
+      userName: getUser?.name,
+      email: getUser?.email,
+      ...cartItem,
+    };
+
+    // Add to cart
+    addToCart(cartItem);
+    addToCartEvent(extraData);
+    addToCartServerEvent(extraData);
+
+    // Optional: Show success message
+    toast.success(`Added ${quantity} item(s) to cart!`, {
+      position: "bottom-right",
+    });
+  };
+
+  const buyNow = () => {
     if (!selectedColor || !selectedSize) {
       // You can add a toast notification here
       toast.error("Please select both color and size");
@@ -251,17 +351,33 @@ const ProductPage = ({ params }: { params: Product }) => {
       // Variant stock
       variantStock: currentVariant.stock ?? 0,
     };
+    const eventId = uuidv4();
+
+    const extraData = {
+      event_id: eventId,
+      userId: getUser?.id,
+      userName: getUser?.name,
+      email: getUser?.email,
+      ...cartItem,
+    };
 
     // Add to cart
     addToCart(cartItem);
+    addToCartEvent(extraData);
+    const extraDatas = {
+      userId: getUser?.id,
+      userName: getUser?.name,
+      email: getUser?.email,
+      event_id: eventId,
+      items: [{ ...cartItem, quantity: quantity }],
+    };
+    initiateCheckoutEvent(extraDatas);
+
+    addToCartServerEvent(cartItem);
+    initiateCheckoutServerEvent(extraDatas);
 
     // Optional: Show success message
-    toast.success(`Added ${quantity} item(s) to cart!`, {
-      position: "top-right",
-    });
-
-    // Optional: Reset quantity to 1 after adding
-    // setQuantity(1);
+    router.push("/cart");
   };
 
   return (
@@ -514,6 +630,7 @@ const ProductPage = ({ params }: { params: Product }) => {
             {/* Action Buttons */}
             <div className="space-y-3">
               <button
+                type="button"
                 disabled={isAddToCartDisabled}
                 className="w-full bg-palette-btn text-white py-3 px-6 rounded-lg font-semibold hover:bg-palette-btn/90 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                 onClick={handleAddToCart}
@@ -529,17 +646,14 @@ const ProductPage = ({ params }: { params: Product }) => {
 
               <div className="flex gap-3">
                 <button
+                  onClick={buyNow}
                   disabled={isAddToCartDisabled}
                   className="flex-1 border-2 border-palette-btn text-palette-btn py-3 px-6 rounded-lg font-semibold hover:bg-palette-btn hover:text-white disabled:border-gray-300 disabled:text-gray-400 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
                 >
                   Buy Now
                 </button>
-                <button className="flex items-center justify-center w-12 h-12 border-2 border-gray-200 rounded-lg text-palette-text hover:border-palette-btn hover:bg-palette-btn/5 transition-colors">
-                  <Heart className="w-5 h-5" />
-                </button>
-                <button className="flex items-center justify-center w-12 h-12 border-2 border-gray-200 rounded-lg text-palette-text hover:border-palette-btn hover:bg-palette-btn/5 transition-colors">
-                  <Share2 className="w-5 h-5" />
-                </button>
+
+                <ShareProductDialog />
               </div>
             </div>
 

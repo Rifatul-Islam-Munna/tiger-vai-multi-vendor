@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards, Query } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { CreateCartDto, RemoveFromCartDto } from './dto/create-cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
 import { AuthGuard, type ExpressRequest } from 'src/auth/auth.guard';
+import { PaginationDto } from 'lib/pagination.dto';
 
 @Controller('cart')
 export class CartController {
@@ -17,8 +18,8 @@ export class CartController {
 
   @Get('get-cart')
   @UseGuards(AuthGuard)
-  getCart(@Req() req: ExpressRequest) {
-    return this.cartService.getCart(req?.user.id);
+  getCart(@Query() query:PaginationDto,@Req() req: ExpressRequest) {
+    return this.cartService.getCart(query,req?.user.id);
   }
 
   @Get('get-cart-list')

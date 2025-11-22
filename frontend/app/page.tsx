@@ -14,6 +14,8 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import TodayBestSell from "@/components/ui/custom/home/TodayBestSell";
 import TopBrand from "@/components/ui/custom/home/TopBrand";
+import CategoryShop from "@/components/ui/custom/home/CategoryShop";
+import HeroSection from "@/components/ui/custom/home/HeroSection";
 
 const Page = () => {
   const categories = [
@@ -113,81 +115,10 @@ const Page = () => {
   return (
     <div className=" bg-palette-bg h-full">
       {/* ============ HERO SECTION ============ */}
-      <section id="hero" className="bg-palette-text text-white py-20 md:py-28">
-        <div className=" container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-              <Badge className="w-fit bg-palette-btn text-white border-0">
-                <Zap className="w-3 h-3 mr-1" />
-                Limited Time Offer
-              </Badge>
-
-              <div>
-                <h1 className="text-5xl md:text-7xl font-bold text-white mb-4">
-                  Mega Sale
-                </h1>
-                <p className="text-4xl font-semibold text-palette-btn">
-                  Up to 70% Off
-                </p>
-              </div>
-
-              <p className="text-lg text-gray-200 leading-relaxed">
-                Explore the best deals from top vendors across Bangladesh. Shop
-                electronics, fashion, home essentials and more!
-              </p>
-
-              <div className="flex flex-wrap gap-4 pt-4">
-                <Button
-                  size="lg"
-                  className="bg-palette-btn hover:bg-palette-btn/90 text-white font-semibold"
-                >
-                  Shop Now
-                  <ChevronRight className="w-4 h-4 ml-2" />
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-2 border-white text-palette-text hover:bg-white hover:text-palette-text font-semibold"
-                >
-                  Become a Vendor
-                </Button>
-              </div>
-
-              {/* Trust indicators */}
-              <div className="grid grid-cols-3 gap-4 pt-8 border-t border-white/20">
-                <div className="flex items-center gap-2">
-                  <Truck className="w-5 h-5 text-palette-btn flex-shrink-0" />
-                  <div className="text-sm">
-                    <p className="font-semibold">Fast Delivery</p>
-                    <p className="text-gray-300 text-xs">Nationwide</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-palette-btn flex-shrink-0" />
-                  <div className="text-sm">
-                    <p className="font-semibold">100% Safe</p>
-                    <p className="text-gray-300 text-xs">Secure</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Star className="w-5 h-5 text-palette-btn flex-shrink-0" />
-                  <div className="text-sm">
-                    <p className="font-semibold">Trusted</p>
-                    <p className="text-gray-300 text-xs">500K+ Users</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="hidden md:flex justify-center items-center">
-              <div className="text-9xl">🛍️</div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HeroSection />
 
       {/* ============ PROMOTIONAL BANNERS ============ */}
-      <section
+      {/*  <section
         id="PROMOTIONAL"
         className=" container mx-auto px-4 sm:px-6 lg:px-8 -mt-12 relative z-20 pb-16"
       >
@@ -246,32 +177,10 @@ const Page = () => {
             </CardContent>
           </Card>
         </div>
-      </section>
+      </section> */}
 
       {/* ============ CATEGORIES ============ */}
-      <section
-        id="BANNERS"
-        className=" container mx-auto px-4 sm:px-6 lg:px-8 py-16"
-      >
-        <h2 className="text-3xl font-bold text-palette-text mb-8">
-          Shop by Category
-        </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
-          {categories.map((category, index) => (
-            <Card
-              key={index}
-              className="border border-palette-accent-3/20 hover:border-palette-btn/30 transition cursor-pointer shadow-none"
-            >
-              <CardContent className="p-6 flex flex-col items-center justify-center aspect-square shadow-none">
-                <div className="text-4xl mb-2">{category.icon}</div>
-                <p className="text-xs font-medium text-center text-palette-text">
-                  {category.name}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
+      <CategoryShop />
 
       {/* ============ TODAY'S BEST DEALS ============ */}
       <TodayBestSell />
@@ -280,7 +189,7 @@ const Page = () => {
       <TopBrand />
 
       {/* ============ FEATURED PRODUCTS ============ */}
-      <section id="FEATURED" className="bg-gray-50 py-16">
+      {/*    <section id="FEATURED" className="bg-gray-50 py-16">
         <div className=" container mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-palette-text mb-8">
             Featured Products
@@ -307,7 +216,7 @@ const Page = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* ============ VENDOR CTA SECTION ============ */}
       <section id="VENDOR" className="bg-palette-text text-white py-16">

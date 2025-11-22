@@ -14,11 +14,14 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { ShoppingCart, X, Plus, Minus, Trash2 } from "lucide-react";
-
+import { v4 as uuidv4 } from "uuid";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/zustan-hook/cart";
+import { getUserInfo } from "@/actions/auth";
+import { initiateCheckoutEvent } from "@/lib/google-tag-manager";
+import { initiateCheckoutServerEvent } from "@/actions/metaEvent";
 
 export default function CartSheet() {
   const router = useRouter();
@@ -36,9 +39,21 @@ export default function CartSheet() {
 
   const finalTotal = totalPrice - totalDiscount;
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     setOpen(false);
     router.push("/cart");
+
+    const eventId = uuidv4();
+    const getUser = await getUserInfo();
+    const extraData = {
+      userId: getUser?.id,
+      userName: getUser?.name,
+      email: getUser?.email,
+      event_id: eventId,
+      items: items,
+    };
+    initiateCheckoutEvent(extraData);
+    initiateCheckoutServerEvent(extraData);
   };
 
   return (

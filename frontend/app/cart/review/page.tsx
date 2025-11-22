@@ -11,7 +11,10 @@ import { useEffect, useState } from "react";
 import { useApiMutation } from "@/api-hook/react-query-wrapper";
 import { postNewSell } from "@/actions/sells";
 import { Spinner } from "@/components/ui/spinner";
-
+import { purchaseEvent } from "@/lib/google-tag-manager";
+import { v4 as uuidv4 } from "uuid";
+import { getUserInfo } from "@/actions/auth";
+import { purchaseServerEvent } from "@/actions/metaEvent";
 export default function ReviewOrderPage() {
   const router = useRouter();
   const { items, totalPrice, totalDiscount, clearCart } = useCartStore();
@@ -91,6 +94,17 @@ export default function ReviewOrderPage() {
     };
     console.log("Order payload:", orderPayload);
     mutate(orderPayload);
+    const eventId = uuidv4();
+    const getUser = await getUserInfo();
+    const extraData = {
+      userId: getUser?.id,
+      userName: getUser?.name,
+      email: getUser?.email,
+      event_id: eventId,
+      ...orderPayload,
+    };
+    purchaseEvent(extraData);
+    await purchaseServerEvent(extraData);
   };
 
   return (

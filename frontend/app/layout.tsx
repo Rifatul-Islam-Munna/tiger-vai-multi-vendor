@@ -7,10 +7,12 @@ import { Toaster } from "@/components/ui/sonner";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "core-js/stable";
 import Script from "next/script";
+import { GoogleTagManager } from "@next/third-parties/google";
 
 import "regenerator-runtime/runtime";
 import { Suspense } from "react";
 import ClientSideScrollRestorer from "@/components/ui/custom/common/ClientSideScrollRestorer";
+import { PageViewTracker } from "@/components/ui/custom/common/PageViewTracker";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -200,6 +202,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <GoogleTagManager gtmId="GTM-TW7XR5TX" />
+      <PageViewTracker />
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-palette-bg h-full`}
       >
