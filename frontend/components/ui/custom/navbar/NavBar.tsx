@@ -1,7 +1,7 @@
 import { getUserInfo } from "@/actions/auth";
 import ClientNavbar from "./Client-Navbar";
 import { Suspense } from "react";
-
+export const dynamic = "force-dynamic";
 const Navbar = async () => {
   let user = null;
 
