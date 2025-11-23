@@ -1,4 +1,3 @@
-// components/common/UserProfileDropdown.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -18,7 +17,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import useProfilePopStore from "@/zustan-hook/profile-pop";
+import { useQueryClient } from "@tanstack/react-query";
+// import useProfilePopStore from "@/zustan-hook/profile-pop"; // REMOVED: Global state caused conflict
 
 interface UserProfileDropdownProps {
   user: BasicUser | null;
@@ -28,15 +28,17 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
   user,
 }) => {
   const router = useRouter();
-
-  const { open, setOpen } = useProfilePopStore();
-
+  // CHANGED: Use local state instead of global store to prevent conflicts
+  const [open, setOpen] = useState(false);
+  const query = useQueryClient();
   const onLoginClick = () => {
     router.push("/auth/login");
   };
 
   const onLogout = async () => {
     await logOut();
+    setOpen(false); // Close dropdown after logout
+    query.refetchQueries({ queryKey: ["user-info"], exact: false });
   };
 
   const pushRouter = (path: string) => {
@@ -45,11 +47,10 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
   };
 
   if (!user) {
-    // Not logged in - Show Login Button
     return (
       <button
         onClick={onLoginClick}
-        className="flex items-center gap-2 bg-palette-btn px-4 py-2 rounded-lg font-medium text-white transition-all hover:shadow-lg hover:-translate-y-0.5"
+        className="flex items-center gap-2 bg-[var(--palette-btn)] px-4 py-2 rounded-lg font-medium text-white transition-all hover:shadow-lg hover:-translate-y-0.5"
       >
         <User size={18} />
         Login
@@ -71,7 +72,8 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
-          className="flex items-center text-xs justify-center w-7 h-7 bg-palette-btn rounded-full font-semibold text-white transition-all hover:shadow-md hover:scale-105"
+          className="flex items-center text-xs justify-center w-9 h-9 rounded-full font-semibold text-white transition-all hover:shadow-md hover:scale-105 focus:outline-none ring-2 ring-offset-1 ring-transparent focus:ring-[var(--palette-btn)]"
+          style={{ backgroundColor: "var(--palette-btn)" }}
           title={user.name}
         >
           {getInitials(user.name)}
@@ -79,21 +81,19 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
       </PopoverTrigger>
 
       <PopoverContent
-        className="w-80 p-0 rounded-xl shadow-xl border-0"
+        className="w-80 p-0 rounded-xl shadow-xl border-0 z-[60]"
+        align="end"
         style={{
-          backgroundColor: "var(--palette-bg)",
-          borderColor: "var(--palette-accent-3)",
+          backgroundColor: "#ffffff", // Ensure solid background
+          color: "var(--palette-text)",
         }}
       >
         {/* Header Section */}
-        <div
-          className="px-6 py-6 border-b"
-          style={{ borderColor: "rgba(255, 255, 255, 0.05)" }}
-        >
+        <div className="px-6 py-6 border-b border-gray-100">
           <div className="flex items-center gap-4">
             {/* Avatar */}
             <div
-              className="w-14 h-14 rounded-full flex  items-center justify-center font-semibold text-white text-lg shadow-md"
+              className="w-14 h-14 rounded-full flex items-center justify-center font-semibold text-white text-lg shadow-md shrink-0"
               style={{ backgroundColor: "var(--palette-btn)" }}
             >
               {getInitials(user.name)}
@@ -101,15 +101,10 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
 
             {/* User Info */}
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-base capitalize truncate">
+              <p className="font-semibold text-base capitalize truncate text-gray-900">
                 {user.name}
               </p>
-              <p
-                className="text-sm truncate"
-                style={{ color: "var(--palette-accent-3)" }}
-              >
-                {user.email}
-              </p>
+              <p className="text-sm truncate text-gray-500">{user.email}</p>
 
               {/* Role Badge */}
               <span
@@ -117,16 +112,16 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
                 style={{
                   backgroundColor:
                     user.role === "vendor"
-                      ? "rgba(240, 212, 168, 0.15)"
+                      ? "rgba(240, 212, 168, 0.2)"
                       : user.role === "admin"
-                      ? "rgba(255, 107, 122, 0.15)"
-                      : "rgba(168, 179, 191, 0.15)",
+                      ? "rgba(255, 107, 122, 0.1)"
+                      : "rgba(168, 179, 191, 0.2)",
                   color:
                     user.role === "vendor"
-                      ? "var(--palette-accent-1)"
+                      ? "var(--palette-accent-1, #d97706)"
                       : user.role === "admin"
-                      ? "var(--palette-btn)"
-                      : "var(--palette-accent-3)",
+                      ? "red"
+                      : "gray",
                 }}
               >
                 {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
@@ -137,104 +132,56 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
 
         {/* Vendor Info (if vendor) */}
         {user.role === "vendor" && user.shopName && (
-          <div
-            className="px-6 py-4 border-b"
-            style={{ borderColor: "rgba(255, 255, 255, 0.05)" }}
-          >
-            <p
-              className="text-xs font-semibold mb-2 uppercase tracking-wide"
-              style={{ color: "var(--palette-accent-1)" }}
-            >
+          <div className="px-6 py-4 border-b border-gray-100">
+            <p className="text-xs font-semibold mb-2 uppercase tracking-wide text-gray-500">
               Your Shop
             </p>
-            <p className="font-medium text-sm">{user.shopName}</p>
+            <p className="font-medium text-sm text-gray-800">{user.shopName}</p>
             {user.shopAddress && (
-              <p
-                className="text-xs mt-2"
-                style={{ color: "var(--palette-accent-3)" }}
-              >
-                {user.shopAddress}
-              </p>
+              <p className="text-xs mt-1 text-gray-500">{user.shopAddress}</p>
             )}
           </div>
         )}
 
-        {/* Contact Info */}
-        <div
-          className="px-6 py-4 border-b"
-          style={{ borderColor: "rgba(255, 255, 255, 0.05)" }}
-        >
-          <p
-            className="text-xs font-semibold mb-2 uppercase tracking-wide"
-            style={{ color: "var(--palette-accent-1)" }}
-          >
-            Contact
-          </p>
-          <p className="text-sm" style={{ color: "var(--palette-accent-3)" }}>
-            {user.phone ?? "N/A"}
-          </p>
-          {user.address && (
-            <p
-              className="text-sm mt-2"
-              style={{ color: "var(--palette-accent-3)" }}
-            >
-              {user.address ?? "N/A"}
-            </p>
-          )}
-        </div>
-
         {/* Menu Items */}
         <div className="px-3 py-3 space-y-1">
-          {/* Dashboard Link */}
-
           <button
             onClick={() =>
               pushRouter(
                 user.role === "vendor"
                   ? "/dashboard/vendor"
                   : user.role === "admin"
-                  ? " /admin"
+                  ? "/admin"
                   : "/user/profile"
               )
             }
-            className="w-full flex text-palette-btn/80 bg-palette-btn/4 items-center gap-3 px-4 py-3 rounded-lg transition-all hover:shadow-sm"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all hover:bg-gray-50 group"
           >
-            <LayoutDashboard size={18} />
-            <span className="font-medium text-sm">Go to Dashboard</span>
+            <LayoutDashboard
+              size={18}
+              className="text-gray-500 group-hover:text-[var(--palette-btn)]"
+            />
+            <span className="font-medium text-sm text-gray-700 group-hover:text-[var(--palette-btn)]">
+              Dashboard
+            </span>
           </button>
 
-          {/* Settings Link (Optional) */}
-          {/* <Link href="/account/settings">
-            <button
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all hover:shadow-sm"
-              style={{
-                backgroundColor: "rgba(255, 255, 255, 0.02)",
-              }}
-            >
-              <Settings size={18} style={{ color: "var(--palette-accent-1)" }} />
-              <span className="font-medium text-sm">Settings</span>
-              <ChevronDown size={16} className="ml-auto rotate-180" />
-            </button>
-          </Link> */}
-
-          {/* Logout Button */}
           <button
             onClick={onLogout}
-            className="w-full text-palette-btn/80 bg-palette-btn/4 flex items-center gap-3 px-4 py-3 rounded-lg transition-all hover:shadow-sm mt-2"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all hover:bg-red-50 group mt-2"
           >
-            <LogOut size={18} />
-            <span className="font-medium text-sm">Logout</span>
+            <LogOut
+              size={18}
+              className="text-gray-500 group-hover:text-red-500"
+            />
+            <span className="font-medium text-sm text-gray-700 group-hover:text-red-500">
+              Logout
+            </span>
           </button>
         </div>
 
         {/* Footer Info */}
-        <div
-          className="px-6 py-3 border-t text-xs text-center"
-          style={{
-            borderColor: "rgba(255, 255, 255, 0.05)",
-            color: "var(--palette-accent-3)",
-          }}
-        >
+        <div className="px-6 py-3 border-t border-gray-100 text-xs text-center text-gray-400">
           Last login: {new Date().toLocaleDateString()}
         </div>
       </PopoverContent>

@@ -61,7 +61,7 @@ export const logOut = async (currentPath?: string) => {
   cookieStore.delete("access_token");
   cookieStore.delete("refresh_token");
   cookieStore.delete("user_info");
-  
+  return true
   // ✅ If on home page, revalidate it; otherwise redirect to home
   if (currentPath === "/") {
     revalidatePath("/");

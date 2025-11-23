@@ -23,7 +23,7 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   // Basic Info
   title: {
@@ -204,7 +204,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <GoogleTagManager gtmId="GTM-TW7XR5TX" />
-      <PageViewTracker />
+      <Suspense>
+        <PageViewTracker />
+      </Suspense>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-palette-bg h-full`}
       >
@@ -269,7 +271,9 @@ export default function RootLayout({
             }),
           }}
         />
-        <ClientSideScrollRestorer />
+        <Suspense>
+          <ClientSideScrollRestorer />
+        </Suspense>
         <QueryProvider>
           <NuqsAdapter>
             <Navbar />
