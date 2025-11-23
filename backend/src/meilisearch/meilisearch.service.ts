@@ -11,8 +11,8 @@ export class MeilisearchService implements OnModuleInit{
   async onModuleInit() {
     try{
       this.client = new MeiliSearch({
-      host: 'http://localhost:7700',
-      apiKey: 'admin',
+      host: process.env.MELISEACH_URL as string,
+      apiKey: process.env.MELISEACH_TOKEN as string,
     });
     this.client.createIndex('short_products',{
       primaryKey: 'id',
