@@ -2,7 +2,7 @@
 import { HttpException, Injectable, ForbiddenException, Logger } from '@nestjs/common';
 import { CreateProductDto, getProductCsv } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import slugify from 'slugify';
+
 import { User, UserDocument, UserRole, UserSchema } from 'src/user/entities/user.schema';
 import { TenantConnectionService } from 'lib/connection/mongooseConnection.service';
 import { ReviewStatsSchema, ReviewStats, ReviewStatsDocument } from './entities/review-stats.schema';
@@ -19,6 +19,7 @@ import { PaginationDto } from 'lib/pagination.dto';
 import { SellProductItemService } from 'src/sell-product-item/sell-product-item.service';
 import { json2csv } from "json-2-csv";
 import { jwts } from 'src/auth/auth.guard';
+import slugify from '@sindresorhus/slugify';
 
 @Injectable()
 export class ProductService {

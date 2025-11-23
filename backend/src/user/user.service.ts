@@ -6,7 +6,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
-import slugify from 'slugify';
+import slugify from '@sindresorhus/slugify';
 
 import { User, UserDocument, UserSchema, UserRole } from './entities/user.schema';
 import { PaginationDto } from 'lib/pagination.dto';
