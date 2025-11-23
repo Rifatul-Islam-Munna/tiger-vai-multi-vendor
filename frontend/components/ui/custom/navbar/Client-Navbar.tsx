@@ -50,6 +50,7 @@ import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
 import { CartData } from "@/@types/wishlist";
 import { useWishHook } from "@/zustan-hook/wishListhook";
 import { Category, CategoryResponse } from "@/@types/category-brand";
+import Image from "next/image";
 
 const ClientNavbar = ({ user }: { user: BasicUser | null }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -150,18 +151,12 @@ const ClientNavbar = ({ user }: { user: BasicUser | null }) => {
           {/* Logo */}
           <Link href={"/"}>
             <div className="flex items-center gap-2">
-              <div
-                className="w-10 h-10 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: "var(--palette-btn)" }}
-              >
-                <ShoppingBag className="w-6 h-6 text-white" />
-              </div>
-              <span
-                className="text-2xl font-bold"
-                style={{ color: "var(--palette-text)" }}
-              >
-                MarketHub
-              </span>
+              <Image
+                src={"/logo-black.avif"}
+                width={200}
+                height={100}
+                alt="logo"
+              />
             </div>
           </Link>
 
@@ -389,13 +384,12 @@ const ClientNavbar = ({ user }: { user: BasicUser | null }) => {
             style={{ borderColor: "#e5e7eb" }}
           >
             <SheetTitle className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: "var(--palette-btn)" }}
-              >
-                <ShoppingBag className="w-6 h-6 text-white" />
-              </div>
-              <span style={{ color: "var(--palette-text)" }}>MarketHub</span>
+              <Image
+                src={"/logo-black.avif"}
+                width={200}
+                height={100}
+                alt="logo"
+              />
             </SheetTitle>
           </SheetHeader>
 

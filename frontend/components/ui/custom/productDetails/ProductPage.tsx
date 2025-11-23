@@ -36,6 +36,7 @@ import {
 } from "@/actions/metaEvent";
 import { User } from "@/@types/auth-response";
 import { BasicUser } from "@/@types/userType";
+import DescriptionComponent from "./RenderDesription";
 
 const RatingBreakdown = ({ stats }: { stats: ReviewStats | undefined }) => {
   const getCount = (rating: number): number => {
@@ -758,9 +759,8 @@ const ProductPage = ({ params }: { params: Product }) => {
                   <h3 className="text-xl font-bold text-palette-text mb-4">
                     Product Description
                   </h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    {params?.description ?? "No description available."}
-                  </p>
+
+                  <DescriptionComponent params={params?.description} />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 p-6 bg-palette-btn/5 rounded-lg">

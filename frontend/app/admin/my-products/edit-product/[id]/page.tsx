@@ -41,6 +41,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { ImageUploadFieldUpdate } from "@/components/ui/custom/admin/create-edit-product/create-product/UpdateImageField";
 import { updateProductAdmin } from "@/actions/product";
+import RichTextEditor from "@/components/ui/custom/addProduct/Description";
 
 // Static product data for demo
 const STATIC_PRODUCTS: Record<string, any> = {
@@ -315,7 +316,7 @@ export default function EditProductPage() {
                     >
                       Description
                     </label>
-                    <Textarea
+                    {/* <Textarea
                       value={formData.description || ""}
                       onChange={(e) =>
                         updateField("description", e.target.value)
@@ -326,6 +327,10 @@ export default function EditProductPage() {
                         borderColor: "var(--palette-accent-3)",
                         color: "var(--palette-text)",
                       }}
+                    /> */}
+                    <RichTextEditor
+                      description={formData.description}
+                      updateField={updateField}
                     />
                   </div>
 

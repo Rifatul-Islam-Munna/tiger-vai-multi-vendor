@@ -13,6 +13,7 @@ import "regenerator-runtime/runtime";
 import { Suspense } from "react";
 import ClientSideScrollRestorer from "@/components/ui/custom/common/ClientSideScrollRestorer";
 import { PageViewTracker } from "@/components/ui/custom/common/PageViewTracker";
+import Footer from "@/components/ui/custom/common/Footer";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -274,6 +275,7 @@ export default function RootLayout({
             <Navbar />
 
             {children}
+            <Footer />
             <Toaster />
           </NuqsAdapter>
         </QueryProvider>

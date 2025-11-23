@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-
+@plugin "@tailwindcss/typography";
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -48,21 +48,23 @@
   --color-palette-text: var(--palette-text); /* #263846 - Text */
   --color-palette-accent-1: var(--palette-accent-1); /* #edb57e - Warm accent */
   --color-palette-accent-2: var(--palette-accent-2); /* #c8d2c7 - Sage accent */
-  --color-palette-accent-3: var(--palette-accent-3); /* #86929c - Cool accent */ --animate-marquee: marquee var(--duration) infinite linear; --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+  --color-palette-accent-3: var(--palette-accent-3); /* #86929c - Cool accent */
+  --animate-marquee: marquee var(--duration) infinite linear;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
   @keyframes marquee {
-  from {
-    transform: translateX(0);
+    from {
+      transform: translateX(0);
     }
-  to {
-    transform: translateX(calc(-100% - var(--gap)));
+    to {
+      transform: translateX(calc(-100% - var(--gap)));
     }
   }
   @keyframes marquee-vertical {
-  from {
-    transform: translateY(0);
+    from {
+      transform: translateY(0);
     }
-  to {
-    transform: translateY(calc(-100% - var(--gap)));
+    to {
+      transform: translateY(calc(-100% - var(--gap)));
     }
   }
 }
@@ -153,6 +155,25 @@
   --palette-accent-1: #b4ccfb; /* Dark blue-gray */
   --palette-accent-2: #5f6f99; /* Medium dark blue */
   --palette-accent-3: #3d4e6f; /* Deep blue-gray */
+}
+@layer components {
+  .rich-text {
+    /* Base styles (Mobile / Default) */
+    @apply prose max-w-none w-full
+    prose-headings:font-bold 
+    prose-h1:text-xl 
+    prose-h2:text-lg
+    prose-h3:text-base 
+    prose-p:text-sm 
+    prose-a:text-blue-600 prose-a:underline
+    prose-ul:list-disc prose-ol:list-decimal
+    prose-img:rounded-lg prose-img:shadow-none;
+  }
+
+  /* Optional: Fix for TipTap editor container height */
+  .rich-text .ProseMirror {
+    @apply min-h-[400px] outline-none;
+  }
 }
 
 @layer base {

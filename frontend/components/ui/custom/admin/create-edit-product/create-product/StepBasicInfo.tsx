@@ -17,6 +17,7 @@ import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
 import { BrandResponse, CategoryResponse } from "@/@types/category-brand";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import RichTextEditor from "../../../addProduct/Description";
 
 // Static categories and brands
 const CATEGORIES = [
@@ -101,7 +102,7 @@ export default function StepBasicInfo() {
         >
           Description
         </label>
-        <Textarea
+        {/*    <Textarea
           placeholder="Enter product description"
           value={formData.description || ""}
           onChange={(e) => updateField("description", e.target.value)}
@@ -111,6 +112,10 @@ export default function StepBasicInfo() {
             borderColor: "var(--palette-accent-3)",
             color: "var(--palette-text)",
           }}
+        /> */}
+        <RichTextEditor
+          description={formData.description}
+          updateField={updateField}
         />
       </div>
 

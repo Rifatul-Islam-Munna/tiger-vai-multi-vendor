@@ -36,12 +36,13 @@ export default function PaymentPage() {
       desc: "Pay when you receive your order",
       icon: <Truck className="w-6 h-6" />,
     },
-    {
+    /* {
       id: PaymentMethod.ONLINE,
       name: "Online Payment",
       desc: "Pay with bKash, Nagad, Rocket, or Card",
       icon: <Wallet className="w-6 h-6" />,
-    },
+    } */
+    ,
   ];
 
   const handlePlaceOrder = async () => {
