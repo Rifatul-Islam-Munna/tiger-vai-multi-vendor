@@ -19,7 +19,7 @@ import { PaginationDto } from 'lib/pagination.dto';
 import { SellProductItemService } from 'src/sell-product-item/sell-product-item.service';
 import { json2csv } from "json-2-csv";
 import { jwts } from 'src/auth/auth.guard';
-import slugify from '@sindresorhus/slugify';
+import slugify from 'slugify';
 
 @Injectable()
 export class ProductService {
