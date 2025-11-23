@@ -22,7 +22,7 @@ export function MobileFilterSheet(props: any) {
       </SheetTrigger>
       <SheetContent
         side="right"
-        className="w-[500px] px-14 overflow-y-auto bg-white border-0"
+        className=" w-full sm:max-w-[500px] px-1 md:px-14 overflow-y-auto bg-white border-0"
       >
         <SheetHeader>
           <SheetTitle>Filters</SheetTitle>

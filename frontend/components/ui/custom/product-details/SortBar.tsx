@@ -28,7 +28,7 @@ export function SortBar({
   console.log("currentValue", currentValue);
 
   return (
-    <div className="flex items-center justify-between mb-6 bg-white p-4 rounded-lg border border-gray-200">
+    <div className="flex items-center justify-between flex-wrap mb-6 bg-white p-4 rounded-lg border border-gray-200">
       <p className="text-sm text-gray-600">
         <span className="font-medium text-palette-text">{totalProducts}</span>{" "}
         products found
