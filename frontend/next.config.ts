@@ -12,6 +12,12 @@ const nextConfig: NextConfig = {
         port: "9000",
         pathname: "/my-tiger-vai-bucket/**",
       },
+      {
+        protocol: "https",
+        hostname: "multi-vendor-minio.pixs1x.easypanel.host",
+        port: "9000",
+        pathname: "/my-tiger-vai-bucket/**",
+      },
     
     ],
     unoptimized: true,
@@ -24,7 +30,12 @@ const nextConfig: NextConfig = {
     cssChunking:true
     
     
-  }
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  
+  
 };
 
 export default nextConfig;

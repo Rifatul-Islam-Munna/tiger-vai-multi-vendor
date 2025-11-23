@@ -1,5 +1,6 @@
 import { getUserInfo } from "@/actions/auth";
 import ClientNavbar from "./Client-Navbar";
+import { Suspense } from "react";
 
 const Navbar = async () => {
   let user = null;
@@ -12,7 +13,11 @@ const Navbar = async () => {
     user = null;
   }
 
-  return <ClientNavbar user={user} />;
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ClientNavbar user={user} />{" "}
+    </Suspense>
+  );
 };
 
 export default Navbar;
