@@ -732,14 +732,14 @@ const ProductPage = ({ params }: { params: Product }) => {
 
         {/* Rest of the tabs section remains the same... */}
         <div className="mt-16">
-          <div className="border-b-2 border-gray-200">
-            <nav className="flex space-x-8">
+          <div className="border-b-2 border-gray-200 ">
+            <nav className="flex space-x-8 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth -webkit-overflow-scrolling-touch">
               {["description", "specifications", "reviews", "shipping"].map(
                 (tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm capitalize transition-colors ${
+                    className={`py-4 px-1 border-b-2 font-medium text-sm capitalize transition-colors whitespace-nowrap snap-start flex-shrink-0 ${
                       activeTab === tab
                         ? "border-palette-btn text-palette-btn"
                         : "border-transparent text-gray-500 hover:text-palette-text"
