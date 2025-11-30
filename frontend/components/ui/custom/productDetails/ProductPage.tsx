@@ -60,10 +60,7 @@ const RatingBreakdown = ({ stats }: { stats: ReviewStats | undefined }) => {
     const count = getCount(rating);
     const total = stats?.totalReviews ?? 0;
 
-    // If no reviews, return 0%
     if (total === 0) return "0%";
-
-    // Calculate percentage
     return `${Math.round((count / total) * 100)}%`;
   };
 
@@ -93,24 +90,241 @@ const RatingBreakdown = ({ stats }: { stats: ReviewStats | undefined }) => {
   );
 };
 
+// Product Variant Cards Component
+interface ProductVariantCardsProps {
+  product: Product;
+  user?: BasicUser | null;
+}
+
+const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
+  product,
+  user,
+}) => {
+  const { addToCart } = useCartStore();
+
+  // Group variants by size
+  const variantsBySize = React.useMemo(() => {
+    const grouped = new Map<string, typeof product.variants>();
+
+    product.variants?.forEach((variant) => {
+      const size = variant.size || "Default";
+      if (!grouped.has(size)) {
+        grouped.set(size, []);
+      }
+      grouped.get(size)?.push(variant);
+    });
+
+    return grouped;
+  }, [product.variants]);
+
+  // Get unique colors for a size
+  const getColorsForSize = (size: string) => {
+    const variants = variantsBySize.get(size) || [];
+    return variants.map((v) => v.color).filter(Boolean);
+  };
+
+  return (
+    <div className="space-y-4">
+      {Array.from(variantsBySize.entries()).map(([size, variants]) => (
+        <VariantCard
+          key={size}
+          product={product}
+          size={size}
+          variants={variants}
+          colors={getColorsForSize(size)}
+          user={user}
+          addToCart={addToCart}
+        />
+      ))}
+    </div>
+  );
+};
+
+interface VariantCardProps {
+  product: Product;
+  size: string;
+  variants: NonNullable<Product["variants"]>;
+  colors: (string | undefined)[];
+  user?: BasicUser | null;
+  addToCart: (item: Omit<CartItem, "quantity">) => void;
+}
+
+const VariantCard: React.FC<VariantCardProps> = ({
+  product,
+  size,
+  variants,
+  colors,
+  user,
+  addToCart,
+}) => {
+  const [selectedColor, setSelectedColor] = useState<string>(colors[0] || "");
+
+  // Get current variant based on selected color
+  const currentVariant = variants.find((v) => v.color === selectedColor);
+
+  // Calculate prices
+  const currentPrice =
+    currentVariant?.discountPrice || currentVariant?.price || 0;
+  const originalPrice = currentVariant?.discountPrice
+    ? currentVariant?.price
+    : null;
+  const discountPercentage = originalPrice
+    ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100)
+    : 0;
+
+  // Get stock
+  const stock = currentVariant?.stock || 0;
+
+  // Check if this VARIANT is recommended (from variant.recommended field)
+  const isRecommended = currentVariant?.recommended;
+
+  const handleAddToCart = () => {
+    if (!selectedColor || !currentVariant) {
+      toast.error("Please select a color");
+      return;
+    }
+
+    if (stock === 0) {
+      toast.error("This item is out of stock");
+      return;
+    }
+
+    const eventId = uuidv4();
+    const cartItemId = `${product._id}-${size}-${selectedColor}`;
+
+    const cartItem: Omit<CartItem, "quantity"> = {
+      _id: cartItemId,
+      productId: product._id,
+      name: product.name ?? "Product",
+      thumbnail: product.thumbnail?.url ?? "",
+      brandName: product.brand?.name ?? "Unknown Brand",
+      slug: product.slug ?? "",
+      variant: {
+        size: size,
+        color: selectedColor,
+        price: currentVariant.price,
+        discountPrice: currentVariant.discountPrice,
+      },
+      unitPrice: currentVariant.discountPrice ?? currentVariant.price,
+      variantStock: currentVariant.stock ?? 0,
+    };
+
+    const extraData = {
+      event_id: eventId,
+      userId: user?.id,
+      userName: user?.name,
+      email: user?.email,
+      ...cartItem,
+    };
+
+    addToCart(cartItem);
+    addToCartEvent(extraData);
+    addToCartServerEvent(extraData);
+
+    toast.success("Added to cart!", { position: "bottom-right" });
+  };
+
+  return (
+    <div className="relative bg-white border border-gray-200 rounded-lg p-4  ">
+      {/* Recommended Badge - Shows when current selected variant is recommended */}
+      {isRecommended && (
+        <div className="    py-1  text-xs font-semibold ">
+          Recommended: {isRecommended}
+        </div>
+      )}
+
+      <div className="space-y-3 mt-2">
+        {/* Size Display */}
+        <div>
+          <span className="text-sm text-gray-600">Size: </span>
+          <span className="font-semibold text-palette-text">{size}</span>
+        </div>
+
+        {/* Price Section */}
+        <div className="flex items-center gap-3 flex-wrap">
+          {originalPrice ? (
+            <>
+              <span className="text-lg line-through text-gray-400">
+                ৳{originalPrice.toFixed(2)}
+              </span>
+              <span className="text-2xl font-bold text-palette-text">
+                ৳{currentPrice.toFixed(2)}
+              </span>
+              {discountPercentage > 0 && (
+                <span className="bg-palette-btn/10 text-palette-btn px-2 py-1 rounded text-sm font-bold">
+                  {discountPercentage}% off
+                </span>
+              )}
+            </>
+          ) : (
+            <span className="text-2xl font-bold text-palette-text">
+              ৳{currentPrice.toFixed(2)}
+            </span>
+          )}
+        </div>
+
+        {/* Color Selection - User can select color */}
+        {colors.length > 0 && (
+          <div className="space-y-2">
+            <span className="text-sm font-medium text-palette-text">
+              Select Color:{" "}
+              <span className="text-palette-btn">
+                {selectedColor || "None"}
+              </span>
+            </span>
+            <div className="flex gap-2 flex-wrap">
+              {colors.map((color) => (
+                <button
+                  key={color}
+                  onClick={() => setSelectedColor(color || "")}
+                  className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
+                    selectedColor === color
+                      ? "border-palette-btn bg-palette-btn text-white shadow-md"
+                      : "border-gray-300 bg-white text-gray-700 hover:border-palette-btn hover:bg-palette-btn/5"
+                  }`}
+                >
+                  {color}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Stock Status */}
+        <div className="flex items-center justify-between">
+          <div
+            className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+              stock > 0
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
+            }`}
+          >
+            {stock > 0 ? `Stock: ${stock}` : "Out of Stock"}
+          </div>
+        </div>
+
+        {/* Add to Cart Button */}
+        <button
+          onClick={handleAddToCart}
+          disabled={stock === 0 || !selectedColor}
+          className="w-full bg-palette-btn text-white py-2.5 px-4 rounded-lg font-semibold hover:bg-palette-btn/90 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm"
+        >
+          {stock === 0
+            ? "Out of Stock"
+            : !selectedColor
+            ? "Select Color First"
+            : "Add to Cart"}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const ProductPage = ({ params }: { params: Product }) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
-  /*   const [selectedSize, setSelectedSize] = useQueryState("size");
-  const [selectedColor, setSelectedColor] = useQueryState("color"); */
-  const [selectedSize, setSelectedSize] = useState("");
-  const [selectedColor, setSelectedColor] = useState("");
   const [page, setPage] = useState(1);
   const [getUser, setGetUser] = useState<BasicUser | null>(null);
-
-  /*   useEffect(() => {
-    const getUSer = async () => {
-      const user = await getUserInfo();
-      setGetUser(user);
-    };
-    getUSer();
-  }, []); */
 
   console.log("params-stats", params.stats);
 
@@ -119,84 +333,33 @@ const ProductPage = ({ params }: { params: Product }) => {
     `/product/get-all-reviews-for-products?id=${params._id}&page=${page}`,
     { enabled: activeTab === "reviews" }
   );
-  // Extract unique colors and sizes from variants
-  const colors =
-    (params?.variants?.length ?? 0) > 0
-      ? [
-          ...new Set(
-            (params.variants ?? []).map((v) => v?.color).filter(Boolean)
-          ),
-        ]
-      : [];
 
-  const sizes =
-    (params?.variants?.length ?? 0) > 0
-      ? [
-          ...new Set(
-            (params.variants ?? []).map((v) => v?.size).filter(Boolean)
-          ),
-        ]
-      : [];
-
-  // Get current variant based on selection
-  const currentVariant = params?.variants?.find(
-    (v) => v?.color === selectedColor && v?.size === selectedSize
-  );
-
-  // Calculate price based on variant or default
-  const getCurrentPrice = () => {
-    // If variants exist, only show price when valid variant is selected
-    if ((params?.variants?.length ?? 0) > 0) {
-      if (currentVariant?.discountPrice) {
-        return currentVariant.discountPrice;
-      }
-      if (currentVariant?.price) {
-        return currentVariant.price;
-      }
-      // No valid variant selected, return null to show "Select options" message
+  // Calculate price range from variants
+  const getPriceRange = () => {
+    if (!params?.variants || params.variants.length === 0) {
       return null;
     }
 
-    // No variants, use base product pricing
-    if (params?.hasOffer && params?.offerPrice) {
-      return params.offerPrice;
-    }
-    return params?.price ?? 0;
+    const prices = params.variants.map((v) =>
+      v.discountPrice ? v.discountPrice : v.price
+    );
+    const originalPrices = params.variants.map((v) => v.price);
+
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const minOriginalPrice = Math.min(...originalPrices);
+    const maxOriginalPrice = Math.max(...originalPrices);
+
+    return {
+      min: minPrice,
+      max: maxPrice,
+      originalMin: minOriginalPrice,
+      originalMax: maxOriginalPrice,
+      hasDiscount: prices.some((price, i) => price < originalPrices[i]),
+    };
   };
 
-  const getOriginalPrice = () => {
-    // If variants exist, only show original price when valid variant is selected
-    if ((params?.variants?.length ?? 0) > 0) {
-      if (currentVariant?.price && currentVariant?.discountPrice) {
-        return currentVariant.price;
-      }
-      return null;
-    }
-
-    // No variants, use base product pricing
-    if (params?.hasOffer && params?.offerPrice) {
-      return params.price;
-    }
-    return null;
-  };
-
-  const currentPrice = getCurrentPrice();
-  const originalPrice = getOriginalPrice();
-  const totalPrice = currentPrice ? (currentPrice * quantity).toFixed(2) : null;
-
-  // Get stock based on variant or default
-  const currentStock = currentVariant?.stock ?? params?.stock ?? 0;
-
-  // Check if Add to Cart button should be disabled
-  const hasVariants = (params?.variants?.length ?? 0) > 0;
-  const needsColorSelection =
-    hasVariants && colors.length > 0 && !selectedColor;
-  const needsSizeSelection = hasVariants && sizes.length > 0 && !selectedSize;
-  const isAddToCartDisabled =
-    currentStock === 0 ||
-    needsColorSelection ||
-    needsSizeSelection ||
-    !currentVariant;
+  const priceRange = getPriceRange();
 
   const handleImageNavigation = (direction: "prev" | "next") => {
     const imagesLength = params?.images?.length ?? 0;
@@ -226,160 +389,6 @@ const ProductPage = ({ params }: { params: Product }) => {
       </div>
     );
   };
-  const router = useRouter();
-  const { addToCart } = useCartStore();
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    // Validate that color and size are selected
-    if (!selectedColor || !selectedSize) {
-      // You can add a toast notification here
-      toast.error("Please select both color and size");
-      return;
-    }
-
-    // Validate that a valid variant exists
-    if (!currentVariant) {
-      toast.error("This combination is not available");
-      return;
-    }
-
-    // Check stock availability
-    if (currentStock === 0) {
-      toast.error("This item is out of stock");
-      return;
-    }
-
-    // Check if requested quantity exceeds stock
-    if (quantity > currentStock) {
-      toast.error(`Only ${currentStock} items available`);
-      return;
-    }
-    const eventId = uuidv4();
-
-    // Create unique cart item ID
-    const cartItemId = `${params._id}-${selectedSize}-${selectedColor}`;
-
-    // Prepare cart item data
-    const cartItem: Omit<CartItem, "quantity"> = {
-      _id: cartItemId,
-      productId: params._id,
-      name: params.name ?? "Product",
-      thumbnail: params.thumbnail?.url ?? "",
-      brandName: params.brand?.name ?? "Unknown Brand",
-      slug: params.slug ?? "",
-
-      // Variant information
-      variant: {
-        size: selectedSize,
-        color: selectedColor,
-        price: currentVariant.price,
-        discountPrice: currentVariant.discountPrice,
-      },
-
-      // Unit price (use discount price if available)
-      unitPrice: currentVariant.discountPrice ?? currentVariant.price,
-
-      // Variant stock
-      variantStock: currentVariant.stock ?? 0,
-    };
-    const extraData = {
-      event_id: eventId,
-      userId: getUser?.id,
-      userName: getUser?.name,
-      email: getUser?.email,
-      ...cartItem,
-    };
-
-    // Add to cart
-    addToCart(cartItem);
-    addToCartEvent(extraData);
-    addToCartServerEvent(extraData);
-
-    // Optional: Show success message
-    toast.success(`Added ${quantity} item(s) to cart!`, {
-      position: "bottom-right",
-    });
-  };
-
-  const buyNow = () => {
-    if (!selectedColor || !selectedSize) {
-      // You can add a toast notification here
-      toast.error("Please select both color and size");
-      return;
-    }
-
-    // Validate that a valid variant exists
-    if (!currentVariant) {
-      toast.error("This combination is not available");
-      return;
-    }
-
-    // Check stock availability
-    if (currentStock === 0) {
-      toast.error("This item is out of stock");
-      return;
-    }
-
-    // Check if requested quantity exceeds stock
-    if (quantity > currentStock) {
-      toast.error(`Only ${currentStock} items available`);
-      return;
-    }
-
-    // Create unique cart item ID
-    const cartItemId = `${params._id}-${selectedSize}-${selectedColor}`;
-
-    // Prepare cart item data
-    const cartItem: Omit<CartItem, "quantity"> = {
-      _id: cartItemId,
-      productId: params._id,
-      name: params.name ?? "Product",
-      thumbnail: params.thumbnail?.url ?? "",
-      brandName: params.brand?.name ?? "Unknown Brand",
-      slug: params.slug ?? "",
-
-      // Variant information
-      variant: {
-        size: selectedSize,
-        color: selectedColor,
-        price: currentVariant.price,
-        discountPrice: currentVariant.discountPrice,
-      },
-
-      // Unit price (use discount price if available)
-      unitPrice: currentVariant.discountPrice ?? currentVariant.price,
-
-      // Variant stock
-      variantStock: currentVariant.stock ?? 0,
-    };
-    const eventId = uuidv4();
-
-    const extraData = {
-      event_id: eventId,
-      userId: getUser?.id,
-      userName: getUser?.name,
-      email: getUser?.email,
-      ...cartItem,
-    };
-
-    // Add to cart
-    addToCart(cartItem);
-    addToCartEvent(extraData);
-    const extraDatas = {
-      userId: getUser?.id,
-      userName: getUser?.name,
-      email: getUser?.email,
-      event_id: eventId,
-      items: [{ ...cartItem, quantity: quantity }],
-    };
-    initiateCheckoutEvent(extraDatas);
-
-    addToCartServerEvent(cartItem);
-    initiateCheckoutServerEvent(extraDatas);
-
-    // Optional: Show success message
-    router.push("/cart");
-  };
 
   return (
     <div className="min-h-screen bg-palette-bg px-4 lg:px-2 xl:px-0">
@@ -388,7 +397,7 @@ const ProductPage = ({ params }: { params: Product }) => {
           {/* Product Images Section */}
           <div className="space-y-4">
             {/* Main Image */}
-            <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
+            <div className="relative bg-gray-100 rounded-lg overflow-hidden">
               <img
                 src={
                   params?.images?.[selectedImageIndex]?.url ??
@@ -396,7 +405,7 @@ const ProductPage = ({ params }: { params: Product }) => {
                   ""
                 }
                 alt={params?.name ?? "Product image"}
-                className=" aspect-square "
+                className="w-full h-full object-contain"
               />
 
               {/* Navigation Arrows */}
@@ -418,21 +427,21 @@ const ProductPage = ({ params }: { params: Product }) => {
               )}
 
               {/* Offer Badge */}
-              {currentPrice && originalPrice && (
+              {priceRange?.hasDiscount && (
                 <div className="absolute top-4 left-4 bg-palette-btn text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
-                  Save ${(originalPrice - currentPrice).toFixed(2)}
+                  Sale
                 </div>
               )}
             </div>
 
             {/* Thumbnail Images */}
             {(params?.images?.length ?? 0) > 1 && (
-              <div className="flex gap-3">
+              <div className="flex gap-3 overflow-x-auto">
                 {params?.images?.map((image, index) => (
                   <button
                     key={image?._id ?? index}
                     onClick={() => setSelectedImageIndex(index)}
-                    className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${
+                    className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors flex-shrink-0 ${
                       selectedImageIndex === index
                         ? "border-palette-btn"
                         : "border-gray-200 hover:border-gray-300"
@@ -488,175 +497,74 @@ const ProductPage = ({ params }: { params: Product }) => {
               )}
             </div>
 
-            {/* Price */}
-            <div className="space-y-2">
-              {currentPrice !== null ? (
-                <div className="flex items-center gap-4">
-                  {originalPrice ? (
-                    <>
-                      <span className="text-3xl font-bold text-palette-text">
-                        ${currentPrice.toFixed(2)}
-                      </span>
-                      <span className="text-xl text-gray-500 line-through">
-                        ${originalPrice.toFixed(2)}
-                      </span>
-                      <span className="bg-palette-btn/10 text-palette-btn px-2 py-1 rounded text-sm font-bold">
-                        {Math.round(
-                          ((originalPrice - currentPrice) / originalPrice) * 100
-                        )}
-                        % OFF
-                      </span>
-                    </>
-                  ) : (
-                    <span className="text-3xl font-bold text-palette-text">
-                      ${currentPrice.toFixed(2)}
-                    </span>
-                  )}
-                </div>
-              ) : (
-                <div className="text-xl text-gray-500">
-                  Select options to see price
-                </div>
+            <div className=" flex flex-col ">
+              {params?.shortDescription && (
+                <p className="md:text-lg text-gray-600 text-sm">
+                  {params?.shortDescription}
+                </p>
               )}
-              {params?.hasOffer && params?.offerExpiresAt && (
-                <p className="text-sm text-gray-500">
-                  Offer expires on{" "}
-                  {new Date(params.offerExpiresAt).toLocaleDateString()}
+              {params?.special_offer && (
+                <p className="md:text-lg text-gray-600 text-sm">
+                  {params?.special_offer}
                 </p>
               )}
             </div>
 
-            {/* Stock Status */}
-            {currentVariant || !hasVariants ? (
-              <div
-                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                  currentStock > 0
-                    ? "bg-green-100 text-green-700"
-                    : "bg-palette-btn/10 text-palette-btn"
-                }`}
-              >
-                {currentStock > 0
-                  ? `In Stock (${currentStock} available)`
-                  : "Out of Stock"}
-              </div>
-            ) : (
-              <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600">
-                Select variant to check stock
-              </div>
-            )}
-
-            {/* Color Selection */}
-            {colors.length > 0 && (
-              <div className="space-y-3">
-                <h4 className="font-medium text-palette-text">
-                  Color{" "}
-                  {needsColorSelection && (
-                    <span className="text-palette-btn">*</span>
+            {/* Price Range Display */}
+            {priceRange && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-4 flex-wrap">
+                  {/* Original Price Range (Left) */}
+                  {priceRange.hasDiscount && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-400 line-through text-lg">
+                        ৳{priceRange.originalMin.toFixed(2)}
+                        {priceRange.originalMin !== priceRange.originalMax &&
+                          ` - ৳${priceRange.originalMax.toFixed(2)}`}
+                      </span>
+                    </div>
                   )}
-                </h4>
-                <div className="flex gap-2 flex-wrap">
-                  {colors.map((color) => {
-                    return (
-                      <button
-                        key={color}
-                        onClick={() => setSelectedColor(color)}
-                        className={`px-4 py-2 rounded-lg border transition-colors ${
-                          selectedColor === color
-                            ? "border-palette-btn bg-palette-btn/5 text-palette-btn font-medium"
-                            : "border-gray-200 hover:border-gray-300 text-palette-text cursor-pointer"
-                        }`}
-                      >
-                        {color}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
 
-            {/* Size Selection */}
-            {sizes.length > 0 && (
-              <div className="space-y-3">
-                <h4 className="font-medium text-palette-text">
-                  Size{" "}
-                  {needsSizeSelection && (
-                    <span className="text-palette-btn">*</span>
+                  {/* Discounted Price Range (Right) */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-3xl font-bold text-palette-text">
+                      ৳{priceRange.min.toFixed(2)}
+                      {priceRange.min !== priceRange.max &&
+                        ` - ৳${priceRange.max.toFixed(2)}`}
+                    </span>
+                  </div>
+
+                  {/* Discount Badge */}
+                  {priceRange.hasDiscount && (
+                    <span className="bg-palette-btn/10 text-palette-btn px-2 py-1 rounded text-sm font-bold">
+                      Up to{" "}
+                      {Math.round(
+                        ((priceRange.originalMax - priceRange.min) /
+                          priceRange.originalMax) *
+                          100
+                      )}
+                      % OFF
+                    </span>
                   )}
-                </h4>
-                <div className="flex gap-2 flex-wrap">
-                  {sizes.map((size) => {
-                    return (
-                      <button
-                        key={size}
-                        onClick={() => setSelectedSize(size)}
-                        className={`px-4 py-2 rounded-lg border transition-colors ${
-                          selectedSize === size
-                            ? "border-palette-btn bg-palette-btn/5 text-palette-btn font-medium"
-                            : "border-gray-200 hover:border-gray-300 text-palette-text cursor-pointer"
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    );
-                  })}
                 </div>
+                {params?.hasOffer && params?.offerExpiresAt && (
+                  <p className="text-sm text-gray-500">
+                    Offer expires on{" "}
+                    {new Date(params.offerExpiresAt).toLocaleDateString()}
+                  </p>
+                )}
               </div>
             )}
 
-            {/* Quantity */}
-            <div className="space-y-3">
-              <h4 className="font-medium text-palette-text">Quantity</h4>
-              <div className="flex items-center border-2 border-gray-200 rounded-lg w-fit">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="px-4 py-2 text-palette-text hover:bg-palette-bg transition-colors"
-                >
-                  −
-                </button>
-                <span className="px-4 py-2 border-x-2 border-gray-200 text-palette-text font-medium">
-                  {quantity}
-                </span>
-                <button
-                  onClick={() =>
-                    setQuantity(Math.min(currentStock, quantity + 1))
-                  }
-                  disabled={!currentStock}
-                  className="px-4 py-2 text-palette-text hover:bg-palette-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  +
-                </button>
+            {/* Variant Cards Section */}
+            {params?.variants && params.variants.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="font-medium text-palette-text text-lg">
+                  Available Options
+                </h4>
+                <ProductVariantCards product={params} user={getUser} />
               </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="space-y-3">
-              <button
-                type="button"
-                disabled={isAddToCartDisabled}
-                className="w-full bg-palette-btn text-white py-3 px-6 rounded-lg font-semibold hover:bg-palette-btn/90 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-                onClick={handleAddToCart}
-              >
-                {currentStock === 0
-                  ? "Out of Stock"
-                  : isAddToCartDisabled
-                  ? "Select Color & Size"
-                  : totalPrice
-                  ? `Add to Cart - $${totalPrice}`
-                  : "Add to Cart"}
-              </button>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={buyNow}
-                  disabled={isAddToCartDisabled}
-                  className="flex-1 border-2 border-palette-btn text-palette-btn py-3 px-6 rounded-lg font-semibold hover:bg-palette-btn hover:text-white disabled:border-gray-300 disabled:text-gray-400 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
-                >
-                  Buy Now
-                </button>
-
-                <ShareProductDialog />
-              </div>
-            </div>
+            )}
 
             {/* Key Features */}
             {(params?.features?.length ?? 0) > 0 && (
@@ -694,7 +602,7 @@ const ProductPage = ({ params }: { params: Product }) => {
                     {params?.freeShipping
                       ? "Free Shipping"
                       : params?.shippingCost
-                      ? `Shipping: $${params.shippingCost}`
+                      ? `Shipping: ৳${params.shippingCost}`
                       : "Shipping Available"}
                   </p>
                   {params?.shippingTime && (
@@ -730,9 +638,9 @@ const ProductPage = ({ params }: { params: Product }) => {
           </div>
         </div>
 
-        {/* Rest of the tabs section remains the same... */}
+        {/* Tabs Section */}
         <div className="mt-16">
-          <div className="border-b-2 border-gray-200 ">
+          <div className="border-b-2 border-gray-200">
             <nav className="flex space-x-8 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth -webkit-overflow-scrolling-touch">
               {["description", "specifications", "reviews", "shipping"].map(
                 (tab) => (
@@ -899,7 +807,7 @@ const ProductPage = ({ params }: { params: Product }) => {
                         <span className="font-medium text-palette-text">
                           {params?.freeShipping
                             ? "Free"
-                            : `$${params?.shippingCost ?? 0}`}
+                            : `৳${params?.shippingCost ?? 0}`}
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -949,7 +857,7 @@ const ProductPage = ({ params }: { params: Product }) => {
                   <ol className="list-decimal list-inside space-y-2 text-gray-600">
                     <li>Contact our support team to initiate a return</li>
                     <li>Pack the item in its original packaging</li>
-                    <li>Print the prepaid return label we'll email you</li>
+                    <li>Print the prepaid return label we will email you</li>
                     <li>Drop off at any courier location or schedule pickup</li>
                     <li>Refund will be processed within 3-5 business days</li>
                   </ol>

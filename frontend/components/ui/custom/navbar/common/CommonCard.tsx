@@ -56,8 +56,8 @@ export function ProductCard({
         onClick={() => handlPushToProduct(product.slug)}
         className="group relative border pt-0 rounded-lg overflow-hidden bg-white transition-all shadow-none duration-300 hover:border-gray-300 flex flex-col"
       >
-        {/* Fixed Height Image Container */}
-        <div className="relative w-full h-44 sm:h-48 md:h-52 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden flex-shrink-0">
+        {/* 1:1 Square Image Container */}
+        <div className="relative w-full aspect-square bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden flex-shrink-0">
           {/* Discount Badge */}
           {product?.hasOffer && discount > 0 && (
             <Badge className="absolute top-2 left-2 z-10 bg-palette-btn/70 text-white border-0 text-[10px] sm:text-xs px-2 py-0.5 font-bold shadow-md">
@@ -77,7 +77,7 @@ export function ProductCard({
             className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
           />
 
-          {/* Wishlist Button - Separate Component */}
+          {/* Wishlist Button */}
           <div className="absolute top-2 right-2">
             <WishlistButton productId={product._id} />
           </div>
@@ -115,14 +115,14 @@ export function ProductCard({
           )}
 
           {/* Product Name */}
-          <h3 className="font-semibold text-gray-900 text-xs sm:text-sm md:text-base line-clamp-2 group-hover:text-palette-btn transition-colors leading-tight  mb-2">
+          <h3 className="font-semibold text-gray-900 text-xs sm:text-sm md:text-base line-clamp-2 group-hover:text-palette-btn transition-colors leading-tight mb-2">
             {product?.name}
           </h3>
 
           {/* Price Section */}
           <div className="mt-auto">
             <div className="flex items-baseline gap-2">
-              <span className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold  text-palette-btn">
+              <span className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-palette-btn">
                 ৳
                 {product?.offerPrice
                   ? product?.offerPrice?.toLocaleString()
@@ -148,7 +148,7 @@ export function ProductCard({
           href={isOutOfStock ? "#" : `/product-details/${product?.slug}`}
           className={isOutOfStock ? "pointer-events-none opacity-60" : ""}
         >
-          <div className="relative w-full h-32 sm:h-40 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden flex-shrink-0">
+          <div className="relative w-full aspect-square bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden flex-shrink-0">
             <img
               src={
                 imageError

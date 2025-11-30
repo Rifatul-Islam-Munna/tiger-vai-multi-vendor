@@ -118,6 +118,49 @@ export default function StepBasicInfo() {
           updateField={updateField}
         />
       </div>
+      <div>
+        <label
+          className="block text-sm font-semibold mb-2"
+          style={{ color: "var(--palette-accent-1)" }}
+        >
+          short Description
+        </label>
+        {/*    <Textarea
+          placeholder="Enter product description"
+          value={formData.description || ""}
+          onChange={(e) => updateField("description", e.target.value)}
+          rows={4}
+          style={{
+            backgroundColor: "rgba(255, 255, 255, 0.05)",
+            borderColor: "var(--palette-accent-3)",
+            color: "var(--palette-text)",
+          }}
+        /> */}
+        <Textarea
+          placeholder="Enter product short description"
+          value={formData.shortDescription || ""}
+          onChange={(e) => updateField("shortDescription", e.target.value)}
+          rows={4}
+          style={{}}
+        />
+      </div>
+
+      <div>
+        <label
+          className="block text-sm font-semibold mb-2"
+          style={{ color: "var(--palette-accent-1)" }}
+        >
+          Special Offer
+        </label>
+
+        <Textarea
+          placeholder="Enter special offer "
+          value={formData.special_offer || ""}
+          onChange={(e) => updateField("special_offer", e.target.value)}
+          rows={4}
+          style={{}}
+        />
+      </div>
 
       {/* Main Category */}
       <div>

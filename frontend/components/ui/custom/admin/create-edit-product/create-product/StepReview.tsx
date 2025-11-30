@@ -126,9 +126,11 @@ export default function StepReview() {
               <span style={{ color: "var(--palette-accent-3)" }}>
                 Avg Price:
               </span>{" "}
-              <span className="font-semibold">৳{avgPrice}</span>
+              <span className="font-semibold">
+                ৳{formData?.price ?? "set Price"}
+              </span>
             </div>
-            {avgOfferPrice && (
+            {formData?.offerPrice && (
               <div>
                 <span style={{ color: "var(--palette-accent-3)" }}>
                   Avg Offer:
@@ -137,7 +139,7 @@ export default function StepReview() {
                   className="font-semibold"
                   style={{ color: "var(--palette-btn)" }}
                 >
-                  ৳{avgOfferPrice}
+                  ৳{formData?.offerPrice}
                 </span>
               </div>
             )}

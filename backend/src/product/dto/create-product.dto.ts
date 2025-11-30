@@ -90,6 +90,11 @@ class ProductVariantDto {
   @IsNumber()
   stock?: number;
 
+  @ApiProperty({ description: 'Variant stock quantity', required: false })
+  @IsOptional()
+  @IsString()
+  recommended?: number;
+
   @ApiProperty({ description: 'Variant discount price', required: false })
   @IsOptional()
   @Transform(({ value }) => Number(value))
@@ -270,6 +275,14 @@ export class CreateProductDto {
   @IsOptional()
   @IsString()
   shippingTime?: string;
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  shortDescription?: string;
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  special_offer?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()

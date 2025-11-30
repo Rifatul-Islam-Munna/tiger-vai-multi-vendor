@@ -1,7 +1,7 @@
 // app/dashboard/products/add/page.tsx
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
@@ -51,6 +51,7 @@ export default function AddProductPage() {
     "new product",
     onSuccess
   );
+
   // ✅ UPDATED: Max step is now 7
   const handleSubmit = async () => {
     // ✅ Calculate and finalize prices from variants
@@ -62,7 +63,7 @@ export default function AddProductPage() {
     );
     console.log(
       "Submitting product with auto-calculated thumbnail:",
-      JSON.stringify(finalData.thumbnail)
+      JSON.stringify(finalData.price)
     );
 
     // Here you would call your API to create the product

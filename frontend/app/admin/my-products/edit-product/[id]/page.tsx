@@ -114,6 +114,7 @@ export default function EditProductPage() {
     color: "",
     price: 0,
     stock: 0,
+    recommended: "",
   });
   const { data: productDetails, isPending } = useQueryWrapper<Product>(
     [productId],
@@ -162,7 +163,7 @@ export default function EditProductPage() {
 
     const variants = (formData?.variants as any[]) || [];
     updateField("variants", [...variants, newVariant]);
-    setNewVariant({ size: "", color: "", price: 0, stock: 0 });
+    setNewVariant({ size: "", color: "", price: 0, stock: 0, recommended: "" });
   };
 
   const handleRemoveVariant = (index: number) => {
@@ -331,6 +332,54 @@ export default function EditProductPage() {
                     <RichTextEditor
                       description={formData.description}
                       updateField={updateField}
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      className="block text-sm font-semibold mb-2"
+                      style={{ color: "var(--palette-accent-1)" }}
+                    >
+                      short Description
+                    </label>
+                    {/*    <Textarea
+                            placeholder="Enter product description"
+                            value={formData.description || ""}
+                            onChange={(e) => updateField("description", e.target.value)}
+                            rows={4}
+                            style={{
+                              backgroundColor: "rgba(255, 255, 255, 0.05)",
+                              borderColor: "var(--palette-accent-3)",
+                              color: "var(--palette-text)",
+                            }}
+                          /> */}
+                    <Textarea
+                      placeholder="Enter product short description"
+                      value={formData.shortDescription || ""}
+                      onChange={(e) =>
+                        updateField("shortDescription", e.target.value)
+                      }
+                      rows={4}
+                      style={{}}
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      className="block text-sm font-semibold mb-2"
+                      style={{ color: "var(--palette-accent-1)" }}
+                    >
+                      Special Offer
+                    </label>
+
+                    <Textarea
+                      placeholder="Enter special offer "
+                      value={formData.special_offer || ""}
+                      onChange={(e) =>
+                        updateField("special_offer", e.target.value)
+                      }
+                      rows={4}
+                      style={{}}
                     />
                   </div>
 
@@ -714,6 +763,30 @@ export default function EditProductPage() {
                           }}
                         />
                       </div>
+
+                      <div>
+                        <label
+                          className="text-xs font-semibold mb-1 block"
+                          style={{ color: "var(--palette-accent-3)" }}
+                        >
+                          Recommended (Optional)
+                        </label>
+                        <Input
+                          placeholder="e.g., Use this variant"
+                          value={newVariant.recommended || ""}
+                          onChange={(e) =>
+                            setNewVariant({
+                              ...newVariant,
+                              recommended: e.target.value,
+                            })
+                          }
+                          style={{
+                            backgroundColor: "rgba(255, 255, 255, 0.05)",
+                            borderColor: "var(--palette-accent-3)",
+                            color: "var(--palette-text)",
+                          }}
+                        />
+                      </div>
                     </div>
                     <Button
                       onClick={handleAddVariant}
@@ -753,7 +826,8 @@ export default function EditProductPage() {
                                 className="text-sm"
                                 style={{ color: "var(--palette-accent-3)" }}
                               >
-                                ৳{variant.price} | Stock: {variant.stock}
+                                ৳{variant.price} | Stock: {variant.stock} |{" "}
+                                {variant?.recommended}
                                 {variant.discountPrice &&
                                   ` | Discount: ৳${variant.discountPrice}`}
                               </p>
@@ -790,19 +864,38 @@ export default function EditProductPage() {
                         <span style={{ color: "var(--palette-accent-3)" }}>
                           Avg Price:
                         </span>
-                        <p className="font-semibold text-lg">৳{avgPrice}</p>
+                        <Input
+                          type="number"
+                          value={formData?.price}
+                          onChange={(e) =>
+                            updateField("price", parseInt(e.target.value))
+                          }
+                        />
+                        {/* <p className="font-semibold text-lg">
+                          ৳{formData?.price}
+                        </p> */}
                       </div>
-                      {avgOfferPrice && (
+                      {formData?.offerPrice && (
                         <div>
                           <span style={{ color: "var(--palette-accent-3)" }}>
                             Avg Offer:
                           </span>
-                          <p
+                          <Input
+                            type="number"
+                            value={formData?.offerPrice}
+                            onChange={(e) =>
+                              updateField(
+                                "offerPrice",
+                                parseInt(e.target.value)
+                              )
+                            }
+                          />
+                          {/*    <p
                             className="font-semibold text-lg"
                             style={{ color: "var(--palette-btn)" }}
                           >
                             ৳{avgOfferPrice}
-                          </p>
+                          </p> */}
                         </div>
                       )}
                       <div>

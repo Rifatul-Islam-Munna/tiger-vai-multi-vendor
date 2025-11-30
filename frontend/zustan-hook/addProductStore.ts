@@ -62,6 +62,9 @@ const initialFormData: Partial<CreateProduct> = {
   shippingCost: 0,
   freeShipping: false,
   isAdminCreated: false,
+  shortDescription: "",
+  special_offer:"",
+
 };
 
 export const useAddProductStore = create<AddProductState>((set, get) => ({
@@ -117,24 +120,23 @@ export const useAddProductStore = create<AddProductState>((set, get) => ({
       throw new Error("Please add at least one variant");
     }
 
-    // Calculate average price
-    const avgPrice = calculateAveragePrice(variants);
+    /* // Calculate average price
+    const avgPrice = calculateAveragePrice(variants); */
 
-    // Calculate average offer price
-    const avgOfferPrice = calculateAverageOfferPrice(variants);
+/*     // Calculate average offer price
+    const avgOfferPrice = calculateAverageOfferPrice(variants); */
 
     // Calculate total stock
     const totalStock = calculateTotalStock(variants);
 
-    // Determine if has offer
-    const hasOffer = !!avgOfferPrice;
+   
 
     return {
       ...formData,
-      price: avgPrice,
+  
       stock: totalStock,
-      hasOffer,
-      offerPrice: avgOfferPrice || 0,
+      hasOffer:(formData?.offerPrice ?? 0) > 0 ? true : false,
+  
     };
   },
 }));

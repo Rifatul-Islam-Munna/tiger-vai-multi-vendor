@@ -100,8 +100,8 @@ export class ProductService {
 
   // ✅ UPDATED: Create Short Product DTO Helper
   private createShortProductData(product: any) {
-    const averagePrice = ProductHelper.calculateAveragePrice(product.variants);
-    const averageOfferPrice = ProductHelper.calculateAverageOfferPrice(product.variants);
+/*     const averagePrice = ProductHelper.calculateAveragePrice(product.variants);
+    const averageOfferPrice = ProductHelper.calculateAverageOfferPrice(product.variants); */
     const totalStock = ProductHelper.calculateTotalStock(product.variants);
 
     // ✅ Extract minimal variant info for short product
@@ -111,6 +111,7 @@ export class ProductService {
       price: v.price,
       discountPrice: v.discountPrice,
       stock: v.stock,
+    
     })) || [];
 
     return {
@@ -119,8 +120,8 @@ export class ProductService {
       main: product.category.main,
       category: product.category.category,
       subMain: product.category.subMain,
-      price: averagePrice || product.price,
-      offerPrice: averageOfferPrice || product.offerPrice,
+      price:  product.price,
+      offerPrice:  product.offerPrice,
       hasOffer: product.hasOffer,
       isDigital: product.isDigital,
       brandId: product.brand.id,
@@ -158,6 +159,7 @@ export class ProductService {
 
   // ✅ UPDATED: Create Product (Admin OR Vendor)
   async createProduct(dto: CreateProductDto, userId: string, role: UserRole) {
+    this.logger.log('🟡 Creating product',dto.price,dto.offerPrice);
     const ProductModel = this.productModel();
     const rawSlug = this.rawSlugify(
       dto.name,
@@ -174,15 +176,15 @@ export class ProductService {
     const isAdmin = role === UserRole.ADMIN;
 
     // ✅ NEW: Calculate averages from variants if provided
-    let finalPrice = dto.price;
+    let finalPrice = dto.price ?? 0;
     let finalStock = dto.stock;
-    let finalOfferPrice = dto.offerPrice;
+    let finalOfferPrice = dto.offerPrice ?? 0;
 
-    if (dto.variants && dto.variants.length > 0) {
+  /*   if (dto.variants && dto.variants.length > 0) {
       finalPrice = ProductHelper.calculateAveragePrice(dto.variants);
       finalStock = ProductHelper.calculateTotalStock(dto.variants);
       finalOfferPrice = ProductHelper.calculateAverageOfferPrice(dto.variants) || dto.offerPrice;
-    }
+    } */
 
     const newProduct = await ProductModel.create({
       ...dto,
@@ -230,14 +232,14 @@ export class ProductService {
     const ProductModel = this.productModel();
 
     // ✅ Calculate new averages if variants changed
-    let updateData = { ...dto };
+   /*  let updateData = { ...dto };
     if (dto.variants && dto.variants.length > 0) {
       updateData.price = ProductHelper.calculateAveragePrice(dto.variants);
       updateData.stock = ProductHelper.calculateTotalStock(dto.variants);
       updateData.offerPrice = ProductHelper.calculateAverageOfferPrice(dto.variants) || dto.offerPrice;
-    }
+    } */
 
-    const updated = await ProductModel.findByIdAndUpdate(productId, updateData, { new: true });
+    const updated = await ProductModel.findByIdAndUpdate(productId, dto, { new: true });
     if (!updated) throw new HttpException('Product not found', 404);
 
     // ✅ UPDATED: Sync ShortProduct with variants
@@ -270,14 +272,14 @@ export class ProductService {
     }
 
     // ✅ Calculate new averages if variants changed
-    let updateData = { ...dto };
+   /*  let updateData = { ...dto };
     if (dto.variants && dto.variants.length > 0) {
       updateData.price = ProductHelper.calculateAveragePrice(dto.variants);
       updateData.stock = ProductHelper.calculateTotalStock(dto.variants);
       updateData.offerPrice = ProductHelper.calculateAverageOfferPrice(dto.variants) || dto.offerPrice;
-    }
+    } */
 
-    const updated = await ProductModel.findByIdAndUpdate(productId, updateData, { new: true });
+    const updated = await ProductModel.findByIdAndUpdate(productId, dto, { new: true });
     if (!updated) throw new HttpException('Product not found', 404);
 
     // ✅ UPDATED: Sync ShortProduct with variants

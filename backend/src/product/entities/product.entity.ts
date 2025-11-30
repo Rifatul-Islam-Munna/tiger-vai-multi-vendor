@@ -91,6 +91,8 @@ class ProductVariant {
 
   @Prop()
   sku?: string;
+  @Prop()
+  recommended?: string;
 
   @Prop({ default: true })
   isAvailable: boolean;
@@ -203,6 +205,10 @@ export class Product {
 
   @Prop({ default: false })
   isAdminCreated: boolean;
+  @Prop()
+  shortDescription: string;
+  @Prop()
+  special_offer: string;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);

@@ -30,6 +30,7 @@ export interface ProductVariant {
   image?: ProductImage;
   sku?: string;
   isAvailable?: boolean;
+  recommended?: string;
 }
 
 export interface CreateProduct {
@@ -37,6 +38,8 @@ export interface CreateProduct {
   description?: string;
   price: number;
   stock: number;
+  shortDescription?: string;
+  special_offer?: string;
 
   variants?: ProductVariant[];
 

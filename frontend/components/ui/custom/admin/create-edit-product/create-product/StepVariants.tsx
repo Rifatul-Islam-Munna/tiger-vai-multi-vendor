@@ -15,6 +15,7 @@ interface Variant {
   stock: number;
   discountPrice?: number;
   sku?: string;
+  recommended?: string;
 }
 
 export default function StepVariants() {
@@ -202,6 +203,27 @@ export default function StepVariants() {
               value={newVariant.sku || ""}
               onChange={(e) =>
                 setNewVariant({ ...newVariant, sku: e.target.value })
+              }
+              style={{
+                backgroundColor: "rgba(255, 255, 255, 0.05)",
+                borderColor: "var(--palette-accent-3)",
+                color: "var(--palette-text)",
+              }}
+            />
+          </div>
+
+          <div>
+            <label
+              className="text-xs font-semibold mb-1 block"
+              style={{ color: "var(--palette-accent-3)" }}
+            >
+              Recommended (Optional)
+            </label>
+            <Input
+              placeholder="e.g., Use this variant"
+              value={newVariant.recommended || ""}
+              onChange={(e) =>
+                setNewVariant({ ...newVariant, recommended: e.target.value })
               }
               style={{
                 backgroundColor: "rgba(255, 255, 255, 0.05)",
