@@ -504,8 +504,8 @@ const ProductPage = ({ params }: { params: Product }) => {
                 </p>
               )}
               {params?.special_offer && (
-                <p className="md:text-lg text-gray-600 text-sm">
-                  {params?.special_offer}
+                <p className="md:text-lg  bg-green-100 px-2.5 py-1 rounded-md text-green-900  w-fit text-sm">
+                  Special Offer: {params?.special_offer}
                 </p>
               )}
             </div>
