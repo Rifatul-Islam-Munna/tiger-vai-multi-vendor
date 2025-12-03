@@ -650,7 +650,7 @@ const ProductPage = ({ params }: { params: Product }) => {
         </div>
 
         {/* Tabs Section */}
-        <div className="mt-16">
+        <div className="mt-16 w-full">
           <div className=" block lg:hidden ">
             <h1 className=" text-lg lg:text-xl font-bold  text-palette-text">
               Company Details :
@@ -660,8 +660,8 @@ const ProductPage = ({ params }: { params: Product }) => {
             </p>
           </div>
 
-          <div className=" mt-11">
-            <div>
+          <div className=" mt-11 w-full">
+            <div className=" w-full">
               <h3 className="text-xl font-bold text-palette-text mb-4">
                 Product Description
               </h3>

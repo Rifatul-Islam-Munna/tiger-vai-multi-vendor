@@ -10,7 +10,7 @@ export default function DescriptionComponent({ params }: { params: any }) {
   if (isHtml(description)) {
     return (
       <div
-        className=" leading-relaxed prose"
+        className=" leading-relaxed prose w-full"
         dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(description) }}
       />
     );
