@@ -411,9 +411,9 @@ const ProductPage = ({ params }: { params: Product }) => {
   return (
     <div className="min-h-screen bg-palette-bg px-4 lg:px-2 xl:px-0">
       <div className="container mx-auto px-4 md:px-0 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 relative">
           {/* Product Images Section */}
-          <div className="space-y-4">
+          <div className="space-y-4 sticky h-fit  top-0">
             {/* Main Image */}
             <div className="relative bg-gray-100 rounded-lg overflow-hidden">
               <img
