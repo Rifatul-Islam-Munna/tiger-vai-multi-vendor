@@ -11,6 +11,8 @@ import {
   ChevronDown,
   ChevronUp,
   Pen,
+  Upload,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -36,14 +38,15 @@ import {
   useApiMutation,
   useQueryWrapper,
 } from "@/api-hook/react-query-wrapper";
-import { Product } from "@/@types/fullProduct";
+import { Product, ProductImage } from "@/@types/fullProduct";
 import { BrandResponse, CategoryResponse } from "@/@types/category-brand";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { ImageUploadFieldUpdate } from "@/components/ui/custom/admin/create-edit-product/create-product/UpdateImageField";
 import { updateProductAdmin } from "@/actions/product";
 import RichTextEditor from "@/components/ui/custom/addProduct/Description";
-
+import { ReactSortable } from "react-sortablejs";
+import { useUploadSingleImage } from "@/lib/useHandelImageUpload";
 // Static product data for demo
 const STATIC_PRODUCTS: Record<string, any> = {
   "1": {
@@ -94,6 +97,20 @@ const BRANDS = [
   { id: "brand4", name: "Zara" },
   { id: "brand5", name: "Fossil" },
 ];
+interface Variant {
+  size: string;
+  color: string;
+  price: number;
+  stock: number;
+  discountPrice?: number;
+  sku?: string;
+  recommended?: string;
+  image?: {
+    url: string;
+    key: string;
+    id: string;
+  };
+}
 
 export default function EditProductPage() {
   const router = useRouter();
@@ -110,7 +127,7 @@ export default function EditProductPage() {
     shipping: false,
     additional: false,
   });
-  const [newVariant, setNewVariant] = useState({
+  const [newVariant, setNewVariant] = useState<Variant>({
     size: "",
     color: "",
     price: 0,
@@ -172,6 +189,7 @@ export default function EditProductPage() {
       stock: 0,
       recommended: "",
       discountPrice: 0,
+      image: { url: "", key: "", id: "" },
     });
   };
 
@@ -197,6 +215,30 @@ export default function EditProductPage() {
     });
 
     setNewSpec({ key: "", value: "" });
+  };
+  const { mutate: uploadImage, isPending: isImageUploading } =
+    useUploadSingleImage();
+  const handelUploadImage = (file: File) => {
+    const fromData = new FormData();
+    fromData.append("file", file);
+    uploadImage(fromData, {
+      onSuccess: (data) => {
+        setNewVariant({
+          ...newVariant,
+          image: {
+            url: data?.data?.url as string,
+            key: data?.data?.key as string,
+            id: data?.data?.key as string,
+          },
+        });
+      },
+    });
+  };
+  const handleRemoveImage = () => {
+    setNewVariant({
+      ...newVariant,
+      image: undefined,
+    });
   };
 
   const handleRemoveSpec = (key: string) => {
@@ -234,6 +276,7 @@ export default function EditProductPage() {
   const findOneSubCategory = findOneSub?.sub?.find(
     (item) => item?.SubMain === formData.category?.subMain
   );
+  const images = (formData.images as ProductImage[]) || [];
   return (
     <div
       className="min-h-screen p-6"
@@ -828,6 +871,87 @@ export default function EditProductPage() {
                           }}
                         />
                       </div>
+
+                      <div className="mb-4">
+                        <label
+                          className="text-xs font-semibold mb-2 block"
+                          style={{ color: "var(--palette-accent-3)" }}
+                        >
+                          Variant Image (Optional)
+                        </label>
+
+                        {!newVariant.image?.url ? (
+                          <div
+                            className="relative border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-white/5 transition-colors"
+                            style={{ borderColor: "var(--palette-accent-3)" }}
+                          >
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  handelUploadImage(file);
+                                }
+                              }}
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                              disabled={isImageUploading}
+                            />
+                            <div className="flex flex-col items-center gap-2">
+                              <Upload
+                                size={32}
+                                style={{ color: "var(--palette-accent-3)" }}
+                              />
+                              <p
+                                className="text-sm font-medium"
+                                style={{ color: "var(--palette-accent-3)" }}
+                              >
+                                {isImageUploading
+                                  ? "Uploading..."
+                                  : "Click to upload variant image"}
+                              </p>
+                              <p
+                                className="text-xs"
+                                style={{
+                                  color: "var(--palette-accent-3)",
+                                  opacity: 0.7,
+                                }}
+                              >
+                                PNG, JPG, WEBP up to 5MB
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div
+                            className="relative rounded-lg border p-2"
+                            style={{
+                              borderColor: "var(--palette-accent-3)",
+                              backgroundColor: "rgba(255, 255, 255, 0.05)",
+                            }}
+                          >
+                            <div className="relative w-full h-32">
+                              <img
+                                src={newVariant.image.url}
+                                alt="Variant preview"
+                                className="w-full h-full object-cover rounded"
+                              />
+                              <button
+                                onClick={handleRemoveImage}
+                                className="absolute -top-2 -right-2 p-1 bg-red-500 hover:bg-red-600 rounded-full transition"
+                                type="button"
+                              >
+                                <X size={16} className="text-white" />
+                              </button>
+                            </div>
+                            <p
+                              className="text-xs mt-2 text-center"
+                              style={{ color: "var(--palette-accent-3)" }}
+                            >
+                              Image uploaded ✓
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <Button
                       onClick={handleAddVariant}
@@ -846,19 +970,33 @@ export default function EditProductPage() {
                         className="font-semibold mb-3"
                         style={{ color: "var(--palette-accent-1)" }}
                       >
-                        Current Variants
+                        Added Variants ({variants.length})
                       </h3>
                       <div className="space-y-2">
                         {variants.map((variant, index) => (
                           <div
                             key={index}
-                            className="flex justify-between items-center p-3 rounded-lg"
+                            className="flex justify-between items-center p-3 rounded-lg gap-3"
                             style={{
-                              backgroundColor: "rgba(255, 255, 255, 0.02)",
                               borderColor: "var(--palette-accent-3)",
+                              backgroundColor: "rgba(255, 255, 255, 0.02)",
                               border: "1px solid",
                             }}
                           >
+                            {/* Variant Image Preview */}
+                            {variant.image?.url && (
+                              <div className="flex-shrink-0">
+                                <img
+                                  src={variant.image.url}
+                                  alt={`${variant.size} ${variant.color}`}
+                                  className="w-16 h-16 object-cover rounded border"
+                                  style={{
+                                    borderColor: "var(--palette-accent-3)",
+                                  }}
+                                />
+                              </div>
+                            )}
+
                             <div className="flex-1">
                               <p className="font-medium">
                                 {variant.size} - {variant.color}
@@ -867,10 +1005,11 @@ export default function EditProductPage() {
                                 className="text-sm"
                                 style={{ color: "var(--palette-accent-3)" }}
                               >
-                                ৳{variant.price} | Stock: {variant.stock} |{" "}
-                                {variant?.recommended}
+                                ৳{variant.price}
                                 {variant.discountPrice &&
-                                  ` | Discount: ৳${variant.discountPrice}`}
+                                  ` → ৳${variant.discountPrice}`}{" "}
+                                | Stock: {variant.stock}
+                                {variant.sku && ` | SKU: ${variant.sku}`}
                               </p>
                             </div>
                             <button
@@ -882,8 +1021,9 @@ export default function EditProductPage() {
                                   stock: variant?.stock,
                                   recommended: variant?.recommended,
                                   discountPrice: variant?.discountPrice,
+                                  sku: variant?.sku,
+                                  image: variant?.image,
                                 });
-
                                 handleRemoveVariant(index);
                               }}
                               className="p-2 hover:bg-red-500/20 rounded transition"
@@ -1029,18 +1169,73 @@ export default function EditProductPage() {
                   >
                     Product Images
                   </h3>
-                  {formData.images && (formData.images as any[]).length > 0 && (
-                    <div className="grid grid-cols-4 gap-3 mb-4">
-                      {(formData.images as any[]).map((img, index) => (
-                        <img
-                          key={index}
-                          src={img.url}
-                          alt={`Product ${index}`}
-                          className="w-full h-24 object-cover rounded-lg"
-                        />
-                      ))}
+                  {images.length > 0 && (
+                    <div>
+                      <p
+                        className="text-sm font-medium mb-3"
+                        style={{ color: "var(--palette-accent-1)" }}
+                      >
+                        Uploaded Images ({images.length}) - Drag to reorder
+                      </p>
+                      <ReactSortable
+                        id="images-grid"
+                        list={images}
+                        setList={(newOrder) => updateField("images", newOrder)}
+                        className="grid grid-cols-4 gap-3"
+                        animation={200}
+                        handle=".drag-handle"
+                        itemClass="sortable-item"
+                        group="images"
+                        style={{ touchAction: "none" }}
+                      >
+                        {images.map((img, index) => (
+                          <div
+                            key={`${img.id || img.key}-${index}`}
+                            className="w-full h-24 relative sortable-item"
+                          >
+                            <div
+                              className="w-full h-24 cursor-grab active:cursor-grabbing rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border-2 border-transparent hover:border-blue-400 group relative drag-handle"
+                              style={{
+                                touchAction: "none",
+                                userSelect: "none",
+                              }}
+                            >
+                              {/* Drag handle - unchanged */}
+                              <div className="absolute top-1 right-1 w-6 h-6 bg-blue-500/80 hover:bg-blue-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-10 cursor-grab active:cursor-grabbing">
+                                <svg
+                                  className="w-4 h-4 text-white"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 8h16M4 16h16"
+                                  />
+                                </svg>
+                              </div>
+
+                              <img
+                                src={img.url}
+                                alt={`Product image ${index + 1}`}
+                                className="w-full h-full object-cover rounded-lg"
+                                draggable={false}
+                              />
+
+                              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
+                                <span className="text-white text-xs font-medium px-2 py-1 bg-black/50 rounded">
+                                  Drag ↕️
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </ReactSortable>
                     </div>
                   )}
+
                   <ImageUploadFieldUpdate
                     label="Add More Images"
                     isThumbnail={false}

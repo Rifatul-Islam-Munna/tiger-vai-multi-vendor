@@ -100,6 +100,7 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
   product,
   user,
 }) => {
+  console.log("product", product);
   const { addToCart } = useCartStore();
 
   // Group variants by size
@@ -122,6 +123,15 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
     const variants = variantsBySize.get(size) || [];
     return variants.map((v) => v.color).filter(Boolean);
   };
+  const getSizeImage = (size: string) => {
+    const variants = variantsBySize.get(size) || [];
+    const firstVariantWithImage = variants.find((v) => v.image?.url);
+    return (
+      firstVariantWithImage?.image?.url ||
+      product.images?.[0]?.url ||
+      "/placeholder-image.jpg"
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -131,6 +141,7 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
           product={product}
           size={size}
           variants={variants}
+          image={getSizeImage(size)}
           colors={getColorsForSize(size)}
           user={user}
           addToCart={addToCart}
@@ -146,6 +157,7 @@ interface VariantCardProps {
   variants: NonNullable<Product["variants"]>;
   colors: (string | undefined)[];
   user?: BasicUser | null;
+  image?: string;
   addToCart: (item: Omit<CartItem, "quantity">) => void;
 }
 
@@ -156,7 +168,9 @@ const VariantCard: React.FC<VariantCardProps> = ({
   colors,
   user,
   addToCart,
+  image,
 }) => {
+  console.log("image", image);
   const [selectedColor, setSelectedColor] = useState<string>(colors[0] || "");
 
   // Get current variant based on selected color
@@ -232,89 +246,93 @@ const VariantCard: React.FC<VariantCardProps> = ({
           Recommended: {isRecommended}
         </div>
       )}
+      <div className=" flex justify-between items-center gap-6">
+        {image ? (
+          <img src={image} className=" w-full h-full max-w-[200px] h-full" />
+        ) : null}
+        <div className="space-y-3 mt-2 flex-1">
+          {/* Size Display */}
+          <div>
+            <span className="text-sm text-gray-600">Size: </span>
+            <span className="font-semibold text-palette-text">{size}</span>
+          </div>
 
-      <div className="space-y-3 mt-2">
-        {/* Size Display */}
-        <div>
-          <span className="text-sm text-gray-600">Size: </span>
-          <span className="font-semibold text-palette-text">{size}</span>
-        </div>
-
-        {/* Price Section */}
-        <div className="flex items-center gap-3 flex-wrap">
-          {originalPrice ? (
-            <>
-              <span className="text-lg line-through text-gray-400">
-                ৳{originalPrice.toFixed(2)}
-              </span>
+          {/* Price Section */}
+          <div className="flex items-center gap-3 flex-wrap">
+            {originalPrice ? (
+              <>
+                <span className="text-lg line-through text-gray-400">
+                  ৳{originalPrice.toFixed(2)}
+                </span>
+                <span className="text-2xl font-bold text-palette-text">
+                  ৳{currentPrice.toFixed(2)}
+                </span>
+                {discountPercentage > 0 && (
+                  <span className="bg-palette-btn/10 text-palette-btn px-2 py-1 rounded text-sm font-bold">
+                    {discountPercentage}% off
+                  </span>
+                )}
+              </>
+            ) : (
               <span className="text-2xl font-bold text-palette-text">
                 ৳{currentPrice.toFixed(2)}
               </span>
-              {discountPercentage > 0 && (
-                <span className="bg-palette-btn/10 text-palette-btn px-2 py-1 rounded text-sm font-bold">
-                  {discountPercentage}% off
-                </span>
-              )}
-            </>
-          ) : (
-            <span className="text-2xl font-bold text-palette-text">
-              ৳{currentPrice.toFixed(2)}
-            </span>
-          )}
-        </div>
+            )}
+          </div>
 
-        {/* Color Selection - User can select color */}
-        {colors.length > 0 && (
-          <div className="space-y-2">
-            <span className="text-sm font-medium text-palette-text">
-              Select Color:{" "}
-              <span className="text-palette-btn">
-                {selectedColor || "None"}
+          {/* Color Selection - User can select color */}
+          {colors.length > 0 && (
+            <div className="space-y-2">
+              <span className="text-sm font-medium text-palette-text">
+                Select Color:{" "}
+                <span className="text-palette-btn">
+                  {selectedColor || "None"}
+                </span>
               </span>
-            </span>
-            <div className="flex gap-2 flex-wrap">
-              {colors.map((color) => (
-                <button
-                  key={color}
-                  onClick={() => setSelectedColor(color || "")}
-                  className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
-                    selectedColor === color
-                      ? "border-palette-btn bg-palette-btn text-white shadow-md"
-                      : "border-gray-300 bg-white text-gray-700 hover:border-palette-btn hover:bg-palette-btn/5"
-                  }`}
-                >
-                  {color}
-                </button>
-              ))}
+              <div className="flex gap-2 flex-wrap">
+                {colors.map((color) => (
+                  <button
+                    key={color}
+                    onClick={() => setSelectedColor(color || "")}
+                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
+                      selectedColor === color
+                        ? "border-palette-btn bg-palette-btn text-white shadow-md"
+                        : "border-gray-300 bg-white text-gray-700 hover:border-palette-btn hover:bg-palette-btn/5"
+                    }`}
+                  >
+                    {color}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Stock Status */}
+          <div className="flex items-center justify-between">
+            <div
+              className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                stock > 0
+                  ? "bg-green-100 text-green-700"
+                  : "bg-red-100 text-red-700"
+              }`}
+            >
+              {stock > 0 ? `Stock: ${stock}` : "Out of Stock"}
             </div>
           </div>
-        )}
 
-        {/* Stock Status */}
-        <div className="flex items-center justify-between">
-          <div
-            className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-              stock > 0
-                ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-700"
-            }`}
+          {/* Add to Cart Button */}
+          <button
+            onClick={handleAddToCart}
+            disabled={stock === 0 || !selectedColor}
+            className="w-full bg-palette-btn text-white py-2.5 px-4 rounded-lg font-semibold hover:bg-palette-btn/90 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm"
           >
-            {stock > 0 ? `Stock: ${stock}` : "Out of Stock"}
-          </div>
-        </div>
-
-        {/* Add to Cart Button */}
-        <button
-          onClick={handleAddToCart}
-          disabled={stock === 0 || !selectedColor}
-          className="w-full bg-palette-btn text-white py-2.5 px-4 rounded-lg font-semibold hover:bg-palette-btn/90 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm"
-        >
-          {stock === 0
-            ? "Out of Stock"
-            : !selectedColor
-            ? "Select Color First"
-            : "Add to Cart"}
-        </button>
+            {stock === 0
+              ? "Out of Stock"
+              : !selectedColor
+              ? "Select Color First"
+              : "Add to Cart"}
+          </button>
+        </div>{" "}
       </div>
     </div>
   );

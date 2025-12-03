@@ -2,11 +2,11 @@
 "use client";
 
 import React, { useState } from "react";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Pen, Plus, Trash2 } from "lucide-react";
+import { Pen, Plus, Trash2, Upload, X } from "lucide-react";
 import { useAddProductStore } from "@/zustan-hook/addProductStore";
+import { useUploadSingleImage } from "@/lib/useHandelImageUpload";
 
 interface Variant {
   size: string;
@@ -16,6 +16,11 @@ interface Variant {
   discountPrice?: number;
   sku?: string;
   recommended?: string;
+  image?: {
+    url: string;
+    key: string;
+    id: string;
+  };
 }
 
 export default function StepVariants() {
@@ -41,7 +46,13 @@ export default function StepVariants() {
     }
 
     updateField("variants", [...variants, newVariant]);
-    setNewVariant({ size: "", color: "", price: 0, stock: 0 });
+    setNewVariant({
+      size: "",
+      color: "",
+      price: 0,
+      stock: 0,
+      image: { url: "", key: "", id: "" },
+    });
   };
 
   const handleRemoveVariant = (index: number) => {
@@ -49,6 +60,32 @@ export default function StepVariants() {
       "variants",
       variants.filter((_, i) => i !== index)
     );
+  };
+
+  const { mutate, isPending } = useUploadSingleImage();
+
+  const handelUploadImage = (file: File) => {
+    const fromData = new FormData();
+    fromData.append("file", file);
+    mutate(fromData, {
+      onSuccess: (data) => {
+        setNewVariant({
+          ...newVariant,
+          image: {
+            url: data?.data?.url as string,
+            key: data?.data?.key as string,
+            id: data?.data?.key as string,
+          },
+        });
+      },
+    });
+  };
+
+  const handleRemoveImage = () => {
+    setNewVariant({
+      ...newVariant,
+      image: undefined,
+    });
   };
 
   return (
@@ -234,6 +271,83 @@ export default function StepVariants() {
           </div>
         </div>
 
+        {/* Image Upload Section */}
+        <div className="mb-4">
+          <label
+            className="text-xs font-semibold mb-2 block"
+            style={{ color: "var(--palette-accent-3)" }}
+          >
+            Variant Image (Optional)
+          </label>
+
+          {!newVariant.image?.url ? (
+            <div
+              className="relative border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-white/5 transition-colors"
+              style={{ borderColor: "var(--palette-accent-3)" }}
+            >
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    handelUploadImage(file);
+                  }
+                }}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                disabled={isPending}
+              />
+              <div className="flex flex-col items-center gap-2">
+                <Upload
+                  size={32}
+                  style={{ color: "var(--palette-accent-3)" }}
+                />
+                <p
+                  className="text-sm font-medium"
+                  style={{ color: "var(--palette-accent-3)" }}
+                >
+                  {isPending ? "Uploading..." : "Click to upload variant image"}
+                </p>
+                <p
+                  className="text-xs"
+                  style={{ color: "var(--palette-accent-3)", opacity: 0.7 }}
+                >
+                  PNG, JPG, WEBP up to 5MB
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div
+              className="relative rounded-lg border p-2"
+              style={{
+                borderColor: "var(--palette-accent-3)",
+                backgroundColor: "rgba(255, 255, 255, 0.05)",
+              }}
+            >
+              <div className="relative w-full h-32">
+                <img
+                  src={newVariant.image.url}
+                  alt="Variant preview"
+                  className="w-full h-full object-cover rounded"
+                />
+                <button
+                  onClick={handleRemoveImage}
+                  className="absolute -top-2 -right-2 p-1 bg-red-500 hover:bg-red-600 rounded-full transition"
+                  type="button"
+                >
+                  <X size={16} className="text-white" />
+                </button>
+              </div>
+              <p
+                className="text-xs mt-2 text-center"
+                style={{ color: "var(--palette-accent-3)" }}
+              >
+                Image uploaded ✓
+              </p>
+            </div>
+          )}
+        </div>
+
         <Button
           onClick={handleAddVariant}
           className="flex items-center gap-2 text-white"
@@ -257,13 +371,25 @@ export default function StepVariants() {
             {variants.map((variant, index) => (
               <div
                 key={index}
-                className="flex justify-between items-center p-3 rounded-lg"
+                className="flex justify-between items-center p-3 rounded-lg gap-3"
                 style={{
                   borderColor: "var(--palette-accent-3)",
                   backgroundColor: "rgba(255, 255, 255, 0.02)",
                   border: "1px solid",
                 }}
               >
+                {/* Variant Image Preview */}
+                {variant.image?.url && (
+                  <div className="flex-shrink-0">
+                    <img
+                      src={variant.image.url}
+                      alt={`${variant.size} ${variant.color}`}
+                      className="w-16 h-16 object-cover rounded border"
+                      style={{ borderColor: "var(--palette-accent-3)" }}
+                    />
+                  </div>
+                )}
+
                 <div className="flex-1">
                   <p className="font-medium">
                     {variant.size} - {variant.color}
@@ -288,6 +414,7 @@ export default function StepVariants() {
                       recommended: variant?.recommended,
                       discountPrice: variant?.discountPrice,
                       sku: variant?.sku,
+                      image: variant?.image,
                     });
                     handleRemoveVariant(index);
                   }}
