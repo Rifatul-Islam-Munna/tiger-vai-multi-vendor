@@ -246,9 +246,12 @@ const VariantCard: React.FC<VariantCardProps> = ({
           Recommended: {isRecommended}
         </div>
       )}
-      <div className=" flex justify-between items-center gap-6">
+      <div className=" flex sm:justify-between flex-col sm:flex-row flex-wrap sm:items-center gap-6">
         {image ? (
-          <img src={image} className=" w-full h-full max-w-[200px] h-full" />
+          <img
+            src={image}
+            className=" w-full h-full max-w-[200px] mx-auto h-full"
+          />
         ) : null}
         <div className="space-y-3 mt-2 flex-1">
           {/* Size Display */}
@@ -413,7 +416,7 @@ const ProductPage = ({ params }: { params: Product }) => {
       <div className="container mx-auto px-4 md:px-0 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 relative">
           {/* Product Images Section */}
-          <div className="space-y-4 sticky h-fit  top-0">
+          <div className="space-y-4 lg:sticky h-fit  lg:top-0">
             {/* Main Image */}
             <div className="relative bg-gray-100 rounded-lg overflow-hidden">
               <img
