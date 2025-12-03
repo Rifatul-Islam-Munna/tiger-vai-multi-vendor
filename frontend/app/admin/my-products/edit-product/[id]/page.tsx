@@ -10,6 +10,7 @@ import {
   Trash2,
   ChevronDown,
   ChevronUp,
+  Pen,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -115,6 +116,7 @@ export default function EditProductPage() {
     price: 0,
     stock: 0,
     recommended: "",
+    discountPrice: 0,
   });
   const { data: productDetails, isPending } = useQueryWrapper<Product>(
     [productId],
@@ -163,7 +165,14 @@ export default function EditProductPage() {
 
     const variants = (formData?.variants as any[]) || [];
     updateField("variants", [...variants, newVariant]);
-    setNewVariant({ size: "", color: "", price: 0, stock: 0, recommended: "" });
+    setNewVariant({
+      size: "",
+      color: "",
+      price: 0,
+      stock: 0,
+      recommended: "",
+      discountPrice: 0,
+    });
   };
 
   const handleRemoveVariant = (index: number) => {
@@ -342,22 +351,30 @@ export default function EditProductPage() {
                     >
                       short Description
                     </label>
-                    {/*    <Textarea
-                            placeholder="Enter product description"
-                            value={formData.description || ""}
-                            onChange={(e) => updateField("description", e.target.value)}
-                            rows={4}
-                            style={{
-                              backgroundColor: "rgba(255, 255, 255, 0.05)",
-                              borderColor: "var(--palette-accent-3)",
-                              color: "var(--palette-text)",
-                            }}
-                          /> */}
+
                     <Textarea
                       placeholder="Enter product short description"
                       value={formData.shortDescription || ""}
                       onChange={(e) =>
                         updateField("shortDescription", e.target.value)
+                      }
+                      rows={4}
+                      style={{}}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className="block text-sm font-semibold mb-2"
+                      style={{ color: "var(--palette-accent-1)" }}
+                    >
+                      company details
+                    </label>
+
+                    <Textarea
+                      placeholder=" company details"
+                      value={formData.company_details || ""}
+                      onChange={(e) =>
+                        updateField("company_details", e.target.value)
                       }
                       rows={4}
                       style={{}}
@@ -744,6 +761,30 @@ export default function EditProductPage() {
                           className="text-xs font-semibold mb-1 block"
                           style={{ color: "var(--palette-accent-3)" }}
                         >
+                          Discount Price
+                        </label>
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={newVariant.discountPrice}
+                          onChange={(e) =>
+                            setNewVariant({
+                              ...newVariant,
+                              discountPrice: parseFloat(e.target.value) || 0,
+                            })
+                          }
+                          style={{
+                            backgroundColor: "rgba(255, 255, 255, 0.05)",
+                            borderColor: "var(--palette-accent-3)",
+                            color: "var(--palette-text)",
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          className="text-xs font-semibold mb-1 block"
+                          style={{ color: "var(--palette-accent-3)" }}
+                        >
                           Stock
                         </label>
                         <Input
@@ -832,6 +873,23 @@ export default function EditProductPage() {
                                   ` | Discount: ৳${variant.discountPrice}`}
                               </p>
                             </div>
+                            <button
+                              onClick={() => {
+                                setNewVariant({
+                                  color: variant?.color,
+                                  price: variant?.price,
+                                  size: variant?.size,
+                                  stock: variant?.stock,
+                                  recommended: variant?.recommended,
+                                  discountPrice: variant?.discountPrice,
+                                });
+
+                                handleRemoveVariant(index);
+                              }}
+                              className="p-2 hover:bg-red-500/20 rounded transition"
+                            >
+                              <Pen size={18} className="text-red-400" />
+                            </button>
                             <button
                               onClick={() => handleRemoveVariant(index)}
                               className="p-2 hover:bg-red-500/20 rounded transition"

@@ -322,7 +322,7 @@ const VariantCard: React.FC<VariantCardProps> = ({
 
 const ProductPage = ({ params }: { params: Product }) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [activeTab, setActiveTab] = useState("description");
+  const [activeTab, setActiveTab] = useState("specifications");
   const [page, setPage] = useState(1);
   const [getUser, setGetUser] = useState<BasicUser | null>(null);
 
@@ -439,7 +439,7 @@ const ProductPage = ({ params }: { params: Product }) => {
               <div className="flex gap-3 overflow-x-auto">
                 {params?.images?.map((image, index) => (
                   <button
-                    key={image?._id ?? index}
+                    key={image?.id ?? index}
                     onClick={() => setSelectedImageIndex(index)}
                     className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors flex-shrink-0 ${
                       selectedImageIndex === index
@@ -456,6 +456,17 @@ const ProductPage = ({ params }: { params: Product }) => {
                 ))}
               </div>
             )}
+
+            {params?.company_details ? (
+              <div className=" hidden lg:block">
+                <h1 className=" text-lg lg:text-xl font-bold  text-palette-text">
+                  Company Details:
+                </h1>
+                <p className=" text-sm lg:text-lg font-semibold text-palette-text">
+                  {params?.company_details}
+                </p>
+              </div>
+            ) : null}
           </div>
 
           {/* Product Info Section */}
@@ -640,23 +651,63 @@ const ProductPage = ({ params }: { params: Product }) => {
 
         {/* Tabs Section */}
         <div className="mt-16">
+          <div className=" block lg:hidden ">
+            <h1 className=" text-lg lg:text-xl font-bold  text-palette-text">
+              Company Details :
+            </h1>
+            <p className=" text-sm lg:text-lg font-semibold text-palette-text">
+              {params?.company_details}
+            </p>
+          </div>
+
+          <div className=" mt-11">
+            <div>
+              <h3 className="text-xl font-bold text-palette-text mb-4">
+                Product Description
+              </h3>
+
+              <DescriptionComponent params={params?.description} />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 p-6 bg-palette-btn/5 rounded-lg">
+              {(params?.height || params?.width) && (
+                <div className="text-center">
+                  <h4 className="font-medium text-palette-text mb-2">
+                    Dimensions
+                  </h4>
+                  <p className="text-gray-600">
+                    {params?.height ?? 0}cm × {params?.width ?? 0}cm
+                  </p>
+                </div>
+              )}
+              {params?.weight && (
+                <div className="text-center border-x border-gray-200">
+                  <h4 className="font-medium text-palette-text mb-2">Weight</h4>
+                  <p className="text-gray-600">{params.weight}</p>
+                </div>
+              )}
+              {params?.brand?.name && (
+                <div className="text-center">
+                  <h4 className="font-medium text-palette-text mb-2">Brand</h4>
+                  <p className="text-gray-600">{params.brand.name}</p>
+                </div>
+              )}
+            </div>
+          </div>
           <div className="border-b-2 border-gray-200">
             <nav className="flex space-x-8 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth -webkit-overflow-scrolling-touch">
-              {["description", "specifications", "reviews", "shipping"].map(
-                (tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm capitalize transition-colors whitespace-nowrap snap-start flex-shrink-0 ${
-                      activeTab === tab
-                        ? "border-palette-btn text-palette-btn"
-                        : "border-transparent text-gray-500 hover:text-palette-text"
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                )
-              )}
+              {["specifications", "reviews", "shipping"].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm capitalize transition-colors whitespace-nowrap snap-start flex-shrink-0 ${
+                    activeTab === tab
+                      ? "border-palette-btn text-palette-btn"
+                      : "border-transparent text-gray-500 hover:text-palette-text"
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
             </nav>
           </div>
 

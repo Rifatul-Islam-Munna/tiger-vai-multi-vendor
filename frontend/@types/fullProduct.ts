@@ -85,6 +85,7 @@ export interface CreateProduct {
   isAdminCreated: boolean;
   stats?: ReviewStats;
   slug?: string;
+  company_details?: string;
 
 }
 

@@ -5,7 +5,7 @@ import React, { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2 } from "lucide-react";
+import { Pen, Plus, Trash2 } from "lucide-react";
 import { useAddProductStore } from "@/zustan-hook/addProductStore";
 
 interface Variant {
@@ -278,6 +278,23 @@ export default function StepVariants() {
                     {variant.sku && ` | SKU: ${variant.sku}`}
                   </p>
                 </div>
+                <button
+                  onClick={() => {
+                    setNewVariant({
+                      color: variant?.color,
+                      price: variant?.price,
+                      size: variant?.size,
+                      stock: variant?.stock,
+                      recommended: variant?.recommended,
+                      discountPrice: variant?.discountPrice,
+                      sku: variant?.sku,
+                    });
+                    handleRemoveVariant(index);
+                  }}
+                  className="p-2 hover:bg-red-500/20 rounded transition"
+                >
+                  <Pen size={18} className="text-red-400" />
+                </button>
                 <button
                   onClick={() => handleRemoveVariant(index)}
                   className="p-2 hover:bg-red-500/20 rounded transition"

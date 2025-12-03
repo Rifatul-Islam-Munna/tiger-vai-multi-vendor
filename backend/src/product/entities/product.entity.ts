@@ -209,6 +209,8 @@ export class Product {
   shortDescription: string;
   @Prop()
   special_offer: string;
+  @Prop()
+  company_details: string;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);

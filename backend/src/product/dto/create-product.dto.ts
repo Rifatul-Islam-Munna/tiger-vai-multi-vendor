@@ -283,6 +283,11 @@ export class CreateProductDto {
   @IsOptional()
   @IsString()
   special_offer?: string;
+  
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  company_details?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()

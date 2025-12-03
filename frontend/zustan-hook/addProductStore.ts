@@ -64,6 +64,7 @@ const initialFormData: Partial<CreateProduct> = {
   isAdminCreated: false,
   shortDescription: "",
   special_offer:"",
+  company_details: "",
 
 };
 
