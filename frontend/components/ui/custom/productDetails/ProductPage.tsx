@@ -343,7 +343,7 @@ const VariantCard: React.FC<VariantCardProps> = ({
 
 const ProductPage = ({ params }: { params: Product }) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [activeTab, setActiveTab] = useState("specifications");
+  const [activeTab, setActiveTab] = useState("description");
   const [page, setPage] = useState(1);
   const [getUser, setGetUser] = useState<BasicUser | null>(null);
 
@@ -681,54 +681,23 @@ const ProductPage = ({ params }: { params: Product }) => {
             </p>
           </div>
 
-          <div className=" mt-11 w-full">
-            <div className=" w-full">
-              <h3 className="text-xl font-bold text-palette-text mb-4">
-                Product Description
-              </h3>
-
-              <DescriptionComponent params={params?.description} />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 p-6 bg-palette-btn/5 rounded-lg">
-              {(params?.height || params?.width) && (
-                <div className="text-center">
-                  <h4 className="font-medium text-palette-text mb-2">
-                    Dimensions
-                  </h4>
-                  <p className="text-gray-600">
-                    {params?.height ?? 0}cm × {params?.width ?? 0}cm
-                  </p>
-                </div>
-              )}
-              {params?.weight && (
-                <div className="text-center border-x border-gray-200">
-                  <h4 className="font-medium text-palette-text mb-2">Weight</h4>
-                  <p className="text-gray-600">{params.weight}</p>
-                </div>
-              )}
-              {params?.brand?.name && (
-                <div className="text-center">
-                  <h4 className="font-medium text-palette-text mb-2">Brand</h4>
-                  <p className="text-gray-600">{params.brand.name}</p>
-                </div>
-              )}
-            </div>
-          </div>
           <div className="border-b-2 border-gray-200">
             <nav className="flex space-x-8 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth -webkit-overflow-scrolling-touch">
-              {["specifications", "reviews", "shipping"].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm capitalize transition-colors whitespace-nowrap snap-start flex-shrink-0 ${
-                    activeTab === tab
-                      ? "border-palette-btn text-palette-btn"
-                      : "border-transparent text-gray-500 hover:text-palette-text"
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
+              {["description", "specifications", "reviews", "shipping"].map(
+                (tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm capitalize transition-colors whitespace-nowrap snap-start flex-shrink-0 ${
+                      activeTab === tab
+                        ? "border-palette-btn text-palette-btn"
+                        : "border-transparent text-gray-500 hover:text-palette-text"
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                )
+              )}
             </nav>
           </div>
 
