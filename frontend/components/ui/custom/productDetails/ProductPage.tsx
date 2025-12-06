@@ -13,6 +13,8 @@ import {
   Plus,
   Minus,
   MessageCircle,
+  ShoppingCart,
+  X,
 } from "lucide-react";
 import { Product, ReviewStats } from "@/@types/fullProduct";
 import { useQueryState } from "nuqs";
@@ -46,6 +48,8 @@ import { Separator } from "../../separator";
 interface ProductVariantCardsProps {
   product: Product;
   user?: BasicUser | null;
+  variantQuantities: VariantQuantity;
+  setVariantQuantities: React.Dispatch<React.SetStateAction<VariantQuantity>>;
 }
 
 // Track quantities for each variant
@@ -53,14 +57,102 @@ interface VariantQuantity {
   [cartItemId: string]: number;
 }
 
+// Item detail interface for banner
+interface CartItemDetail {
+  name: string;
+  size: string;
+  color: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+// Enhanced Sticky Bottom Banner with Product Details
+const StickyCartBanner: React.FC<{
+  totalItems: number;
+  totalPrice: number;
+  show: boolean;
+  items: CartItemDetail[];
+}> = ({ totalItems, totalPrice, show, items }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  if (!show) return null;
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-red-500 text-white shadow-lg">
+      <div className="container mx-auto px-4 py-3">
+        {/* Main Summary Bar - Always Visible */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <ShoppingCart className="w-5 h-5" />
+            <div>
+              <span className="font-bold text-lg">Selected</span>
+              <span className="ml-3 text-sm">
+                {totalItems} item(s) • {items.length} variant(s)
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="font-bold text-xl">
+              Tk {totalPrice.toLocaleString()}
+            </div>
+            {items.length > 0 && (
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="ml-2 p-1 hover:bg-red-600 rounded transition-colors"
+                aria-label={isExpanded ? "Collapse details" : "Expand details"}
+              >
+                {isExpanded ? (
+                  <ChevronRight className="w-5 h-5 rotate-90" />
+                ) : (
+                  <ChevronLeft className="w-5 h-5 -rotate-90" />
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Expandable Product Details */}
+        {isExpanded && items.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-red-400 max-h-60 overflow-y-auto">
+            <div className="space-y-2">
+              {items.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between bg-red-600/30 px-3 py-2 rounded"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm truncate">
+                      {item.name}
+                    </p>
+                    <p className="text-xs opacity-90">
+                      Size: {item.size} | Color: {item.color}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 ml-3">
+                    <span className="text-sm font-medium">
+                      Qty: {item.quantity}
+                    </span>
+                    <span className="text-sm font-bold">
+                      Tk {(item.unitPrice * item.quantity).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
   product,
   user,
+  variantQuantities,
+  setVariantQuantities,
 }) => {
   const { addToCart, items, updateQuantity } = useCartStore();
-  const [variantQuantities, setVariantQuantities] = useState<VariantQuantity>(
-    {}
-  );
 
   const variantsBySize = React.useMemo(() => {
     const grouped = new Map<string, typeof product.variants>();
@@ -73,6 +165,7 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
     });
     return grouped;
   }, [product.variants]);
+  const router = useRouter();
 
   const getColorsForSize = (size: string) => {
     const variants = variantsBySize.get(size) || [];
@@ -90,15 +183,12 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
   };
 
   // Handle adding all items with quantities to cart
-  const handleAddAllToCart = () => {
+  const handleAddAllToCart = (isForCheckout?: boolean) => {
     let addedCount = 0;
 
     Object.entries(variantQuantities).forEach(([cartItemId, quantity]) => {
       if (quantity > 0) {
-        // Parse the cartItemId to get productId, size, color
         const [productId, size, color] = cartItemId.split("-");
-
-        // Find the variant
         const variant = product.variants?.find(
           (v) => v.size === size && v.color === color
         );
@@ -121,15 +211,11 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
             variantStock: variant.stock ?? 0,
           };
 
-          // Check if already in cart
           const existingItem = items.find((item) => item._id === cartItemId);
           if (existingItem) {
-            // Update quantity
             updateQuantity(cartItemId, existingItem.quantity + quantity);
           } else {
-            // Add new item with quantity
             addToCart(cartItem);
-            // Update the quantity in cart
             updateQuantity(cartItemId, quantity);
           }
 
@@ -145,6 +231,17 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
 
           addToCartEvent(extraData);
           addToCartServerEvent(extraData);
+          if (isForCheckout) {
+            const payloadForCheckout = {
+              event_id: eventId,
+              userId: user?.id,
+              userName: user?.name,
+              email: user?.email,
+              items: items,
+            };
+            initiateCheckoutEvent(payloadForCheckout);
+            initiateCheckoutServerEvent(payloadForCheckout);
+          }
 
           addedCount++;
         }
@@ -155,7 +252,6 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
       toast.success(`${addedCount} item(s) added to cart!`, {
         position: "bottom-right",
       });
-      // Reset quantities
       setVariantQuantities({});
     } else {
       toast.error("Please select quantity for at least one variant");
@@ -163,11 +259,79 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
   };
 
   const handleOrderNow = () => {
-    handleAddAllToCart();
-    // Redirect to checkout
-    setTimeout(() => {
-      window.location.href = "/checkout";
-    }, 500);
+    let addedCount = 0;
+
+    Object.entries(variantQuantities).forEach(([cartItemId, quantity]) => {
+      if (quantity > 0) {
+        const [productId, size, color] = cartItemId.split("-");
+        const variant = product.variants?.find(
+          (v) => v.size === size && v.color === color
+        );
+
+        if (variant && variant.stock && variant.stock >= quantity) {
+          const cartItem: Omit<CartItem, "quantity"> = {
+            _id: cartItemId,
+            productId: product._id,
+            name: product.name ?? "Product",
+            thumbnail: product.thumbnail?.url ?? "",
+            brandName: product.brand?.name ?? "Unknown Brand",
+            slug: product.slug ?? "",
+            variant: {
+              size: size,
+              color: color,
+              price: variant.price,
+              discountPrice: variant.discountPrice,
+            },
+            unitPrice: variant.discountPrice ?? variant.price,
+            variantStock: variant.stock ?? 0,
+          };
+
+          const existingItem = items.find((item) => item._id === cartItemId);
+          if (existingItem) {
+            updateQuantity(cartItemId, existingItem.quantity + quantity);
+          } else {
+            addToCart(cartItem);
+            updateQuantity(cartItemId, quantity);
+          }
+
+          const eventId = uuidv4();
+          const extraData = {
+            event_id: eventId,
+            userId: user?.id,
+            userName: user?.name,
+            email: user?.email,
+            ...cartItem,
+            quantity,
+          };
+
+          /*  addToCartEvent(extraData);
+          addToCartServerEvent(extraData); */
+
+          const payloadForCheckout = {
+            event_id: eventId,
+            userId: user?.id,
+            userName: user?.name,
+            email: user?.email,
+            items: items,
+          };
+          initiateCheckoutEvent(payloadForCheckout);
+          initiateCheckoutServerEvent(payloadForCheckout);
+
+          addedCount++;
+        }
+      }
+    });
+
+    if (addedCount > 0) {
+      toast.success(`${addedCount} item(s) added to cart!`, {
+        position: "bottom-right",
+      });
+      router.push("/cart/shipment");
+      setVariantQuantities({});
+    } else {
+      toast.error("Please select quantity for at least one variant");
+    }
+    /*    handleAddAllToCart(true); */
   };
 
   const handleChatWithSeller = () => {
@@ -175,49 +339,49 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
   };
 
   return (
-    <div className="space-y-4">
-      {/* Variant Cards */}
-      {Array.from(variantsBySize.entries()).map(([size, variants]) => (
-        <VariantCard
-          key={size}
-          product={product}
-          size={size}
-          variants={variants}
-          image={getSizeImage(size)}
-          colors={getColorsForSize(size)}
-          variantQuantities={variantQuantities}
-          setVariantQuantities={setVariantQuantities}
-        />
-      ))}
+    <section className="relative">
+      <div className="space-y-4">
+        {/* Variant Cards */}
+        {Array.from(variantsBySize.entries()).map(([size, variants]) => (
+          <VariantCard
+            key={size}
+            product={product}
+            size={size}
+            variants={variants}
+            image={getSizeImage(size)}
+            colors={getColorsForSize(size)}
+            variantQuantities={variantQuantities}
+            setVariantQuantities={setVariantQuantities}
+          />
+        ))}
 
-      {/* Two Buttons at Top - Add to Cart & Order Now */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-        {/* Add to Cart - Yellow/Golden */}
-        <button
-          onClick={handleAddAllToCart}
-          className="w-full py-3 px-4 rounded-lg font-semibold text-base transition-all bg-[#FFC107] hover:bg-[#FFB300] text-gray-800"
-        >
-          Add To Cart
-        </button>
+        {/* Two Buttons at Top - Add to Cart & Order Now */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+          <button
+            onClick={handleAddAllToCart}
+            className="w-full py-3 px-4 rounded-full font-semibold text-base transition-all bg-[#FFC107] hover:bg-[#FFB300] text-gray-800"
+          >
+            Add To Cart
+          </button>
 
-        {/* Order Now - Coral/Salmon */}
+          <button
+            onClick={handleOrderNow}
+            className="w-full py-3 px-4 rounded-full font-semibold text-base transition-all bg-[#FF7761] hover:bg-[#FF6550] text-white"
+          >
+            Order Now <span className="text-sm">(আজই কিনুন)</span>
+          </button>
+        </div>
+
+        {/* Chat with Seller - Bottom - Full Width */}
         <button
-          onClick={handleOrderNow}
-          className="w-full py-3 px-4 rounded-lg font-semibold text-base transition-all bg-[#FF7761] hover:bg-[#FF6550] text-white"
+          onClick={handleChatWithSeller}
+          className="w-full py-3 px-4 rounded-full font-semibold text-base transition-all bg-[#2196F3] hover:bg-[#1976D2] text-white flex items-center justify-center gap-2"
         >
-          Order Now <span className="text-sm">(আজই কিনুন)</span>
+          <MessageCircle className="w-5 h-5" />
+          Chat with Seller
         </button>
       </div>
-
-      {/* Chat with Seller - Bottom - Full Width */}
-      <button
-        onClick={handleChatWithSeller}
-        className="w-full py-3 px-4 rounded-lg font-semibold text-base transition-all bg-[#2196F3] hover:bg-[#1976D2] text-white flex items-center justify-center gap-2"
-      >
-        <MessageCircle className="w-5 h-5" />
-        Chat with Seller
-      </button>
-    </div>
+    </section>
   );
 };
 
@@ -256,7 +420,6 @@ const VariantCard: React.FC<VariantCardProps> = ({
   const stock = currentVariant?.stock || 0;
   const isRecommended = currentVariant?.recommended;
 
-  // Get cart item ID and current quantity
   const cartItemId = `${product._id}-${size}-${selectedColor}`;
   const currentQuantity = variantQuantities[cartItemId] || 0;
 
@@ -285,7 +448,7 @@ const VariantCard: React.FC<VariantCardProps> = ({
       <div className="flex flex-row gap-3 sm:gap-4 p-3 sm:p-4">
         {/* Left: Product Image - Smaller on mobile */}
         {image && (
-          <div className=" w-20 md:w-24 flex-shrink-0">
+          <div className="w-20 md:w-24 flex-shrink-0">
             <img
               src={image}
               alt={`${product.name} - ${size}`}
@@ -349,7 +512,7 @@ const VariantCard: React.FC<VariantCardProps> = ({
         </div>
 
         {/* Right: Stock & Quantity - Compact */}
-        <div className="sm:w-20 md:w-28 flex-shrink-0 flex flex-col gap-3 sm:gap-4 justify-center items-start ">
+        <div className="sm:w-20 md:w-28 flex-shrink-0 flex flex-col gap-3 sm:gap-4 justify-center items-start">
           <div className="text-left sm:text-right">
             <span className="text-gray-800 font-bold text-sm">
               Stock: {stock > 0 ? stock : "Out"}
@@ -389,6 +552,11 @@ const ProductPage = ({ params }: { params: Product }) => {
   const [getUser, setGetUser] = useState<BasicUser | null>(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
 
+  // Lift variantQuantities state to page level
+  const [variantQuantities, setVariantQuantities] = useState<VariantQuantity>(
+    {}
+  );
+
   const { data, isPending } = useQueryWrapper<Reviews>(
     ["get-review-of-product", params._id, page],
     `/product/get-all-reviews-for-products?id=${params._id}&page=${page}`,
@@ -400,6 +568,38 @@ const ProductPage = ({ params }: { params: Product }) => {
       setGetUser(user);
     });
   }, []);
+
+  // Calculate cart summary at page level with detailed items
+  const cartSummary = React.useMemo(() => {
+    let totalItems = 0;
+    let totalPrice = 0;
+    const items: CartItemDetail[] = [];
+
+    Object.entries(variantQuantities).forEach(([cartItemId, quantity]) => {
+      if (quantity > 0) {
+        const [productId, size, color] = cartItemId.split("-");
+        const variant = params.variants?.find(
+          (v) => v.size === size && v.color === color
+        );
+
+        if (variant) {
+          const unitPrice = variant.discountPrice ?? variant.price;
+          totalItems += quantity;
+          totalPrice += unitPrice * quantity;
+
+          items.push({
+            name: params.name ?? "Product",
+            size: size,
+            color: color,
+            quantity: quantity,
+            unitPrice: unitPrice,
+          });
+        }
+      }
+    });
+
+    return { totalItems, totalPrice, items };
+  }, [variantQuantities, params.variants, params.name]);
 
   const getPriceRange = () => {
     if (!params?.variants || params.variants.length === 0) {
@@ -456,6 +656,14 @@ const ProductPage = ({ params }: { params: Product }) => {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Sticky Banner with detailed items */}
+      <StickyCartBanner
+        totalItems={cartSummary.totalItems}
+        totalPrice={cartSummary.totalPrice}
+        items={cartSummary.items}
+        show={cartSummary.totalItems > 0}
+      />
+
       <div className="container mx-auto px-4 py-6 sm:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Product Images Section */}
@@ -552,7 +760,7 @@ const ProductPage = ({ params }: { params: Product }) => {
 
             {/* Price Range - WITHOUT "Save up to" */}
             {priceRange && (
-              <div className="space-y-1   rounded-lg">
+              <div className="space-y-1 rounded-lg">
                 <div className="flex items-baseline gap-3 flex-wrap">
                   {priceRange.hasDiscount && (
                     <span className="text-base text-gray-400 line-through">
@@ -604,7 +812,7 @@ const ProductPage = ({ params }: { params: Product }) => {
               <Separator />
               {params?.special_offer && (
                 <div className="bg-green-50/20 px-3 py-2 rounded-lg mt-2">
-                  <span className=" text-gray-800 font-bold">
+                  <span className="text-gray-800 font-bold">
                     Special Offer:
                   </span>
                   <p className="text-sm text-gray-800 font-semibold">
@@ -620,7 +828,12 @@ const ProductPage = ({ params }: { params: Product }) => {
                 <h4 className="text-lg font-bold text-palette-text">
                   Available Options
                 </h4>
-                <ProductVariantCards product={params} user={getUser} />
+                <ProductVariantCards
+                  product={params}
+                  user={getUser}
+                  variantQuantities={variantQuantities}
+                  setVariantQuantities={setVariantQuantities}
+                />
               </div>
             )}
 

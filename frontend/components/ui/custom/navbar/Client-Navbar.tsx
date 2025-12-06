@@ -106,7 +106,7 @@ const ClientNavbar = () => {
 
   return (
     <nav
-      className={cn("sticky top-0 z-50 border-b shadow-sm bg-white", {
+      className={cn("sticky top-0 z-50 border-b shadow-sm  bg-white ", {
         hidden: pathName.includes("user") || pathName.includes("admin"),
       })}
       style={{ borderColor: "#e5e7eb" }}
@@ -114,10 +114,16 @@ const ClientNavbar = () => {
       <div className="container mx-auto px-4">
         {/* --- Desktop Header Layout --- */}
         <div className="hidden lg:flex justify-between items-center h-16">
+          <Link
+            href={"/"}
+            className=" text-gray-800 font-bold hover:text-palette-btn hover:underline transition-all duration-500"
+          >
+            Home
+          </Link>
           <Link href={"/"}>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 ">
               <Image
-                src={"/logo-black.avif"}
+                src={"/logo-black.png"}
                 width={200}
                 height={100}
                 alt="logo"
@@ -126,9 +132,8 @@ const ClientNavbar = () => {
             </div>
           </Link>
 
-          <SearchModal />
-
           <div className="flex items-center gap-4">
+            <SearchModal />
             <CartSheet />
             <UserProfileDropdown user={user} />
           </div>
@@ -138,9 +143,15 @@ const ClientNavbar = () => {
         <div className="lg:hidden flex flex-col py-3 gap-3">
           {/* Row 1: Logo + Actions */}
           <div className="flex justify-between items-center">
+            <Link
+              href={"/"}
+              className=" text-gray-800 font-bold hover:text-palette-btn hover:underline transition-all duration-500"
+            >
+              Home
+            </Link>
             <Link href={"/"}>
               <Image
-                src={"/logo-black.avif"}
+                src={"/logo-black.png"}
                 width={140}
                 height={70}
                 alt="logo"
@@ -155,9 +166,6 @@ const ClientNavbar = () => {
 
           {/* Row 2: Search + Menu Trigger */}
           <div className="flex items-center gap-3">
-            <div className="flex-1">
-              <SearchModal />
-            </div>
             <button
               className="p-2.5 rounded-lg active:scale-95 transition-transform border"
               onClick={() => setMobileMenuOpen(true)}
@@ -168,6 +176,9 @@ const ClientNavbar = () => {
             >
               <Menu className="w-5 h-5" />
             </button>
+            <div className="flex-1">
+              <SearchModal />
+            </div>
           </div>
         </div>
 
@@ -321,21 +332,13 @@ const ClientNavbar = () => {
             <div className="flex items-center justify-between">
               <SheetTitle className="text-left">
                 <Image
-                  src={"/logo-black.avif"}
+                  src={"/logo-black.png"}
                   width={140}
                   height={60}
                   alt="logo"
                   className="object-contain"
                 />
               </SheetTitle>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-full"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <X className="h-5 w-5" />
-              </Button>
             </div>
           </SheetHeader>
 

@@ -38,7 +38,7 @@ export const viewcontentEvent = (payload: Product & extra) => {
 };
 
 
-export const addToCartEvent = (payload: Omit<CartItem, "quantity"> & extra) => {
+export const addToCartEvent = (payload:CartItem & extra) => {
     console.log("sending-payload-for-add-to-cart",payload)
   return sendGTMEvent({
     event: "add_to_cart",
@@ -58,7 +58,7 @@ export const addToCartEvent = (payload: Omit<CartItem, "quantity"> & extra) => {
           item_brand: payload.brandName,
           item_variant: `${payload.variant.size} / ${payload.variant.color}`,
           price: payload.unitPrice,
-          quantity: 1,
+          quantity: payload?.quantity ?? 1,
         description:"tiger-vai-product",
           item_category: "product", // optional but GA4 likes it
         },

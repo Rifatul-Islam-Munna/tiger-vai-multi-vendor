@@ -27,8 +27,7 @@ export default function SuccessPage() {
           </h1>
 
           <p className="text-sm text-gray-600 mb-4 max-w-md leading-relaxed">
-            Thank you for your purchase. A confirmation email and SMS have been
-            sent to your registered email and phone number.
+            Thank you for your purchase.
           </p>
         </div>
 

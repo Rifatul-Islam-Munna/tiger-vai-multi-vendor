@@ -10,7 +10,15 @@ import Link from "next/link";
 import { useCartStore } from "@/zustan-hook/cart";
 import { useCheckoutStore } from "@/zustan-hook/checkoutStore";
 import { useState } from "react";
-
+import PageBanner from "@/components/ui/custom/common/PageBanner";
+import { useApiMutation } from "@/api-hook/react-query-wrapper";
+import { postNewSell } from "@/actions/sells";
+import { getUserInfo } from "@/actions/auth";
+import { purchaseEvent } from "@/lib/google-tag-manager";
+import { purchaseServerEvent } from "@/actions/metaEvent";
+import { v4 as uuidv4 } from "uuid";
+import { Spinner } from "@/components/ui/spinner";
+import PathaoChargeTable from "@/components/ui/custom/common/PathaoChargeTable";
 export default function ShipmentPage() {
   const router = useRouter();
   const { items, totalPrice, totalDiscount } = useCartStore();
@@ -18,6 +26,73 @@ export default function ShipmentPage() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const finalTotal = totalPrice - totalDiscount;
+
+  const onCompleteOrder = () => {
+    router.push("/cart/success");
+  };
+  const { mutate, isPending } = useApiMutation(
+    postNewSell,
+    undefined,
+    "sell-product-item",
+    onCompleteOrder
+  );
+  const handlePlaceOrder = async () => {
+    const orderPayload = {
+      // ✅ CORRECT: Map to 'products' array (not 'items')
+      products: items.map((item) => ({
+        // Basic product info
+        productId: item?.productId,
+        slug: item?.slug,
+        name: item?.name,
+        quantity: item?.quantity,
+        unitPrice: item?.unitPrice,
+
+        // ✅ REQUIRED: Variant object with all fields
+        variant: {
+          size: item?.variant?.size,
+          color: item?.variant?.color,
+          sku: item?.variant?.sku || undefined,
+          ...(item?.variant?.sku && { sku: item?.variant?.sku }),
+          price: item?.variant?.price,
+          ...(item?.variant?.discountPrice && {
+            discountPrice: item.variant.discountPrice,
+          }),
+        },
+
+        // Optional fields
+        totalPrice: item?.unitPrice * item?.quantity,
+        discountApplied: item.variant.discountPrice
+          ? (item.variant.price - item.variant.discountPrice) * item.quantity
+          : undefined,
+      })),
+
+      // ✅ REQUIRED: Shipment details
+      shipment: {
+        name: shipment?.name,
+        phone: shipment?.phone,
+        house: shipment?.house,
+        paymentMethod: shipment?.paymentMethod,
+        ...(shipment?.comment?.trim() && { comment: shipment?.comment }),
+      },
+
+      // ✅ REQUIRED: Order totals
+      orderTotal: finalTotal,
+      totalDiscount: totalDiscount || 0,
+    };
+    console.log("Order payload:", orderPayload);
+    mutate(orderPayload);
+    const eventId = uuidv4();
+    const getUser = await getUserInfo();
+    const extraData = {
+      userId: getUser?.id,
+      userName: getUser?.name,
+      email: getUser?.email,
+      event_id: eventId,
+      ...orderPayload,
+    };
+    purchaseEvent(extraData);
+    await purchaseServerEvent(extraData);
+  };
 
   // ✅ FIXED: Validate only shipping fields, not payment method
   const isShippingValid = () => {
@@ -35,29 +110,25 @@ export default function ShipmentPage() {
     }
     router.push("/cart/payment");
   };
+  const route = [
+    {
+      title: "Checkout",
+      link: "/cart/shipment",
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-palette-bg">
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+      <main className=" container mx-auto px-3 md:px-1  py-8 md:py-12">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-8">
-          <Link href="/cart" className="hover:text-palette-btn transition">
-            Cart
-          </Link>
-          <span>/</span>
-          <span className="text-palette-btn font-semibold">Shipping</span>
-          <span>/</span>
-          <span>Payment</span>
-          <span>/</span>
-          <span>Confirmation</span>
-        </div>
+        <PageBanner title="Checkout" routes={route} />
 
         {/* Progress Bar */}
-        <div className="w-full h-1 bg-gray-200 rounded-full mb-8 overflow-hidden">
+        {/* <div className="w-full h-1 bg-gray-200 rounded-full mb-8 overflow-hidden">
           <div className="w-1/4 h-full bg-palette-btn rounded-full transition-all duration-300"></div>
-        </div>
+        </div> */}
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-8 mt-6">
           {/* Shipping Form */}
           <div className="lg:col-span-2">
             <div className="flex items-center justify-between mb-8">
@@ -249,11 +320,11 @@ export default function ShipmentPage() {
                 </div>
 
                 <Button
-                  onClick={handleContinue}
+                  onClick={handlePlaceOrder}
                   className="w-full mt-6 bg-palette-btn hover:bg-palette-btn/90 text-white h-12 font-semibold rounded-lg transition"
-                  disabled={!isShippingValid()}
+                  disabled={!isShippingValid() || isPending}
                 >
-                  Continue to Payment
+                  {isPending && <Spinner className="mr-2" />} Place Order
                 </Button>
 
                 <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
@@ -267,6 +338,9 @@ export default function ShipmentPage() {
               </CardContent>
             </Card>
           </div>
+        </div>
+        <div className=" mt-4">
+          <PathaoChargeTable />
         </div>
       </main>
     </div>

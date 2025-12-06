@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useCartStore } from "@/zustan-hook/cart";
+import PageBanner from "../common/PageBanner";
 
 export default function CartPage() {
   const router = useRouter();
@@ -35,6 +36,12 @@ export default function CartPage() {
   const handleCheckout = () => {
     router.push("/cart/shipment");
   };
+  const route = [
+    {
+      title: "Cart",
+      link: "/cart",
+    },
+  ];
 
   if (items.length === 0) {
     return (
@@ -64,17 +71,10 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen bg-palette-bg">
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+      <main className=" container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-8">
-          <Link href="/" className="hover:text-palette-btn transition">
-            Home
-          </Link>
-          <span>/</span>
-          <span className="text-palette-btn font-semibold">Cart</span>
-        </div>
-
-        <div className="flex items-center justify-between mb-8">
+        <PageBanner title="Cart" routes={route} />
+        <div className="flex items-center justify-between mb-8 mt-6">
           <h1 className="text-3xl md:text-4xl font-bold text-palette-text">
             Your Shopping Cart
           </h1>
@@ -269,7 +269,7 @@ export default function CartPage() {
                   onClick={handleCheckout}
                   className="w-full bg-palette-btn hover:bg-palette-btn/90 text-white h-12 font-semibold rounded-lg transition"
                 >
-                  Proceed to Shipment
+                  Proceed to Checkout
                 </Button>
 
                 <Button

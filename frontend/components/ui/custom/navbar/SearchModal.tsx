@@ -10,52 +10,14 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
 } from "@/components/ui/command";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { Search, TrendingUp, Clock, X, ArrowLeft } from "lucide-react";
-import { Kbd, KbdGroup } from "@/components/ui/kbd";
+import { Search, Clock, X, ArrowLeft } from "lucide-react";
+import { Kbd } from "@/components/ui/kbd";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-// --- Hook to detect screen size ---
-function useMediaQuery(query: string) {
-  const [value, setValue] = useState(false);
-
-  useEffect(() => {
-    function onChange(event: MediaQueryListEvent) {
-      setValue(event.matches);
-    }
-    const result = matchMedia(query);
-    result.addEventListener("change", onChange);
-    setValue(result.matches);
-    return () => result.removeEventListener("change", onChange);
-  }, [query]);
-
-  return value;
-}
-
-// --- Data Constants ---
-const TRENDING_SEARCHES = [
-  "iPhone 15 Pro Max",
-  "Samsung Galaxy S24 Ultra",
-  "Sony WH-1000XM5",
-  "MacBook Pro M3",
-  "Apple Watch Series 9",
-  "PlayStation 5",
-];
-
-const RECOMMENDED_SEARCHES = [
-  "Best Smartphone Deals",
-  "Trending Fashion",
-  "Home Appliances Sale",
-  "Beauty & Skincare",
-  "Gaming Accessories",
-  "Wireless Earbuds",
-];
-
 // --- Sub-Component: Search List Content ---
-// Moved outside to fix "Component creation during render" error
 interface SearchListProps {
   isDesktop: boolean;
   recentSearches: string[];
@@ -100,7 +62,7 @@ const SearchContentList = ({
         </div>
       </CommandEmpty>
 
-      {recentSearches.length > 0 && !searchQuery && (
+      {recentSearches.length > 0 && (
         <CommandGroup heading="Recent Searches">
           {recentSearches.map((search, index) => (
             <CommandItem
@@ -129,38 +91,18 @@ const SearchContentList = ({
         </CommandGroup>
       )}
 
-      <CommandSeparator className="my-2" />
-
-      {!searchQuery && (
-        <>
-          <CommandGroup heading="🔥 Trending Now">
-            {TRENDING_SEARCHES.map((trending, index) => (
-              <CommandItem
-                key={`trending-${index}`}
-                onSelect={() => handleSearch(trending)}
-                className="cursor-pointer py-2"
-              >
-                <TrendingUp className="mr-2 h-4 w-4 text-[var(--palette-btn)]" />
-                <span>{trending}</span>
-              </CommandItem>
-            ))}
-          </CommandGroup>
-
-          <CommandSeparator className="my-2" />
-
-          <CommandGroup heading="Recommended">
-            {RECOMMENDED_SEARCHES.map((suggestion, index) => (
-              <CommandItem
-                key={`recommended-${index}`}
-                onSelect={() => handleSearch(suggestion)}
-                className="cursor-pointer py-2"
-              >
-                <Search className="mr-2 h-4 w-4 text-gray-400" />
-                <span>{suggestion}</span>
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        </>
+      {recentSearches.length === 0 && !searchQuery && (
+        <div className="flex flex-col items-center justify-center py-12 text-center px-4">
+          <div className="rounded-full bg-gray-100 p-4 mb-3">
+            <Clock className="h-8 w-8 text-gray-400" />
+          </div>
+          <p className="text-sm font-medium text-gray-900 mb-1">
+            No recent searches
+          </p>
+          <p className="text-xs text-gray-500">
+            Your search history will appear here
+          </p>
+        </div>
       )}
     </CommandList>
   );
@@ -171,8 +113,6 @@ export function SearchModal() {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
-
-  // Default to true to prevent hydration mismatch, update in useEffect
   const [isDesktop, setIsDesktop] = useState(true);
 
   useEffect(() => {
@@ -248,17 +188,29 @@ export function SearchModal() {
   return (
     <>
       {/* Trigger Button */}
-      <button
-        onClick={() => setOpen(true)}
-        className="flex items-center gap-3  w-full sm:max-w-[300px] md:max-w-2xl px-4 py-2.5 border border-gray-200 rounded-lg bg-white hover:bg-gray-50 transition-colors text-left group"
-      >
-        <Search className="h-4 w-4 text-gray-400 group-hover:text-[var(--palette-btn)] transition-colors" />
-        <span className="text-sm text-gray-500 flex-1 truncate">Search...</span>
-        <KbdGroup className="hidden sm:flex">
-          <Kbd>Ctrl</Kbd>
-          <Kbd>K</Kbd>
-        </KbdGroup>
-      </button>
+      {isDesktop ? (
+        // Desktop: Search Icon Button
+        <Button
+          onClick={() => setOpen(true)}
+          variant="ghost"
+          size="icon"
+          className="relative h-9 w-9  bg-palette-btn/5 rounded-full hover:bg-gray-100"
+        >
+          <Search className="h-5 w-5 text-gray-600" />
+          <span className="sr-only">Search</span>
+        </Button>
+      ) : (
+        // Mobile: Input-like Button
+        <button
+          onClick={() => setOpen(true)}
+          className="flex items-center gap-3 w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-white hover:bg-gray-50 transition-colors text-left group"
+        >
+          <Search className="h-4 w-4 text-gray-400 group-hover:text-[var(--palette-btn)] transition-colors" />
+          <span className="text-sm text-gray-500 flex-1 truncate">
+            Search...
+          </span>
+        </button>
+      )}
 
       {isDesktop ? (
         /* --- DESKTOP: Command Dialog --- */

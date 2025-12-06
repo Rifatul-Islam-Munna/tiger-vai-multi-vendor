@@ -11,6 +11,7 @@ import { viewcontentEvent } from "@/lib/google-tag-manager";
 import { getUserInfo } from "@/actions/auth";
 import { Product } from "@/@types/short-product";
 import { viewContentServerEvent } from "@/actions/metaEvent";
+import { Button } from "@/components/ui/button";
 
 interface ProductCardProps {
   product: Product;
@@ -54,10 +55,10 @@ export function ProductCard({
     return (
       <Card
         onClick={() => handlPushToProduct(product.slug)}
-        className="group relative border pt-0 rounded-lg overflow-hidden bg-white transition-all shadow-none duration-300 hover:border-gray-300 flex flex-col"
+        className="group relative border pt-0 rounded-lg  overflow-hidden bg-white transition-all shadow-none duration-300 hover:border-gray-300 flex flex-col"
       >
         {/* 1:1 Square Image Container */}
-        <div className="relative w-full aspect-square bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden flex-shrink-0">
+        <div className="relative w-full aspect-square group bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden flex-shrink-0">
           {/* Discount Badge */}
 
           {/* Product Image */}
@@ -90,6 +91,11 @@ export function ProductCard({
             )}
           </div>
 
+          <div className="absolute inset-0  flex opacity-0 group-hover:opacity-100 items-center justify-center z-20 transition-opacity duration-700">
+            <span className="text-white font-bold text-sm bg-red-500 px-4 py-2 rounded-lg">
+              Quick view
+            </span>
+          </div>
           {/* Out of Stock Overlay */}
           {isOutOfStock && (
             <div className="absolute inset-0 bg-black/70 backdrop-blur-[2px] flex items-center justify-center z-20">

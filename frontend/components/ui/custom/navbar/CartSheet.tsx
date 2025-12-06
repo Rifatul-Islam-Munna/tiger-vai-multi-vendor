@@ -41,7 +41,7 @@ export default function CartSheet() {
 
   const handleCheckout = async () => {
     setOpen(false);
-    router.push("/cart");
+    router.push("/cart/shipment");
 
     const eventId = uuidv4();
     const getUser = await getUserInfo();
@@ -54,6 +54,10 @@ export default function CartSheet() {
     };
     initiateCheckoutEvent(extraData);
     initiateCheckoutServerEvent(extraData);
+  };
+  const handelToCart = () => {
+    setOpen(false);
+    router.push("/cart");
   };
 
   return (
@@ -128,9 +132,9 @@ export default function CartSheet() {
                         {item.name}
                       </Link>
 
-                      <p className="text-xs text-gray-500 mt-1">
+                      {/*  <p className="text-xs text-gray-500 mt-1">
                         {item.brandName}
-                      </p>
+                      </p> */}
 
                       {/* Variant Info */}
                       <div className="flex gap-2 mt-1">
@@ -230,17 +234,19 @@ export default function CartSheet() {
               </div>
 
               {/* Checkout Button */}
-              <Button className="w-full" size="lg" onClick={handleCheckout}>
-                Proceed to Checkout
-              </Button>
+              <div className=" w-full grid grid-cols-2  gap-1.5">
+                <Button
+                  size="lg"
+                  className=" bg-palette-btn/90 hover:bg-palette-btn"
+                  onClick={handleCheckout}
+                >
+                  Checkout
+                </Button>
 
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => setOpen(false)}
-              >
-                Continue Shopping
-              </Button>
+                <Button variant="outline" onClick={handelToCart}>
+                  Cart
+                </Button>
+              </div>
             </div>
           </>
         )}

@@ -14,6 +14,7 @@ import { Suspense } from "react";
 import ClientSideScrollRestorer from "@/components/ui/custom/common/ClientSideScrollRestorer";
 import { PageViewTracker } from "@/components/ui/custom/common/PageViewTracker";
 import Footer from "@/components/ui/custom/common/Footer";
+import WhatsAppSupport from "@/components/ui/custom/common/WhatsAppSupport";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -206,6 +207,9 @@ export default function RootLayout({
       <GoogleTagManager gtmId="GTM-TW7XR5TX" />
       <Suspense>
         <PageViewTracker />
+      </Suspense>
+      <Suspense>
+        <WhatsAppSupport />
       </Suspense>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-palette-bg h-full`}
