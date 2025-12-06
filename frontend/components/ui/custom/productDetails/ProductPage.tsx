@@ -10,6 +10,9 @@ import {
   Award,
   ChevronLeft,
   ChevronRight,
+  Plus,
+  Minus,
+  MessageCircle,
 } from "lucide-react";
 import { Product, ReviewStats } from "@/@types/fullProduct";
 import { useQueryState } from "nuqs";
@@ -37,65 +40,27 @@ import {
 import { User } from "@/@types/auth-response";
 import { BasicUser } from "@/@types/userType";
 import DescriptionComponent from "./RenderDesription";
-
-const RatingBreakdown = ({ stats }: { stats: ReviewStats | undefined }) => {
-  const getCount = (rating: number): number => {
-    switch (rating) {
-      case 5:
-        return stats?.count5 ?? 0;
-      case 4:
-        return stats?.count4 ?? 0;
-      case 3:
-        return stats?.count3 ?? 0;
-      case 2:
-        return stats?.count2 ?? 0;
-      case 1:
-        return stats?.count1 ?? 0;
-      default:
-        return 0;
-    }
-  };
-
-  const getWidth = (rating: number): string => {
-    const count = getCount(rating);
-    const total = stats?.totalReviews ?? 0;
-    if (total === 0) return "0%";
-    return `${Math.round((count / total) * 100)}%`;
-  };
-
-  return (
-    <div className="flex-1">
-      {[5, 4, 3, 2, 1].map((rating) => (
-        <div key={rating} className="flex items-center gap-3 mb-2">
-          <span className="text-sm w-3 text-gray-700 font-medium">
-            {rating}
-          </span>
-          <Star className="w-4 h-4 fill-palette-btn text-palette-btn flex-shrink-0" />
-          <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden min-w-0">
-            <div
-              className="bg-palette-btn h-full rounded-full transition-all duration-300"
-              style={{ width: getWidth(rating) }}
-            ></div>
-          </div>
-          <span className="text-sm text-gray-500 w-10 text-right flex-shrink-0">
-            {getCount(rating)}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-};
+import ProductTabs from "./ProductTabs";
+import { Separator } from "../../separator";
 
 interface ProductVariantCardsProps {
   product: Product;
   user?: BasicUser | null;
 }
 
+// Track quantities for each variant
+interface VariantQuantity {
+  [cartItemId: string]: number;
+}
+
 const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
   product,
   user,
 }) => {
-  const { addToCart, items } = useCartStore();
+  const { addToCart, items, updateQuantity } = useCartStore();
+  const [variantQuantities, setVariantQuantities] = useState<VariantQuantity>(
+    {}
+  );
 
   const variantsBySize = React.useMemo(() => {
     const grouped = new Map<string, typeof product.variants>();
@@ -124,8 +89,94 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
     );
   };
 
+  // Handle adding all items with quantities to cart
+  const handleAddAllToCart = () => {
+    let addedCount = 0;
+
+    Object.entries(variantQuantities).forEach(([cartItemId, quantity]) => {
+      if (quantity > 0) {
+        // Parse the cartItemId to get productId, size, color
+        const [productId, size, color] = cartItemId.split("-");
+
+        // Find the variant
+        const variant = product.variants?.find(
+          (v) => v.size === size && v.color === color
+        );
+
+        if (variant && variant.stock && variant.stock >= quantity) {
+          const cartItem: Omit<CartItem, "quantity"> = {
+            _id: cartItemId,
+            productId: product._id,
+            name: product.name ?? "Product",
+            thumbnail: product.thumbnail?.url ?? "",
+            brandName: product.brand?.name ?? "Unknown Brand",
+            slug: product.slug ?? "",
+            variant: {
+              size: size,
+              color: color,
+              price: variant.price,
+              discountPrice: variant.discountPrice,
+            },
+            unitPrice: variant.discountPrice ?? variant.price,
+            variantStock: variant.stock ?? 0,
+          };
+
+          // Check if already in cart
+          const existingItem = items.find((item) => item._id === cartItemId);
+          if (existingItem) {
+            // Update quantity
+            updateQuantity(cartItemId, existingItem.quantity + quantity);
+          } else {
+            // Add new item with quantity
+            addToCart(cartItem);
+            // Update the quantity in cart
+            updateQuantity(cartItemId, quantity);
+          }
+
+          const eventId = uuidv4();
+          const extraData = {
+            event_id: eventId,
+            userId: user?.id,
+            userName: user?.name,
+            email: user?.email,
+            ...cartItem,
+            quantity,
+          };
+
+          addToCartEvent(extraData);
+          addToCartServerEvent(extraData);
+
+          addedCount++;
+        }
+      }
+    });
+
+    if (addedCount > 0) {
+      toast.success(`${addedCount} item(s) added to cart!`, {
+        position: "bottom-right",
+      });
+      // Reset quantities
+      setVariantQuantities({});
+    } else {
+      toast.error("Please select quantity for at least one variant");
+    }
+  };
+
+  const handleOrderNow = () => {
+    handleAddAllToCart();
+    // Redirect to checkout
+    setTimeout(() => {
+      window.location.href = "/checkout";
+    }, 500);
+  };
+
+  const handleChatWithSeller = () => {
+    toast.info("Chat feature coming soon!");
+  };
+
   return (
     <div className="space-y-4">
+      {/* Variant Cards */}
       {Array.from(variantsBySize.entries()).map(([size, variants]) => (
         <VariantCard
           key={size}
@@ -134,10 +185,38 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
           variants={variants}
           image={getSizeImage(size)}
           colors={getColorsForSize(size)}
-          user={user}
-          addToCart={addToCart}
+          variantQuantities={variantQuantities}
+          setVariantQuantities={setVariantQuantities}
         />
       ))}
+
+      {/* Two Buttons at Top - Add to Cart & Order Now */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+        {/* Add to Cart - Yellow/Golden */}
+        <button
+          onClick={handleAddAllToCart}
+          className="w-full py-3 px-4 rounded-lg font-semibold text-base transition-all bg-[#FFC107] hover:bg-[#FFB300] text-gray-800"
+        >
+          Add To Cart
+        </button>
+
+        {/* Order Now - Coral/Salmon */}
+        <button
+          onClick={handleOrderNow}
+          className="w-full py-3 px-4 rounded-lg font-semibold text-base transition-all bg-[#FF7761] hover:bg-[#FF6550] text-white"
+        >
+          Order Now <span className="text-sm">(আজই কিনুন)</span>
+        </button>
+      </div>
+
+      {/* Chat with Seller - Bottom - Full Width */}
+      <button
+        onClick={handleChatWithSeller}
+        className="w-full py-3 px-4 rounded-lg font-semibold text-base transition-all bg-[#2196F3] hover:bg-[#1976D2] text-white flex items-center justify-center gap-2"
+      >
+        <MessageCircle className="w-5 h-5" />
+        Chat with Seller
+      </button>
     </div>
   );
 };
@@ -147,9 +226,9 @@ interface VariantCardProps {
   size: string;
   variants: NonNullable<Product["variants"]>;
   colors: (string | undefined)[];
-  user?: BasicUser | null;
   image?: string;
-  addToCart: (item: Omit<CartItem, "quantity">) => void;
+  variantQuantities: VariantQuantity;
+  setVariantQuantities: React.Dispatch<React.SetStateAction<VariantQuantity>>;
 }
 
 const VariantCard: React.FC<VariantCardProps> = ({
@@ -157,9 +236,9 @@ const VariantCard: React.FC<VariantCardProps> = ({
   size,
   variants,
   colors,
-  user,
-  addToCart,
   image,
+  variantQuantities,
+  setVariantQuantities,
 }) => {
   const [selectedColor, setSelectedColor] = useState<string>(colors[0] || "");
 
@@ -177,109 +256,85 @@ const VariantCard: React.FC<VariantCardProps> = ({
   const stock = currentVariant?.stock || 0;
   const isRecommended = currentVariant?.recommended;
 
-  const handleAddToCart = () => {
-    if (!selectedColor || !currentVariant) {
-      toast.error("Please select a color");
-      return;
+  // Get cart item ID and current quantity
+  const cartItemId = `${product._id}-${size}-${selectedColor}`;
+  const currentQuantity = variantQuantities[cartItemId] || 0;
+
+  const handleIncrement = () => {
+    if (currentQuantity < stock) {
+      setVariantQuantities((prev) => ({
+        ...prev,
+        [cartItemId]: currentQuantity + 1,
+      }));
+    } else {
+      toast.error("Maximum stock reached");
     }
+  };
 
-    if (stock === 0) {
-      toast.error("This item is out of stock");
-      return;
+  const handleDecrement = () => {
+    if (currentQuantity > 0) {
+      setVariantQuantities((prev) => ({
+        ...prev,
+        [cartItemId]: Math.max(0, currentQuantity - 1),
+      }));
     }
-
-    const eventId = uuidv4();
-    const cartItemId = `${product._id}-${size}-${selectedColor}`;
-
-    const cartItem: Omit<CartItem, "quantity"> = {
-      _id: cartItemId,
-      productId: product._id,
-      name: product.name ?? "Product",
-      thumbnail: product.thumbnail?.url ?? "",
-      brandName: product.brand?.name ?? "Unknown Brand",
-      slug: product.slug ?? "",
-      variant: {
-        size: size,
-        color: selectedColor,
-        price: currentVariant.price,
-        discountPrice: currentVariant.discountPrice,
-      },
-      unitPrice: currentVariant.discountPrice ?? currentVariant.price,
-      variantStock: currentVariant.stock ?? 0,
-    };
-
-    const extraData = {
-      event_id: eventId,
-      userId: user?.id,
-      userName: user?.name,
-      email: user?.email,
-      ...cartItem,
-    };
-
-    addToCart(cartItem);
-    addToCartEvent(extraData);
-    addToCartServerEvent(extraData);
-
-    toast.success("Added to cart!", { position: "bottom-right" });
   };
 
   return (
-    <div className="relative bg-white border  border-gray-200 rounded-lg p-4 sm:p-6">
-      {isRecommended && (
-        <div className=" w-fit  text-gray-600  fo px-3 py-1.5 rounded-full text-xs md:text-sm font-semibold">
-          Recommended: {isRecommended}
-        </div>
-      )}
-
-      <div className="flex flex-col sm:flex-row gap-6">
+    <div className="relative bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="flex flex-row gap-3 sm:gap-4 p-3 sm:p-4">
+        {/* Left: Product Image - Smaller on mobile */}
         {image && (
-          <div className="w-full sm:w-48 flex-shrink-0">
+          <div className=" w-20 md:w-24 flex-shrink-0">
             <img
               src={image}
               alt={`${product.name} - ${size}`}
-              className="w-full h-auto object-contain"
+              className="w-full h-auto object-contain rounded"
             />
           </div>
         )}
 
-        <div className="flex-1 space-y-4">
+        {/* Middle: Product Details */}
+        <div className="flex-1 space-y-2 min-w-0">
+          {/* Recommended Badge */}
+          {isRecommended && (
+            <div className="inline-block text-orange-700 py-0.5 text-xs font-semibold">
+              Recommended: {isRecommended}
+            </div>
+          )}
+
+          {/* Size */}
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Size:</span>
-            <span className="text-base font-bold text-palette-text">
-              {size}
-            </span>
+            <span className="text-xs text-gray-600">Size:</span>
+            <span className="text-sm font-bold text-gray-800">{size}</span>
           </div>
 
-          <div className="flex items-baseline gap-3 flex-wrap">
+          {/* Price - Compact */}
+          <div className="flex items-baseline gap-2 flex-wrap">
             {originalPrice && (
-              <span className="text-base line-through text-gray-400">
-                ৳{originalPrice.toFixed(2)}
+              <span className="text-xs line-through text-gray-400">
+                Tk {originalPrice.toLocaleString()}
               </span>
             )}
-            <span className="text-2xl font-bold text-palette-text">
-              ৳{currentPrice.toFixed(2)}
+            <span className="text-base sm:text-lg font-bold text-gray-800">
+              Tk {currentPrice.toLocaleString()}
             </span>
             {discountPercentage > 0 && (
-              <span className="bg-palette-btn/10 text-palette-btn px-2.5 py-1 rounded text-sm font-bold">
-                {discountPercentage}% OFF
+              <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-xs font-semibold">
+                {discountPercentage}% off
               </span>
             )}
           </div>
 
+          {/* Color Selection - Compact */}
           {colors.length > 0 && (
-            <div className="space-y-3">
-              <div className="text-sm text-palette-text">
-                Color:{" "}
-                <span className="font-bold text-palette-btn">
-                  {selectedColor || "Select"}
-                </span>
-              </div>
+            <div className="space-y-1.5">
               <div className="flex gap-2 flex-wrap">
                 {colors.map((color) => (
                   <button
                     key={color}
                     onClick={() => setSelectedColor(color || "")}
-                    className={`min-h-[44px] px-4 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+                    className={`px-2 sm:px-2.5 py-1 rounded border text-xs font-medium transition-all ${
                       selectedColor === color
                         ? "border-palette-btn bg-palette-btn text-white"
                         : "border-gray-300 bg-white text-gray-700 hover:border-palette-btn"
@@ -291,30 +346,36 @@ const VariantCard: React.FC<VariantCardProps> = ({
               </div>
             </div>
           )}
+        </div>
 
-          <div className="flex items-center">
-            <span
-              className={`inline-flex items-center px-3 py-1.5 rounded text-xs font-semibold ${
-                stock > 0
-                  ? "bg-green-50 text-green-700 border border-green-200"
-                  : "bg-red-50 text-red-700 border border-red-200"
-              }`}
-            >
-              {stock > 0 ? `In Stock: ${stock}` : "Out of Stock"}
+        {/* Right: Stock & Quantity - Compact */}
+        <div className="sm:w-20 md:w-28 flex-shrink-0 flex flex-col gap-3 sm:gap-4 justify-center items-start ">
+          <div className="text-left sm:text-right">
+            <span className="text-gray-800 font-bold text-sm">
+              Stock: {stock > 0 ? stock : "Out"}
             </span>
           </div>
 
-          <button
-            onClick={handleAddToCart}
-            disabled={stock === 0 || !selectedColor}
-            className="w-full min-h-[48px] bg-palette-btn text-white py-3 px-6 rounded-lg font-semibold text-base hover:bg-palette-btn/90 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-          >
-            {stock === 0
-              ? "Out of Stock"
-              : !selectedColor
-              ? "Select Color First"
-              : "Add to Cart"}
-          </button>
+          {/* Quantity Controls - Compact */}
+          <div className="flex items-center border border-gray-300 rounded">
+            <button
+              onClick={handleDecrement}
+              disabled={currentQuantity === 0}
+              className="w-6 sm:w-7 h-6 sm:h-7 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <Minus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            </button>
+            <span className="w-8 sm:w-10 text-center font-semibold text-sm text-gray-800 border-x border-gray-300">
+              {currentQuantity}
+            </span>
+            <button
+              onClick={handleIncrement}
+              disabled={currentQuantity >= stock || !selectedColor}
+              className="w-6 sm:w-7 h-6 sm:h-7 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -326,12 +387,19 @@ const ProductPage = ({ params }: { params: Product }) => {
   const [activeTab, setActiveTab] = useState("Details");
   const [page, setPage] = useState(1);
   const [getUser, setGetUser] = useState<BasicUser | null>(null);
+  const [showFullDescription, setShowFullDescription] = useState(false);
 
   const { data, isPending } = useQueryWrapper<Reviews>(
     ["get-review-of-product", params._id, page],
     `/product/get-all-reviews-for-products?id=${params._id}&page=${page}`,
     { enabled: activeTab === "reviews" }
   );
+
+  useEffect(() => {
+    getUserInfo().then((user) => {
+      setGetUser(user);
+    });
+  }, []);
 
   const getPriceRange = () => {
     if (!params?.variants || params.variants.length === 0) {
@@ -387,106 +455,89 @@ const ProductPage = ({ params }: { params: Product }) => {
   };
 
   return (
-    <div className="min-h-screen bg-white container mx-auto">
-      <div className="w-full max-w-full mx-auto px-4 py-6 sm:py-8">
+    <div className="min-h-screen bg-white">
+      <div className="container mx-auto px-4 py-6 sm:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Product Images Section */}
           <div className="space-y-4 lg:sticky lg:top-4 h-fit">
-            {/* Main Image */}
-            <div className="relative bg-gray-50 rounded-lg overflow-hidden">
-              <img
-                src={
-                  params?.images?.[selectedImageIndex]?.url ??
-                  params?.thumbnail?.url ??
-                  ""
-                }
-                alt={params?.name ?? "Product image"}
-                className="w-full h-auto object-contain"
-              />
-
+            {/* Image Section - Responsive Thumbnails */}
+            <div className="flex flex-col lg:flex-row gap-3">
+              {/* Thumbnails - BOTTOM for mobile, LEFT for desktop */}
               {(params?.images?.length ?? 0) > 1 && (
-                <>
-                  <button
-                    onClick={() => handleImageNavigation("prev")}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors text-palette-text border border-gray-200"
-                    aria-label="Previous image"
-                  >
-                    <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
-                  </button>
-                  <button
-                    onClick={() => handleImageNavigation("next")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors text-palette-text border border-gray-200"
-                    aria-label="Next image"
-                  >
-                    <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
-                  </button>
-                </>
-              )}
-
-              {priceRange?.hasDiscount && (
-                <div className="absolute top-4 left-4 bg-palette-btn text-white px-4 py-2 rounded-full text-sm font-bold">
-                  SALE
+                <div className="flex flex-row lg:flex-col gap-2 order-2 lg:order-1 w-full lg:w-16 xl:w-20 flex-shrink-0 overflow-x-auto lg:overflow-x-visible">
+                  {params?.images?.map((image, index) => (
+                    <button
+                      key={image?.id ?? index}
+                      onClick={() => setSelectedImageIndex(index)}
+                      className={`w-16 sm:w-20 lg:w-full aspect-square flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
+                        selectedImageIndex === index
+                          ? "border-palette-btn ring-2 ring-palette-btn/30"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <img
+                        src={image?.url ?? ""}
+                        alt={`Thumbnail ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
                 </div>
               )}
+
+              {/* Main Image */}
+              <div className="relative flex-1 bg-gray-50 rounded-lg overflow-hidden order-1 lg:order-2">
+                <img
+                  src={
+                    params?.images?.[selectedImageIndex]?.url ??
+                    params?.thumbnail?.url ??
+                    ""
+                  }
+                  alt={params?.name ?? "Product image"}
+                  className="w-full h-auto object-contain"
+                />
+
+                {priceRange?.hasDiscount && (
+                  <div className="absolute top-4 left-4 bg-palette-btn text-white px-4 py-2 rounded-full text-sm font-bold">
+                    SALE
+                  </div>
+                )}
+
+                {/* Navigation Arrows for Main Image */}
+                {(params?.images?.length ?? 0) > 1 && (
+                  <>
+                    <button
+                      onClick={() => handleImageNavigation("prev")}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors text-palette-text border border-gray-200 shadow-md"
+                      aria-label="Previous image"
+                    >
+                      <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+                    </button>
+                    <button
+                      onClick={() => handleImageNavigation("next")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors text-palette-text border border-gray-200 shadow-md"
+                      aria-label="Next image"
+                    >
+                      <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
 
-            {/* Thumbnail Images */}
-            {(params?.images?.length ?? 0) > 1 && (
-              <div className="flex gap-2 sm:gap-3 overflow-x-auto">
-                {params?.images?.map((image, index) => (
-                  <button
-                    key={image?.id ?? index}
-                    onClick={() => setSelectedImageIndex(index)}
-                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
-                      selectedImageIndex === index
-                        ? "border-palette-btn"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <img
-                      src={image?.url ?? ""}
-                      alt={`Thumbnail ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Desktop Description - Under Image */}
-            <div className="hidden lg:block pt-6">
+            {/* Desktop Description - Under Image - Full Width */}
+            <div className="hidden lg:block pt-6 w-full">
               <h3 className="text-xl font-bold text-palette-text mb-4">
                 Product Description
               </h3>
-              <DescriptionComponent params={params?.description} />
+              <div className="w-full">
+                <DescriptionComponent params={params?.description} />
+              </div>
             </div>
           </div>
 
           {/* Product Info Section */}
           <div className="space-y-6">
-            {/* Breadcrumb */}
-            <div className="text-sm text-gray-500 hidden overflow-x-auto whitespace-nowrap">
-              <span>{params?.category?.main ?? "Category"}</span>
-              {params?.category?.subMain && (
-                <>
-                  <span className="mx-2">/</span>
-                  <span>{params.category.subMain}</span>
-                </>
-              )}
-              {params?.category?.semiSub && (
-                <>
-                  <span className="mx-2">/</span>
-                  <span>{params.category.semiSub}</span>
-                </>
-              )}
-              {params?.category?.category && (
-                <>
-                  <span className="mx-2">/</span>
-                  <span>{params.category.category}</span>
-                </>
-              )}
-            </div>
-
             {/* Product Title & Brand */}
             <div className="space-y-3">
               <h1 className="text-2xl sm:text-3xl font-bold text-palette-text">
@@ -499,36 +550,25 @@ const ProductPage = ({ params }: { params: Product }) => {
               )}
             </div>
 
-            {/* Price Range */}
+            {/* Price Range - WITHOUT "Save up to" */}
             {priceRange && (
-              <div className="space-y-2 bg-gray-50 p-4 sm:p-6 rounded-lg  ">
+              <div className="space-y-1   rounded-lg">
                 <div className="flex items-baseline gap-3 flex-wrap">
                   {priceRange.hasDiscount && (
-                    <span className="text-lg sm:text-xl text-gray-400 line-through">
-                      ৳{priceRange.originalMin.toFixed(2)}
+                    <span className="text-base text-gray-400 line-through">
+                      Tk {priceRange.originalMin.toLocaleString()}
                       {priceRange.originalMin !== priceRange.originalMax &&
-                        ` - ৳${priceRange.originalMax.toFixed(2)}`}
+                        ` - ${priceRange.originalMax.toLocaleString()}`}
                     </span>
                   )}
-                  <span className="text-3xl sm:text-4xl font-bold text-palette-text">
-                    ৳{priceRange.min.toFixed(2)}
+                  <span className="text-2xl sm:text-3xl font-bold text-palette-text">
+                    Tk {priceRange.min.toLocaleString()}
                     {priceRange.min !== priceRange.max &&
-                      ` - ৳${priceRange.max.toFixed(2)}`}
+                      ` - ${priceRange.max.toLocaleString()}`}
                   </span>
-                  {priceRange.hasDiscount && (
-                    <span className="bg-palette-btn text-white px-3 py-1.5 rounded-lg text-sm font-bold">
-                      Save up to{" "}
-                      {Math.round(
-                        ((priceRange.originalMax - priceRange.min) /
-                          priceRange.originalMax) *
-                          100
-                      )}
-                      %
-                    </span>
-                  )}
                 </div>
                 {params?.hasOffer && params?.offerExpiresAt && (
-                  <p className="text-sm text-gray-600">
+                  <p className="text-xs text-gray-600">
                     ⏰ Offer expires on{" "}
                     <span className="font-semibold">
                       {new Date(params.offerExpiresAt).toLocaleDateString()}
@@ -538,23 +578,43 @@ const ProductPage = ({ params }: { params: Product }) => {
               </div>
             )}
 
-            {/* Short Description & Special Offer */}
-            <div className="space-y-3">
+            {/* Short Description with Line Clamp & See More */}
+            <div className="space-y-2">
               {params?.shortDescription && (
-                <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-                  {params?.shortDescription}
-                </p>
+                <>
+                  <p
+                    className={`text-sm text-gray-600 leading-relaxed ${
+                      !showFullDescription ? "line-clamp-2" : ""
+                    }`}
+                  >
+                    {params?.shortDescription}
+                  </p>
+                  {params?.shortDescription.length > 100 && (
+                    <button
+                      onClick={() =>
+                        setShowFullDescription(!showFullDescription)
+                      }
+                      className="text-palette-btn text-sm font-semibold hover:underline"
+                    >
+                      {showFullDescription ? "See Less" : "See More"}
+                    </button>
+                  )}
+                </>
               )}
+              <Separator />
               {params?.special_offer && (
-                <div className="bg-green-50/20  px-4 py-2 rounded-lg">
-                  <p className="text-sm sm:text-base text-gray-800 font-semibold">
+                <div className="bg-green-50/20 px-3 py-2 rounded-lg mt-2">
+                  <span className=" text-gray-800 font-bold">
+                    Special Offer:
+                  </span>
+                  <p className="text-sm text-gray-800 font-semibold">
                     {params?.special_offer}
                   </p>
                 </div>
               )}
             </div>
 
-            {/* Variant Cards */}
+            {/* Variant Cards with Updated Button Layout */}
             {params?.variants && params.variants.length > 0 && (
               <div className="space-y-4">
                 <h4 className="text-lg font-bold text-palette-text">
@@ -644,290 +704,29 @@ const ProductPage = ({ params }: { params: Product }) => {
           </div>
         </div>
 
-        {/* Tabs Section */}
-        <div className="mt-12 sm:mt-16">
-          {/* Mobile Description - In Tabs */}
-          <div className="lg:hidden mb-8">
+        {/* Tabs Section - Full Width */}
+        <div className="mt-12 sm:mt-16 w-full">
+          {/* Mobile Description - Full Width */}
+          <div className="lg:hidden mb-8 w-full">
             <h3 className="text-xl font-bold text-palette-text mb-4">
               Product Description
             </h3>
-            <DescriptionComponent params={params?.description} />
+            <div className="w-full">
+              <DescriptionComponent params={params?.description} />
+            </div>
           </div>
 
-          {/* Tab Navigation */}
-          <div className="border-b-2 border-gray-200 overflow-x-auto">
-            <nav className="flex gap-2 sm:gap-6">
-              {["Details", "specifications", "reviews", "shipping"].map(
-                (tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`py-3 sm:py-4 px-2 sm:px-4 border-b-2 font-semibold text-sm sm:text-base capitalize transition-all whitespace-nowrap min-h-[44px] ${
-                      activeTab === tab
-                        ? "border-palette-btn text-palette-btn"
-                        : "border-transparent text-gray-500 hover:text-palette-text"
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                )
-              )}
-            </nav>
-          </div>
-
-          {/* Tab Content */}
-          <div className="py-6 sm:py-8">
-            {activeTab === "Details" && (
-              <div className="space-y-6">
-                {params?.company_details && (
-                  <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                    <h4 className="text-lg font-bold text-palette-text mb-3">
-                      Company Details
-                    </h4>
-                    <p className="text-base text-gray-700">
-                      {params?.company_details}
-                    </p>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 p-4 sm:p-6 bg-palette-btn/5 rounded-lg border border-palette-btn/10">
-                  <div className="text-center py-3">
-                    <h4 className="font-semibold text-palette-text mb-2 text-sm sm:text-base">
-                      Dimensions
-                    </h4>
-                    <p className="text-sm sm:text-base text-gray-600">
-                      {params?.height || params?.width
-                        ? `${params?.height ?? 0}cm × ${params?.width ?? 0}cm`
-                        : "N/A"}
-                    </p>
-                  </div>
-                  <div className="text-center py-3 border-t sm:border-t-0 sm:border-x border-gray-300">
-                    <h4 className="font-semibold text-palette-text mb-2 text-sm sm:text-base">
-                      Weight
-                    </h4>
-                    <p className="text-sm sm:text-base text-gray-600">
-                      {params?.weight ?? "N/A"}
-                    </p>
-                  </div>
-                  <div className="text-center py-3 border-t sm:border-t-0">
-                    <h4 className="font-semibold text-palette-text mb-2 text-sm sm:text-base">
-                      Brand
-                    </h4>
-                    <p className="text-sm sm:text-base text-gray-600">
-                      {params?.brand?.name ?? "N/A"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === "specifications" && (
-              <div className="space-y-6">
-                <h3 className="text-xl font-bold text-palette-text">
-                  Technical Specifications
-                </h3>
-                {params?.specifications &&
-                  Object.keys(params.specifications).length > 0 && (
-                    <div className="space-y-2">
-                      {Object.entries(params.specifications).map(
-                        ([key, value]) => (
-                          <div
-                            key={key}
-                            className="flex justify-between items-center py-4 px-4 sm:px-6 border-b border-gray-200"
-                          >
-                            <span className="font-semibold text-palette-text text-sm sm:text-base">
-                              {key}
-                            </span>
-                            <span className="text-gray-600 text-sm sm:text-base text-right ml-4">
-                              {value}
-                            </span>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  )}
-
-                {(params?.certifications?.length ?? 0) > 0 && (
-                  <div className="mt-8">
-                    <h4 className="font-semibold text-palette-text mb-4 text-base sm:text-lg">
-                      Certifications
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {params?.certifications?.map((cert, index) => (
-                        <span
-                          key={index}
-                          className="bg-green-50 text-green-700 border border-green-200 px-4 py-2 rounded-full text-sm font-semibold"
-                        >
-                          {cert}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === "reviews" && (
-              <div className="space-y-6">
-                <h3 className="text-xl font-bold text-palette-text">
-                  Customer Reviews
-                </h3>
-
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-4 sm:p-6 bg-palette-btn/5 rounded-lg border border-palette-btn/10">
-                  <div className="text-center sm:text-left">
-                    <div className="text-4xl sm:text-5xl font-bold text-palette-text">
-                      {params?.stats?.averageRating?.toFixed(1) ?? "0.0"}
-                    </div>
-                    <div className="flex justify-center sm:justify-start mt-2">
-                      {renderRating(
-                        params?.stats?.averageRating ?? 0,
-                        params?.stats?.totalReviews ?? 0
-                      )}
-                    </div>
-                    <div className="text-sm text-gray-600 mt-2">
-                      {params?.stats?.totalReviews ?? 0} total
-                    </div>
-                  </div>
-                  <RatingBreakdown stats={params?.stats} />
-                </div>
-
-                <ReviewForm productId={params?._id} />
-                <ReviewsList
-                  currentPage={page}
-                  onPageChange={setPage}
-                  reviews={data?.data}
-                  totalPages={data?.totalPage ?? 0}
-                  isLoading={isPending}
-                />
-              </div>
-            )}
-
-            {activeTab === "shipping" && (
-              <div className="space-y-6">
-                <h3 className="text-xl font-bold text-palette-text">
-                  Shipping & Returns
-                </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                  <div className="p-4 sm:p-6 border border-gray-200 rounded-lg bg-white">
-                    <h4 className="font-bold text-palette-text mb-4 text-base sm:text-lg">
-                      Shipping Information
-                    </h4>
-                    <div className="space-y-3">
-                      {params?.shippingTime && (
-                        <div className="flex justify-between py-2 border-b border-gray-100">
-                          <span className="text-sm sm:text-base text-gray-600">
-                            Delivery Time
-                          </span>
-                          <span className="text-sm sm:text-base font-semibold text-palette-text">
-                            {params.shippingTime}
-                          </span>
-                        </div>
-                      )}
-                      <div className="flex justify-between py-2 border-b border-gray-100">
-                        <span className="text-sm sm:text-base text-gray-600">
-                          Shipping Cost
-                        </span>
-                        <span className="text-sm sm:text-base font-semibold text-palette-text">
-                          {params?.freeShipping
-                            ? "Free"
-                            : `৳${params?.shippingCost ?? 0}`}
-                        </span>
-                      </div>
-                      <div className="flex justify-between py-2">
-                        <span className="text-sm sm:text-base text-gray-600">
-                          Express Delivery
-                        </span>
-                        <span className="text-sm sm:text-base font-semibold text-palette-text">
-                          Available
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-4 sm:p-6 border border-gray-200 rounded-lg bg-white">
-                    <h4 className="font-bold text-palette-text mb-4 text-base sm:text-lg">
-                      Return Policy
-                    </h4>
-                    <div className="space-y-3">
-                      {params?.returnPolicy && (
-                        <div className="flex justify-between py-2 border-b border-gray-100">
-                          <span className="text-sm sm:text-base text-gray-600">
-                            Return Period
-                          </span>
-                          <span className="text-sm sm:text-base font-semibold text-palette-text">
-                            {params.returnPolicy}
-                          </span>
-                        </div>
-                      )}
-                      {params?.warrantyPeriod && (
-                        <div className="flex justify-between py-2 border-b border-gray-100">
-                          <span className="text-sm sm:text-base text-gray-600">
-                            Warranty
-                          </span>
-                          <span className="text-sm sm:text-base font-semibold text-palette-text">
-                            {params.warrantyPeriod}
-                          </span>
-                        </div>
-                      )}
-                      <div className="flex justify-between py-2">
-                        <span className="text-sm sm:text-base text-gray-600">
-                          Return Shipping
-                        </span>
-                        <span className="text-sm sm:text-base font-semibold text-palette-text">
-                          Free
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-4 sm:p-6 bg-palette-btn/5 border-2 border-palette-btn/20 rounded-lg">
-                  <h4 className="font-bold text-palette-text mb-4 text-base sm:text-lg">
-                    Return Process
-                  </h4>
-                  <ol className="space-y-3 text-sm sm:text-base text-gray-700">
-                    <li className="flex gap-3">
-                      <span className="font-bold text-palette-btn flex-shrink-0">
-                        1.
-                      </span>
-                      <span>Contact our support team to initiate a return</span>
-                    </li>
-                    <li className="flex gap-3">
-                      <span className="font-bold text-palette-btn flex-shrink-0">
-                        2.
-                      </span>
-                      <span>Pack the item in its original packaging</span>
-                    </li>
-                    <li className="flex gap-3">
-                      <span className="font-bold text-palette-btn flex-shrink-0">
-                        3.
-                      </span>
-                      <span>
-                        Print the prepaid return label we will email you
-                      </span>
-                    </li>
-                    <li className="flex gap-3">
-                      <span className="font-bold text-palette-btn flex-shrink-0">
-                        4.
-                      </span>
-                      <span>
-                        Drop off at any courier location or schedule pickup
-                      </span>
-                    </li>
-                    <li className="flex gap-3">
-                      <span className="font-bold text-palette-btn flex-shrink-0">
-                        5.
-                      </span>
-                      <span>
-                        Refund will be processed within 3-5 business days
-                      </span>
-                    </li>
-                  </ol>
-                </div>
-              </div>
-            )}
-          </div>
+          <ProductTabs
+            params={params}
+            activeTab={activeTab}
+            renderRating={renderRating}
+            setActiveTab={setActiveTab}
+            page={page}
+            setPage={setPage}
+            reviews={data?.data}
+            totalPages={data?.totalPage ?? 0}
+            isLoading={isPending}
+          />
         </div>
       </div>
     </div>
