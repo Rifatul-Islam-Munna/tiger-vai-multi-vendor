@@ -14,7 +14,7 @@ const TodayBestSell = async () => {
   const { data } = await getBestProduct();
   return (
     <section id="feature" className="bg-gray-50 py-16">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto ">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold text-palette-text">
             Today's Best Deals
