@@ -343,7 +343,7 @@ const VariantCard: React.FC<VariantCardProps> = ({
 
 const ProductPage = ({ params }: { params: Product }) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [activeTab, setActiveTab] = useState("description");
+  const [activeTab, setActiveTab] = useState("Details");
   const [page, setPage] = useState(1);
   const [getUser, setGetUser] = useState<BasicUser | null>(null);
 
@@ -479,13 +479,12 @@ const ProductPage = ({ params }: { params: Product }) => {
             )}
 
             {params?.company_details ? (
-              <div className=" hidden lg:block">
-                <h1 className=" text-lg lg:text-xl font-bold  text-palette-text">
-                  Company Details:
-                </h1>
-                <p className=" text-sm lg:text-lg font-semibold text-palette-text">
-                  {params?.company_details}
-                </p>
+              <div>
+                <h3 className="text-xl font-bold text-palette-text mb-4">
+                  Product Description
+                </h3>
+
+                <DescriptionComponent params={params?.description} />
               </div>
             ) : null}
           </div>
@@ -672,18 +671,17 @@ const ProductPage = ({ params }: { params: Product }) => {
 
         {/* Tabs Section */}
         <div className="mt-16 w-full">
-          <div className=" block lg:hidden ">
-            <h1 className=" text-lg lg:text-xl font-bold  text-palette-text">
-              Company Details :
-            </h1>
-            <p className=" text-sm lg:text-lg font-semibold text-palette-text">
-              {params?.company_details}
-            </p>
+          <div>
+            <h3 className="text-xl font-bold text-palette-text mb-4">
+              Product Description
+            </h3>
+
+            <DescriptionComponent params={params?.description} />
           </div>
 
           <div className="border-b-2 border-gray-200">
             <nav className="flex space-x-8 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth -webkit-overflow-scrolling-touch">
-              {["description", "specifications", "reviews", "shipping"].map(
+              {["Details", "specifications", "reviews", "shipping"].map(
                 (tab) => (
                   <button
                     key={tab}
@@ -702,18 +700,19 @@ const ProductPage = ({ params }: { params: Product }) => {
           </div>
 
           <div className="py-8">
-            {activeTab === "description" && (
+            {activeTab === "Details" && (
               <div className="space-y-6">
-                <div>
-                  <h3 className="text-xl font-bold text-palette-text mb-4">
-                    Product Description
-                  </h3>
-
-                  <DescriptionComponent params={params?.description} />
+                <div className=" hidden lg:block">
+                  <h1 className=" text-lg lg:text-xl font-bold  text-palette-text">
+                    Company Details:
+                  </h1>
+                  <p className=" text-sm lg:text-lg font-semibold text-palette-text">
+                    {params?.company_details}
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 p-6 bg-palette-btn/5 rounded-lg">
-                  {(params?.height || params?.width) && (
+                  {params?.height || params?.width ? (
                     <div className="text-center">
                       <h4 className="font-medium text-palette-text mb-2">
                         Dimensions
@@ -722,21 +721,42 @@ const ProductPage = ({ params }: { params: Product }) => {
                         {params?.height ?? 0}cm × {params?.width ?? 0}cm
                       </p>
                     </div>
+                  ) : (
+                    <div className="text-center">
+                      <h4 className="font-medium text-palette-text mb-2">
+                        Dimensions
+                      </h4>
+                      <p className="text-gray-600">N/A</p>
+                    </div>
                   )}
-                  {params?.weight && (
+                  {params?.weight ? (
                     <div className="text-center border-x border-gray-200">
                       <h4 className="font-medium text-palette-text mb-2">
                         Weight
                       </h4>
                       <p className="text-gray-600">{params.weight}</p>
                     </div>
+                  ) : (
+                    <div className="text-center border-x border-gray-200">
+                      <h4 className="font-medium text-palette-text mb-2">
+                        Weight
+                      </h4>
+                      <p className="text-gray-600">N/A</p>
+                    </div>
                   )}
-                  {params?.brand?.name && (
+                  {params?.brand?.name ? (
                     <div className="text-center">
                       <h4 className="font-medium text-palette-text mb-2">
                         Brand
                       </h4>
                       <p className="text-gray-600">{params.brand.name}</p>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <h4 className="font-medium text-palette-text mb-2">
+                        Brand
+                      </h4>
+                      <p className="text-gray-600">N/A</p>
                     </div>
                   )}
                 </div>
