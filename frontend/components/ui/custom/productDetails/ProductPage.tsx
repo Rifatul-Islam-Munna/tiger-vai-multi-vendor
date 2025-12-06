@@ -551,12 +551,14 @@ const ProductPage = ({ params }: { params: Product }) => {
   const [page, setPage] = useState(1);
   const [getUser, setGetUser] = useState<BasicUser | null>(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
-
+  const [isMounted, setIsMounted] = useState(false);
   // Lift variantQuantities state to page level
   const [variantQuantities, setVariantQuantities] = useState<VariantQuantity>(
     {}
   );
-
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   const { data, isPending } = useQueryWrapper<Reviews>(
     ["get-review-of-product", params._id, page],
     `/product/get-all-reviews-for-products?id=${params._id}&page=${page}`,
@@ -657,12 +659,14 @@ const ProductPage = ({ params }: { params: Product }) => {
   return (
     <div className="min-h-screen bg-white">
       {/* Sticky Banner with detailed items */}
-      <StickyCartBanner
-        totalItems={cartSummary.totalItems}
-        totalPrice={cartSummary.totalPrice}
-        items={cartSummary.items}
-        show={cartSummary.totalItems > 0}
-      />
+      {isMounted && (
+        <StickyCartBanner
+          totalItems={cartSummary.totalItems}
+          totalPrice={cartSummary.totalPrice}
+          items={cartSummary.items}
+          show={cartSummary.totalItems > 0}
+        />
+      )}
 
       <div className="container mx-auto px-4 py-6 sm:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">

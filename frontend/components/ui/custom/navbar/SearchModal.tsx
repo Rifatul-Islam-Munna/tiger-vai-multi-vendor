@@ -117,7 +117,7 @@ export function SearchModal() {
 
   useEffect(() => {
     const checkDesktop = () =>
-      setIsDesktop(window.matchMedia("(min-width: 768px)").matches);
+      setIsDesktop(window.matchMedia("(min-width: 1024px)").matches);
     checkDesktop();
     window.addEventListener("resize", checkDesktop);
     return () => window.removeEventListener("resize", checkDesktop);
