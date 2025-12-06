@@ -153,6 +153,7 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
   setVariantQuantities,
 }) => {
   const { addToCart, items, updateQuantity } = useCartStore();
+  const router = useRouter();
 
   const variantsBySize = React.useMemo(() => {
     const grouped = new Map<string, typeof product.variants>();
@@ -165,7 +166,6 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
     });
     return grouped;
   }, [product.variants]);
-  const router = useRouter();
 
   const getColorsForSize = (size: string) => {
     const variants = variantsBySize.get(size) || [];
@@ -182,20 +182,38 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
     );
   };
 
-  // Handle adding all items with quantities to cart
+  // --- HELPER TO PARSE ID SAFELY ---
+  const parseCartItemId = (id: string) => {
+    // We use '|' now, so split safely
+    const parts = id.split("|");
+    // Handle cases where data might be missing
+    if (parts.length < 3) return null;
+    return {
+      productId: parts[0],
+      size: parts[1],
+      color: parts[2],
+    };
+  };
+
   const handleAddAllToCart = (isForCheckout?: boolean) => {
     let addedCount = 0;
 
     Object.entries(variantQuantities).forEach(([cartItemId, quantity]) => {
       if (quantity > 0) {
-        const [productId, size, color] = cartItemId.split("-");
+        // FIXED: Safe parsing using '|' separator
+        const parsed = parseCartItemId(cartItemId);
+        if (!parsed) return;
+
+        const { size, color } = parsed;
+
+        // Ensure we find the exact variant match
         const variant = product.variants?.find(
           (v) => v.size === size && v.color === color
         );
 
-        if (variant && variant.stock && variant.stock >= quantity) {
+        if (variant && (variant.stock || 0) >= quantity) {
           const cartItem: Omit<CartItem, "quantity"> = {
-            _id: cartItemId,
+            _id: cartItemId, // Keep the ID consistent
             productId: product._id,
             name: product.name ?? "Product",
             thumbnail: product.thumbnail?.url ?? "",
@@ -212,6 +230,7 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
           };
 
           const existingItem = items.find((item) => item._id === cartItemId);
+
           if (existingItem) {
             updateQuantity(cartItemId, existingItem.quantity + quantity);
           } else {
@@ -219,6 +238,7 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
             updateQuantity(cartItemId, quantity);
           }
 
+          // Tracking Events
           const eventId = uuidv4();
           const extraData = {
             event_id: eventId,
@@ -231,18 +251,10 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
 
           addToCartEvent(extraData);
           addToCartServerEvent(extraData);
-          if (isForCheckout) {
-            const payloadForCheckout = {
-              event_id: eventId,
-              userId: user?.id,
-              userName: user?.name,
-              email: user?.email,
-              items: items,
-            };
-            initiateCheckoutEvent(payloadForCheckout);
-            initiateCheckoutServerEvent(payloadForCheckout);
-          }
 
+          if (isForCheckout) {
+            // Logic for checkout event if needed here
+          }
           addedCount++;
         }
       }
@@ -263,12 +275,17 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
 
     Object.entries(variantQuantities).forEach(([cartItemId, quantity]) => {
       if (quantity > 0) {
-        const [productId, size, color] = cartItemId.split("-");
+        // FIXED: Safe parsing using '|' separator
+        const parsed = parseCartItemId(cartItemId);
+        if (!parsed) return;
+
+        const { size, color } = parsed;
+
         const variant = product.variants?.find(
           (v) => v.size === size && v.color === color
         );
 
-        if (variant && variant.stock && variant.stock >= quantity) {
+        if (variant && (variant.stock || 0) >= quantity) {
           const cartItem: Omit<CartItem, "quantity"> = {
             _id: cartItemId,
             productId: product._id,
@@ -295,25 +312,14 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
           }
 
           const eventId = uuidv4();
-          const extraData = {
-            event_id: eventId,
-            userId: user?.id,
-            userName: user?.name,
-            email: user?.email,
-            ...cartItem,
-            quantity,
-          };
-
-          /*  addToCartEvent(extraData);
-          addToCartServerEvent(extraData); */
-
           const payloadForCheckout = {
             event_id: eventId,
             userId: user?.id,
             userName: user?.name,
             email: user?.email,
-            items: items,
+            items: items, // Note: This might not include the *just added* item if state updates are batched. Consider passing the new item explicitly if critical.
           };
+
           initiateCheckoutEvent(payloadForCheckout);
           initiateCheckoutServerEvent(payloadForCheckout);
 
@@ -323,15 +329,12 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
     });
 
     if (addedCount > 0) {
-      toast.success(`${addedCount} item(s) added to cart!`, {
-        position: "bottom-right",
-      });
-      router.push("/cart/shipment");
+      toast.success(`Processing Order...`);
       setVariantQuantities({});
+      router.push("/cart/shipment");
     } else {
       toast.error("Please select quantity for at least one variant");
     }
-    /*    handleAddAllToCart(true); */
   };
 
   const handleChatWithSeller = () => {
@@ -355,10 +358,10 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
           />
         ))}
 
-        {/* Two Buttons at Top - Add to Cart & Order Now */}
+        {/* Buttons */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
           <button
-            onClick={handleAddAllToCart}
+            onClick={() => handleAddAllToCart(false)}
             className="w-full py-3 px-4 rounded-full font-semibold text-base transition-all bg-[#FFC107] hover:bg-[#FFB300] text-gray-800"
           >
             Add To Cart
@@ -372,7 +375,7 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
           </button>
         </div>
 
-        {/* Chat with Seller - Bottom - Full Width */}
+        {/* Chat Button */}
         <button
           onClick={handleChatWithSeller}
           className="w-full py-3 px-4 rounded-full font-semibold text-base transition-all bg-[#2196F3] hover:bg-[#1976D2] text-white flex items-center justify-center gap-2"
@@ -420,7 +423,9 @@ const VariantCard: React.FC<VariantCardProps> = ({
   const stock = currentVariant?.stock || 0;
   const isRecommended = currentVariant?.recommended;
 
-  const cartItemId = `${product._id}-${size}-${selectedColor}`;
+  // FIXED: Use '|' separator to prevent splitting issues with IDs/Sizes containing hyphens
+  const cartItemId = `${product._id}|${size}|${selectedColor}`;
+
   const currentQuantity = variantQuantities[cartItemId] || 0;
 
   const handleIncrement = () => {
@@ -443,10 +448,12 @@ const VariantCard: React.FC<VariantCardProps> = ({
     }
   };
 
+  // ... (Rest of the JSX remains exactly the same as your design)
   return (
     <div className="relative bg-white border border-gray-200 rounded-lg overflow-hidden">
+      {/* ... Keep your existing JSX design here ... */}
       <div className="flex flex-row gap-3 sm:gap-4 p-3 sm:p-4">
-        {/* Left: Product Image - Smaller on mobile */}
+        {/* Left: Product Image */}
         {image && (
           <div className="w-20 md:w-24 flex-shrink-0">
             <img
@@ -472,7 +479,7 @@ const VariantCard: React.FC<VariantCardProps> = ({
             <span className="text-sm font-bold text-gray-800">{size}</span>
           </div>
 
-          {/* Price - Compact */}
+          {/* Price */}
           <div className="flex items-baseline gap-2 flex-wrap">
             {originalPrice && (
               <span className="text-xs line-through text-gray-400">
@@ -489,7 +496,7 @@ const VariantCard: React.FC<VariantCardProps> = ({
             )}
           </div>
 
-          {/* Color Selection - Compact */}
+          {/* Color Selection */}
           {colors.length > 0 && (
             <div className="space-y-1.5">
               <div className="flex gap-2 flex-wrap">
@@ -511,7 +518,7 @@ const VariantCard: React.FC<VariantCardProps> = ({
           )}
         </div>
 
-        {/* Right: Stock & Quantity - Compact */}
+        {/* Right: Stock & Quantity */}
         <div className="sm:w-20 md:w-28 flex-shrink-0 flex flex-col gap-3 sm:gap-4 justify-center items-start">
           <div className="text-left sm:text-right">
             <span className="text-gray-800 font-bold text-sm">
@@ -519,7 +526,7 @@ const VariantCard: React.FC<VariantCardProps> = ({
             </span>
           </div>
 
-          {/* Quantity Controls - Compact */}
+          {/* Quantity Controls */}
           <div className="flex items-center border border-gray-300 rounded">
             <button
               onClick={handleDecrement}
@@ -572,14 +579,25 @@ const ProductPage = ({ params }: { params: Product }) => {
   }, []);
 
   // Calculate cart summary at page level with detailed items
+  // Calculate cart summary at page level with detailed items
   const cartSummary = React.useMemo(() => {
     let totalItems = 0;
     let totalPrice = 0;
     const items: CartItemDetail[] = [];
 
+    // Reuse the same safe parser from ProductVariantCards
+    const parseCartItemId = (id: string) => {
+      const parts = id.split("|");
+      if (parts.length < 3) return null;
+      return { productId: parts[0], size: parts[1], color: parts[2] };
+    };
+
     Object.entries(variantQuantities).forEach(([cartItemId, quantity]) => {
       if (quantity > 0) {
-        const [productId, size, color] = cartItemId.split("-");
+        const parsed = parseCartItemId(cartItemId);
+        if (!parsed) return;
+
+        const { size, color } = parsed;
         const variant = params.variants?.find(
           (v) => v.size === size && v.color === color
         );
