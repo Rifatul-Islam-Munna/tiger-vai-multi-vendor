@@ -205,15 +205,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <GoogleTagManager gtmId="GTM-TW7XR5TX" />
-      <Suspense>
-        <PageViewTracker />
-      </Suspense>
+
       <Suspense>
         <WhatsAppSupport />
       </Suspense>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-palette-bg h-full`}
       >
+        <Suspense>
+          <PageViewTracker />
+        </Suspense>
         <Script
           id="jsonld-main"
           type="application/ld+json"

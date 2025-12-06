@@ -78,7 +78,7 @@ const StickyCartBanner: React.FC<{
   if (!show) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-red-500 text-white shadow-lg">
+    <div className="fixed top-0 translate-y-28 md:translate-y-30 left-0 right-0 z-40 bg-red-500 text-white shadow-lg">
       <div className="container mx-auto px-4 py-3">
         {/* Main Summary Bar - Always Visible */}
         <div className="flex items-center justify-between">
@@ -797,7 +797,7 @@ const ProductPage = ({ params }: { params: Product }) => {
                   >
                     {params?.shortDescription}
                   </p>
-                  {params?.shortDescription.length > 100 && (
+                  {params?.shortDescription.length > 200 && (
                     <button
                       onClick={() =>
                         setShowFullDescription(!showFullDescription)
