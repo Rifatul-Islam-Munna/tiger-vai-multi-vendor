@@ -226,8 +226,8 @@ const VariantCard: React.FC<VariantCardProps> = ({
   return (
     <div className="relative bg-white border  border-gray-200 rounded-lg p-4 sm:p-6">
       {isRecommended && (
-        <div className="absolute top-3 right-3 bg-palette-btn text-white px-3 py-1.5 rounded-full text-xs font-semibold">
-          {isRecommended}
+        <div className=" w-fit  text-gray-600  fo px-3 py-1.5 rounded-full text-xs md:text-sm font-semibold">
+          Recommended: {isRecommended}
         </div>
       )}
 
