@@ -2,10 +2,13 @@
 import React, { useState } from "react";
 import { FaWhatsapp, FaTimes } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 const WhatsAppSupport = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const pathName = usePathname();
 
   const whatsappNumber = "+8801234567890"; // Replace with your actual WhatsApp number
   const message = "Hello! I need support with my order.";
@@ -17,7 +20,15 @@ const WhatsAppSupport = () => {
   };
 
   return (
-    <div className="fixed left-4 bottom-4 z-50">
+    <div
+      className={cn("fixed left-4 bottom-4 z-50", {
+        hidden:
+          pathName.startsWith("/admin") ||
+          pathName.startsWith("/user") ||
+          pathName.startsWith("/vendor") ||
+          pathName.startsWith("/auth"),
+      })}
+    >
       <AnimatePresence>
         {isOpen && (
           <motion.div
