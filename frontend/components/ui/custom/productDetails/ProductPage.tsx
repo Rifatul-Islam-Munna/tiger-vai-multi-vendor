@@ -76,7 +76,7 @@ const StickyCartBanner: React.FC<{
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (!show) return null;
-
+  console.log("🚨 BANNER RENDER:", { show, totalItems, totalPrice });
   return (
     <div className="fixed  -translate-y-3 md:translate-y-0 top-0 md:top-30 lg:top-32  left-0 right-0 z-40 bg-red-500 text-white shadow-lg">
       <div className="container mx-auto px-4 py-3">
