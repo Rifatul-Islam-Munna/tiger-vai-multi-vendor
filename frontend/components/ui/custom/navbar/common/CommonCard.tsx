@@ -59,11 +59,6 @@ export function ProductCard({
         {/* 1:1 Square Image Container */}
         <div className="relative w-full aspect-square bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden flex-shrink-0">
           {/* Discount Badge */}
-          {product?.hasOffer && discount > 0 && (
-            <Badge className="absolute top-2 left-2 z-10 bg-palette-btn/70 text-white border-0 text-[10px] sm:text-xs px-2 py-0.5 font-bold shadow-md">
-              {discount}% OFF
-            </Badge>
-          )}
 
           {/* Product Image */}
           <img
@@ -83,7 +78,7 @@ export function ProductCard({
           </div>
 
           {/* Stock Badge */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 sm:p-3">
+          <div className="absolute bottom-0 hidden left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 sm:p-3">
             {product?.stock > 0 ? (
               <p className="text-green-400 text-[10px] sm:text-xs font-semibold">
                 {product?.stock} in stock
@@ -109,7 +104,7 @@ export function ProductCard({
         <CardContent className="p-2 flex flex-col flex-grow">
           {/* Brand Name */}
           {product?.brandName && (
-            <p className="text-[10px] sm:text-xs text-gray-500 font-medium uppercase tracking-wide mb-1 truncate">
+            <p className="text-[10px] hidden sm:text-xs text-gray-500 font-medium uppercase tracking-wide mb-1 truncate">
               {product?.brandName}
             </p>
           )}
@@ -122,16 +117,21 @@ export function ProductCard({
           {/* Price Section */}
           <div className="mt-auto">
             <div className="flex items-baseline gap-2">
+              {product.hasOffer && product.offerPrice && (
+                <span className="text-xs sm:text-sm text-gray-400 line-through">
+                  ৳{product?.price?.toLocaleString()}
+                </span>
+              )}
               <span className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-palette-btn">
                 ৳
                 {product?.offerPrice
                   ? product?.offerPrice?.toLocaleString()
                   : product?.price?.toLocaleString()}
               </span>
-              {product.hasOffer && product.offerPrice && (
-                <span className="text-xs sm:text-sm text-gray-400 line-through">
-                  ৳{product?.price?.toLocaleString()}
-                </span>
+              {product?.hasOffer && discount > 0 && (
+                <Badge className=" bg-palette-btn/70 text-white border-0 text-[10px] sm:text-xs px-2  font-bold ">
+                  {discount}% OFF
+                </Badge>
               )}
             </div>
           </div>

@@ -95,7 +95,7 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
   product,
   user,
 }) => {
-  const { addToCart } = useCartStore();
+  const { addToCart, items } = useCartStore();
 
   const variantsBySize = React.useMemo(() => {
     const grouped = new Map<string, typeof product.variants>();
@@ -465,7 +465,7 @@ const ProductPage = ({ params }: { params: Product }) => {
           {/* Product Info Section */}
           <div className="space-y-6">
             {/* Breadcrumb */}
-            <div className="text-sm text-gray-500 overflow-x-auto whitespace-nowrap">
+            <div className="text-sm text-gray-500 hidden overflow-x-auto whitespace-nowrap">
               <span>{params?.category?.main ?? "Category"}</span>
               {params?.category?.subMain && (
                 <>
@@ -492,36 +492,16 @@ const ProductPage = ({ params }: { params: Product }) => {
               <h1 className="text-2xl sm:text-3xl font-bold text-palette-text">
                 {params?.name ?? "Product Name"}
               </h1>
-              {params?.brand?.name && (
-                <p className="text-base sm:text-lg text-gray-600">
-                  by {params.brand.name}
-                </p>
-              )}
+
               {renderRating(
                 params?.stats?.averageRating ?? 0,
                 params?.stats?.totalReviews ?? 0
               )}
             </div>
 
-            {/* Short Description & Special Offer */}
-            <div className="space-y-3">
-              {params?.shortDescription && (
-                <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-                  {params?.shortDescription}
-                </p>
-              )}
-              {params?.special_offer && (
-                <div className="bg-green-50 border border-green-200 px-4 py-2 rounded-lg">
-                  <p className="text-sm sm:text-base text-green-800 font-semibold">
-                    🎉 {params?.special_offer}
-                  </p>
-                </div>
-              )}
-            </div>
-
             {/* Price Range */}
             {priceRange && (
-              <div className="space-y-2 bg-gray-50 p-4 sm:p-6 rounded-lg border border-gray-200">
+              <div className="space-y-2 bg-gray-50 p-4 sm:p-6 rounded-lg  ">
                 <div className="flex items-baseline gap-3 flex-wrap">
                   {priceRange.hasDiscount && (
                     <span className="text-lg sm:text-xl text-gray-400 line-through">
@@ -557,6 +537,22 @@ const ProductPage = ({ params }: { params: Product }) => {
                 )}
               </div>
             )}
+
+            {/* Short Description & Special Offer */}
+            <div className="space-y-3">
+              {params?.shortDescription && (
+                <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                  {params?.shortDescription}
+                </p>
+              )}
+              {params?.special_offer && (
+                <div className="bg-green-50/20  px-4 py-2 rounded-lg">
+                  <p className="text-sm sm:text-base text-gray-800 font-semibold">
+                    {params?.special_offer}
+                  </p>
+                </div>
+              )}
+            </div>
 
             {/* Variant Cards */}
             {params?.variants && params.variants.length > 0 && (
