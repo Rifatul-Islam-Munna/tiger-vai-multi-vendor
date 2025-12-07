@@ -251,7 +251,7 @@ const ProductTabs = ({
                     <span className="font-medium text-palette-text">
                       {params?.freeShipping
                         ? "Free"
-                        : `৳${params?.shippingCost ?? 0}`}
+                        : `৳${params?.shippingCost ?? 0}/kg`}
                     </span>
                   </div>
                   {/* <div className="flex justify-between items-center">
