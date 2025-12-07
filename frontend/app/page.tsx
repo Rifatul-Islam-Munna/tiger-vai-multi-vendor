@@ -246,7 +246,7 @@ const Page = () => {
                   <div className="w-5 h-5 bg-palette-btn rounded-full flex items-center justify-center">
                     <span className="text-white text-xs">✓</span>
                   </div>
-                  <span>24/7 vendor support</span>
+                  <span>Available 10 Am to 8 Pm</span>
                 </li>
               </ul>
               <Button

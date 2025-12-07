@@ -331,7 +331,7 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
             onClick={handleOrderNow}
             className="w-full py-3 md:px-4 rounded-full font-semibold text-sm md:text-base transition-all bg-gradient-to-b from-[#fe3200] to-[#ff5507] text-white"
           >
-            Order Now <span className="text-sm">(আজই কিনুন)</span>
+            Order Now <span className="text-sm">(অর্ডার করুন)</span>
           </button>
         </div>
 
@@ -410,14 +410,14 @@ const VariantCard: React.FC<VariantCardProps> = ({
 
   return (
     <div className="relative bg-white border border-gray-100/80 rounded-lg overflow-hidden">
-      <div className="flex flex-row gap-3 sm:gap-4 p-3 sm:p-4">
+      <div className="flex flex-row gap-3 sm:gap-4 ">
         {/* Left: Product Image */}
         {image && (
           <div className="w-20 md:w-24 flex-shrink-0">
             <img
               src={image}
               alt={`${product.name} - ${size}`}
-              className="w-full h-full  rounded"
+              className="w-full h-full object-contain  rounded"
             />
           </div>
         )}
@@ -427,7 +427,7 @@ const VariantCard: React.FC<VariantCardProps> = ({
           {/* Top row: Recommended (full width, aligned to right) */}
           {isRecommended && (
             <div className="w-full flex justify-start">
-              <div className="inline-block text-blue-800 py-0.5 text-xs font-semibold">
+              <div className="inline-block text-[#2E83F2] py-0.5 text-xs font-semibold">
                 {isRecommended}
               </div>
             </div>
@@ -436,7 +436,7 @@ const VariantCard: React.FC<VariantCardProps> = ({
           {/* Middle + bottom are responsive columns/rows */}
           <div className="flex flex-row md:items-stretch gap-3">
             {/* Middle: Product Details */}
-            <div className="flex-1 space-y-2 min-w-0">
+            <div className="flex-1 space-y-1 min-w-0">
               {/* Size */}
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-600">Size:</span>
@@ -464,46 +464,46 @@ const VariantCard: React.FC<VariantCardProps> = ({
                   </div>
                 </div>
               )}
-
-              {/* Price */}
-              <div className="flex items-baseline gap-2 flex-wrap">
-                {originalPrice && (
-                  <span className="text-xs line-through text-gray-400">
-                    Tk {originalPrice.toLocaleString()}
+              <div className=" flex justify-between items-center">
+                {/* Price */}
+                <div className="flex items-baseline gap-2 flex-wrap">
+                  {originalPrice && (
+                    <span className="text-xs line-through text-gray-400">
+                      Tk {originalPrice.toLocaleString()}
+                    </span>
+                  )}
+                  <span className="text-base sm:text-lg font-bold text-gray-800">
+                    Tk {currentPrice.toLocaleString()}
                   </span>
-                )}
-                <span className="text-base sm:text-lg font-bold text-gray-800">
-                  Tk {currentPrice.toLocaleString()}
-                </span>
-              </div>
-            </div>
+                </div>
+                {/* Right: Stock & Quantity (desktop/tablet only) */}
+                <div className="flex sm:w-20 md:w-28 flex-shrink-0 flex-col   justify-center items-center">
+                  <div className="text-left sm:text-right">
+                    <span className="text-gray-800 font-bold text-xs">
+                      Stock: {stock > 0 ? stock : "Out"}
+                    </span>
+                  </div>
 
-            {/* Right: Stock & Quantity (desktop/tablet only) */}
-            <div className="flex sm:w-20 md:w-28 flex-shrink-0 flex-col gap-3 sm:gap-4 justify-center items-start">
-              <div className="text-left sm:text-right">
-                <span className="text-gray-800 font-bold text-sm">
-                  Stock: {stock > 0 ? stock : "Out"}
-                </span>
-              </div>
-
-              <div className="flex items-center border border-gray-300 rounded">
-                <button
-                  onClick={handleDecrement}
-                  disabled={currentQuantity === 0}
-                  className="w-6 sm:w-7 h-6 sm:h-7 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <Minus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                </button>
-                <span className="w-8 sm:w-10 text-center font-semibold text-sm text-gray-800 border-x border-gray-300">
-                  {currentQuantity}
-                </span>
-                <button
-                  onClick={handleIncrement}
-                  disabled={currentQuantity >= stock || !selectedColor}
-                  className="w-6 sm:w-7 h-6 sm:h-7 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                </button>
+                  <div className="flex items-center border border-gray-300 rounded">
+                    <button
+                      onClick={handleDecrement}
+                      disabled={currentQuantity === 0}
+                      className="w-6 sm:w-7 h-6 sm:h-7 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <Minus className="w-4 h-4 " />
+                    </button>
+                    <span className="w-8 sm:w-10 text-center font-semibold text-sm text-gray-800 border-x border-gray-300">
+                      {currentQuantity}
+                    </span>
+                    <button
+                      onClick={handleIncrement}
+                      disabled={currentQuantity >= stock || !selectedColor}
+                      className="w-6 sm:w-7 h-6 sm:h-7 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <Plus className="w-4 h-4 " />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -741,7 +741,7 @@ const ProductPage = ({ params }: { params: Product }) => {
 
             {/* Desktop Description - Under Image - Full Width */}
             <div className="hidden lg:block pt-3 w-full">
-              <h3 className="text-xl font-bold text-palette-text mb-4">
+              <h3 className="text-xl font-bold text-palette-text mb-1.5">
                 Product Description
               </h3>
               <div className="w-full">
@@ -871,14 +871,14 @@ const ProductPage = ({ params }: { params: Product }) => {
 
             {/* Service Features */}
             <div className="space-y-1 border-t border-gray-200 pt-6">
-              <div className="flex items-start gap-3 p-3 rounded-lg">
+              <div className="flex items-start gap-3 px-3 py-0.5 rounded-lg">
                 <Truck className="w-5 h-5 text-palette-btn mt-1 flex-shrink-0" />
                 <div className="min-w-0">
                   <p className="font-semibold text-palette-text text-sm sm:text-base">
                     {params?.freeShipping
                       ? "Free Shipping"
                       : params?.shippingCost
-                      ? `Shipping: ৳${params.shippingCost}`
+                      ? `Shipping: ৳${params.shippingCost}/kg`
                       : "Shipping Available"}
                   </p>
                   {params?.shippingTime && (
@@ -890,11 +890,11 @@ const ProductPage = ({ params }: { params: Product }) => {
               </div>
 
               {params?.returnPolicy && (
-                <div className="flex items-start gap-3 p-2 rounded-lg">
+                <div className="flex items-start gap-3 px-2 py-0.5 rounded-lg">
                   <RotateCcw className="w-5 h-5 text-palette-btn mt-1 flex-shrink-0" />
                   <div className="min-w-0">
                     <p className="font-semibold text-palette-text text-sm sm:text-base">
-                      Easy Returns
+                      Returns Policy
                     </p>
                     <p className="text-sm text-gray-600 mt-0.5">
                       {params.returnPolicy}
@@ -904,7 +904,7 @@ const ProductPage = ({ params }: { params: Product }) => {
               )}
 
               {params?.warrantyPeriod && (
-                <div className="flex items-start gap-3 p-3 rounded-lg">
+                <div className="flex items-start gap-3 px-3 py-0.5 rounded-lg">
                   <Shield className="w-5 h-5 text-palette-btn mt-1 flex-shrink-0" />
                   <div className="min-w-0">
                     <p className="font-semibold text-palette-text text-sm sm:text-base">
@@ -924,7 +924,7 @@ const ProductPage = ({ params }: { params: Product }) => {
         <div className="mt-1 w-full">
           {/* Mobile Description - Full Width */}
           <div className="lg:hidden mb-8 w-full">
-            <h3 className="text-xl font-bold text-palette-text mb-4">
+            <h3 className="text-xl font-bold text-palette-text mb-1.5">
               Product Description
             </h3>
             <div className="w-full">

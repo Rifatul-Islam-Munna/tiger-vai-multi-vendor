@@ -67,7 +67,7 @@ export default function CartSheet() {
           variant="outline"
           className="relative shadow-none border-none border-0"
         >
-          <Image src={CartIcons} alt="cart" width={20} height={20} />
+          <Image src={CartIcons} alt="cart" width={25} height={25} />
           {/* <ShoppingCart className="w-4 h-4 mr-2" /> */}
           <span className=" sr-only">Cart ({totalItems})</span>
 

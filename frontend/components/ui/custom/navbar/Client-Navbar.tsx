@@ -123,8 +123,8 @@ const ClientNavbar = () => {
             onClick={handelToHome}
             className=" flex flex-col  group justify-center items-center cursor-pointer"
           >
-            <House className=" size-6 group-hover:text-palette-btn" />
-            <span className=" text-sm font-semibold  group-hover:text-palette-btn duration-500">
+            <House className=" size-7 text-palette-btn  group-hover:text-palette-btn" />
+            <span className=" text-xs md:text-sm font-semibold  group-hover:text-palette-btn duration-500">
               Home
             </span>
           </div>
@@ -133,7 +133,7 @@ const ClientNavbar = () => {
             <div className="flex items-center gap-2 ">
               <Image
                 src={"/logo-black.png"}
-                width={200}
+                width={180}
                 height={100}
                 alt="logo"
                 priority
@@ -156,15 +156,18 @@ const ClientNavbar = () => {
               onClick={handelToHome}
               className=" flex flex-col  group justify-center items-center cursor-pointer"
             >
-              <House className=" size-6 group-hover:text-palette-btn" />
-              <span className=" text-sm font-semibold  group-hover:text-palette-btn duration-500">
+              <House className=" size-7 text-palette-btn group-hover:text-palette-btn" />
+              <span className=" text-xs md:text-sm font-semibold  group-hover:text-palette-btn duration-500">
                 Home
               </span>
             </div>
-            <Link href={"/"}>
+            <Link
+              className=" flex-1 flex justify-end sm:justify-center"
+              href={"/"}
+            >
               <Image
                 src={"/logo-black.png"}
-                width={180}
+                width={160}
                 height={70}
                 alt="logo"
                 priority

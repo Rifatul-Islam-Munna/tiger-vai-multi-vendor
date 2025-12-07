@@ -55,7 +55,7 @@ export function ProductCard({
     return (
       <Card
         onClick={() => handlPushToProduct(product.slug)}
-        className="group relative border pt-0 rounded-lg p-0 pb-1.5  overflow-hidden bg-white transition-all shadow-none duration-300 hover:border-gray-300 flex flex-col"
+        className="group relative border pt-0 rounded-lg p-0 pb-1.5  overflow-hidden bg-white transition-all shadow-none duration-300 hover:border-gray-300 gap-0.5 flex flex-col"
       >
         {/* 1:1 Square Image Container */}
         <div className="relative w-full aspect-square  group bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden flex-shrink-0">
@@ -75,7 +75,7 @@ export function ProductCard({
             <WishlistButton productId={product._id} />
           </div>
           {product?.hasOffer && discount > 0 && (
-            <Badge className=" absolute bottom-0 right-0 bg-[#ffff00] -translate-x-1.5 -translate-y-1.5 text-gray-900 border-0 text-[10px] sm:text-xs px-2  font-bold ">
+            <Badge className=" absolute bottom-0 right-0 bg-[#ffff00]  text-gray-900 border-0 text-[10px] sm:text-xs px-2  font-bold ">
               {discount}% OFF
             </Badge>
           )}

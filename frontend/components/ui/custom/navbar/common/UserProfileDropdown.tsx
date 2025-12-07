@@ -50,7 +50,7 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
     return (
       <button
         onClick={onLoginClick}
-        className="flex items-center gap-2 bg-[var(--palette-btn)] px-4 py-2 rounded-lg font-medium text-white transition-all hover:shadow-lg hover:-translate-y-0.5"
+        className="flex items-center gap-2 bg-[var(--palette-btn)] px-2.5 md:px-4 py-2 text-xs md:text-sm rounded-lg font-medium text-white transition-all hover:shadow-lg hover:-translate-y-0.5"
       >
         <User size={18} />
         Login

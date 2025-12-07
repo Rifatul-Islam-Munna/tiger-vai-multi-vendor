@@ -202,7 +202,7 @@ const Footer = () => {
                 <p className="text-xs text-gray-500 mb-1">Customer Service</p>
                 <a
                   href="tel:+8801234567890"
-                  className="text-palette-btn font-bold text-lg hover:text-palette-btn/80 transition-colors"
+                  className="text-palette-btn font-bold text-sm md:text-lg hover:text-palette-btn/80 transition-colors"
                 >
                   +880 1903-961752
                 </a>
