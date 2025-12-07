@@ -835,15 +835,16 @@ const ProductPage = ({ params }: { params: Product }) => {
               {params?.shortDescription && (
                 <div>
                   <p className="text-sm text-gray-600 leading-relaxed">
-                    {!showFullDescription
+                    {!showFullDescription &&
+                    params?.shortDescription.length > 200
                       ? params?.shortDescription.slice(0, 200) + "... "
-                      : params?.shortDescription + " "}
+                      : params?.shortDescription}
                     {params?.shortDescription.length > 200 && (
                       <button
                         onClick={() =>
                           setShowFullDescription(!showFullDescription)
                         }
-                        className="text-palette-btn text-sm font-semibold hover:underline"
+                        className="text-palette-btn text-sm font-semibold hover:underline ml-1"
                       >
                         {showFullDescription ? "See Less" : "See More"}
                       </button>
@@ -851,6 +852,7 @@ const ProductPage = ({ params }: { params: Product }) => {
                   </p>
                 </div>
               )}
+
               <Separator />
               {params?.special_offer && (
                 <div className="bg-green-50/20 px-3 py-2 rounded-lg mt-2">
