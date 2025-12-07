@@ -835,25 +835,23 @@ const ProductPage = ({ params }: { params: Product }) => {
             {/* Short Description with Line Clamp & See More */}
             <div className="space-y-2">
               {params?.shortDescription && (
-                <>
-                  <p
-                    className={`text-sm text-gray-600 flex leading-relaxed ${
-                      !showFullDescription ? "line-clamp-2" : ""
-                    }`}
-                  >
-                    {params?.shortDescription}
+                <div>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    {!showFullDescription
+                      ? params?.shortDescription.slice(0, 200) + "... "
+                      : params?.shortDescription + " "}
                     {params?.shortDescription.length > 200 && (
-                      <span
+                      <button
                         onClick={() =>
                           setShowFullDescription(!showFullDescription)
                         }
                         className="text-palette-btn text-sm font-semibold hover:underline"
                       >
                         {showFullDescription ? "See Less" : "See More"}
-                      </span>
+                      </button>
                     )}
                   </p>
-                </>
+                </div>
               )}
               <Separator />
               {params?.special_offer && (

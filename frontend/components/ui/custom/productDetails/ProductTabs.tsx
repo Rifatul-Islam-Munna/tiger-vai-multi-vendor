@@ -97,7 +97,7 @@ const ProductTabs = ({
       </div>
       <div className="py-6 sm:py-8">
         {activeTab === "Details" && (
-          <div className="space-y-6">
+          <div className="space-y-2">
             {params?.company_details && (
               <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
                 <h4 className="text-lg font-bold text-palette-text mb-3">
@@ -141,7 +141,7 @@ const ProductTabs = ({
         )}
 
         {activeTab === "specifications" && (
-          <div className="space-y-6">
+          <div className="space-y-2">
             <h3 className="text-xl font-bold text-palette-text">
               Technical Specifications
             </h3>
@@ -151,7 +151,7 @@ const ProductTabs = ({
                   {Object.entries(params.specifications).map(([key, value]) => (
                     <div
                       key={key}
-                      className="flex justify-between items-center py-4 px-4 sm:px-6 border-b border-gray-200"
+                      className="flex justify-between items-center py-2 px-4 sm:px-6 border-b border-gray-200"
                     >
                       <span className="font-semibold text-palette-text text-sm sm:text-base">
                         {key}
@@ -185,7 +185,7 @@ const ProductTabs = ({
         )}
 
         {activeTab === "reviews" && (
-          <div className="space-y-6">
+          <div className="space-y-2">
             <h3 className="text-xl font-bold text-palette-text">
               Customer Reviews
             </h3>
@@ -220,7 +220,7 @@ const ProductTabs = ({
         )}
 
         {activeTab === "shipping" && (
-          <div className="space-y-6">
+          <div className="space-y-2">
             <h3 className="text-xl font-bold text-palette-text">
               Shipping & Returns
             </h3>
