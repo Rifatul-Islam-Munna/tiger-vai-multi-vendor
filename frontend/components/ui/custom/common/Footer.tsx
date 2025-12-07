@@ -142,7 +142,7 @@ const Footer = () => {
 
         <div className="border-t border-gray-700 pt-8 text-center text-sm">
           <p>
-            © 2025 MarketHub. All Rights Reserved. | Built for Bangladesh with
+            © 2025 Tiger vai. All Rights Reserved. | Built for Bangladesh with
             ❤️
           </p>
         </div>

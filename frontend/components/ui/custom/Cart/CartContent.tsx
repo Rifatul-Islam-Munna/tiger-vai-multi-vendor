@@ -71,9 +71,10 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen bg-palette-bg">
+      <PageBanner title="Cart" routes={route} />
       <main className=" container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Breadcrumb */}
-        <PageBanner title="Cart" routes={route} />
+
         <div className="flex items-center justify-between mb-8 mt-6">
           <h1 className="text-3xl md:text-4xl font-bold text-palette-text">
             Your Shopping Cart

@@ -219,7 +219,7 @@ const Page = () => {
       </section> */}
 
       {/* ============ VENDOR CTA SECTION ============ */}
-      <section id="VENDOR" className="bg-palette-text text-white py-16">
+      <section id="VENDOR" className="bg-palette-text text-white pt-16">
         <div className=" container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>

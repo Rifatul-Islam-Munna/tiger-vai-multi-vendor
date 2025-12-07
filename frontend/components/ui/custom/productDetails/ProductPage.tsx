@@ -448,10 +448,8 @@ const VariantCard: React.FC<VariantCardProps> = ({
     }
   };
 
-  // ... (Rest of the JSX remains exactly the same as your design)
   return (
     <div className="relative bg-white border border-gray-200 rounded-lg overflow-hidden">
-      {/* ... Keep your existing JSX design here ... */}
       <div className="flex flex-row gap-3 sm:gap-4 p-3 sm:p-4">
         {/* Left: Product Image */}
         {image && (
@@ -459,92 +457,127 @@ const VariantCard: React.FC<VariantCardProps> = ({
             <img
               src={image}
               alt={`${product.name} - ${size}`}
-              className="w-full h-auto object-contain rounded"
+              className="w-full h-full object-contain rounded"
             />
           </div>
         )}
 
-        {/* Middle: Product Details */}
-        <div className="flex-1 space-y-2 min-w-0">
-          {/* Recommended Badge */}
+        {/* Right side content (full flex-1) */}
+        <div className="flex-1 min-w-0 flex flex-col gap-2">
+          {/* Top row: Recommended (full width, aligned to right) */}
           {isRecommended && (
-            <div className="inline-block text-orange-700 py-0.5 text-xs font-semibold">
-              Recommended: {isRecommended}
-            </div>
-          )}
-
-          {/* Size */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600">Size:</span>
-            <span className="text-sm font-bold text-gray-800">{size}</span>
-          </div>
-
-          {/* Price */}
-          <div className="flex items-baseline gap-2 flex-wrap">
-            {originalPrice && (
-              <span className="text-xs line-through text-gray-400">
-                Tk {originalPrice.toLocaleString()}
-              </span>
-            )}
-            <span className="text-base sm:text-lg font-bold text-gray-800">
-              Tk {currentPrice.toLocaleString()}
-            </span>
-            {discountPercentage > 0 && (
-              <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-xs font-semibold">
-                {discountPercentage}% off
-              </span>
-            )}
-          </div>
-
-          {/* Color Selection */}
-          {colors.length > 0 && (
-            <div className="space-y-1.5">
-              <div className="flex gap-2 flex-wrap">
-                {colors.map((color) => (
-                  <button
-                    key={color}
-                    onClick={() => setSelectedColor(color || "")}
-                    className={`px-2 sm:px-2.5 py-1 rounded border text-xs font-medium transition-all ${
-                      selectedColor === color
-                        ? "border-palette-btn bg-palette-btn text-white"
-                        : "border-gray-300 bg-white text-gray-700 hover:border-palette-btn"
-                    }`}
-                  >
-                    {color}
-                  </button>
-                ))}
+            <div className="w-full flex justify-start">
+              <div className="inline-block text-orange-700 py-0.5 text-xs font-semibold">
+                Recommended: {isRecommended}
               </div>
             </div>
           )}
-        </div>
 
-        {/* Right: Stock & Quantity */}
-        <div className="sm:w-20 md:w-28 flex-shrink-0 flex flex-col gap-3 sm:gap-4 justify-center items-start">
-          <div className="text-left sm:text-right">
-            <span className="text-gray-800 font-bold text-sm">
-              Stock: {stock > 0 ? stock : "Out"}
-            </span>
-          </div>
+          {/* Middle + bottom are responsive columns/rows */}
+          <div className="flex flex-col md:flex-row md:items-stretch gap-3">
+            {/* Middle: Product Details */}
+            <div className="flex-1 space-y-2 min-w-0">
+              {/* Size */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-600">Size:</span>
+                <span className="text-xs md:text-sm font-bold text-gray-800">
+                  {size}
+                </span>
+              </div>
 
-          {/* Quantity Controls */}
-          <div className="flex items-center border border-gray-300 rounded">
-            <button
-              onClick={handleDecrement}
-              disabled={currentQuantity === 0}
-              className="w-6 sm:w-7 h-6 sm:h-7 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <Minus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-            </button>
-            <span className="w-8 sm:w-10 text-center font-semibold text-sm text-gray-800 border-x border-gray-300">
-              {currentQuantity}
-            </span>
-            <button
-              onClick={handleIncrement}
-              disabled={currentQuantity >= stock || !selectedColor}
-              className="w-6 sm:w-7 h-6 sm:h-7 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-            </button>
+              {/* Price */}
+              <div className="flex items-baseline gap-2 flex-wrap">
+                {originalPrice && (
+                  <span className="text-xs line-through text-gray-400">
+                    Tk {originalPrice.toLocaleString()}
+                  </span>
+                )}
+                <span className="text-base sm:text-lg font-bold text-gray-800">
+                  Tk {currentPrice.toLocaleString()}
+                </span>
+                {/* {discountPercentage > 0 && (
+                  <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-xs font-semibold">
+                    {discountPercentage}% off
+                  </span>
+                )} */}
+              </div>
+
+              {/* Color Selection */}
+              {colors.length > 0 && (
+                <div className="space-y-1.5">
+                  <div className="flex gap-2 flex-wrap">
+                    {colors.map((color) => (
+                      <button
+                        key={color}
+                        onClick={() => setSelectedColor(color || "")}
+                        className={`px-2 sm:px-2.5 py-1 rounded border text-xs font-medium transition-all ${
+                          selectedColor === color
+                            ? "border-palette-btn bg-palette-btn text-white"
+                            : "border-gray-300 bg-white text-gray-700 hover:border-palette-btn"
+                        }`}
+                      >
+                        {color}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Stock & Quantity on mobile: under colors */}
+              <div className="flex flex-col gap-2 mt-2 md:hidden">
+                <span className="text-gray-800 font-bold text-sm">
+                  Stock: {stock > 0 ? stock : "Out"}
+                </span>
+                <div className="flex items-center border border-gray-300 rounded w-fit">
+                  <button
+                    onClick={handleDecrement}
+                    disabled={currentQuantity === 0}
+                    className="w-6 sm:w-7 h-6 sm:h-7 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Minus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  </button>
+                  <span className="w-8 sm:w-10 text-center font-semibold text-sm text-gray-800 border-x border-gray-300">
+                    {currentQuantity}
+                  </span>
+                  <button
+                    onClick={handleIncrement}
+                    disabled={currentQuantity >= stock || !selectedColor}
+                    className="w-6 sm:w-7 h-6 sm:h-7 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Stock & Quantity (desktop/tablet only) */}
+            <div className="hidden md:flex sm:w-20 md:w-28 flex-shrink-0 flex-col gap-3 sm:gap-4 justify-center items-start">
+              <div className="text-left sm:text-right">
+                <span className="text-gray-800 font-bold text-sm">
+                  Stock: {stock > 0 ? stock : "Out"}
+                </span>
+              </div>
+
+              <div className="flex items-center border border-gray-300 rounded">
+                <button
+                  onClick={handleDecrement}
+                  disabled={currentQuantity === 0}
+                  className="w-6 sm:w-7 h-6 sm:h-7 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Minus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                </button>
+                <span className="w-8 sm:w-10 text-center font-semibold text-sm text-gray-800 border-x border-gray-300">
+                  {currentQuantity}
+                </span>
+                <button
+                  onClick={handleIncrement}
+                  disabled={currentQuantity >= stock || !selectedColor}
+                  className="w-6 sm:w-7 h-6 sm:h-7 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -687,6 +720,29 @@ const ProductPage = ({ params }: { params: Product }) => {
       )}
 
       <div className="container mx-auto px-4 py-6 sm:py-8">
+        {/* Breadcrumb */}
+        <div className="text-sm flex items-center gap-3 text-gray-500 overflow-x-auto whitespace-nowrap mb-6">
+          <span>{params?.category?.main ?? "Category"}</span>
+          {params?.category?.subMain && (
+            <>
+              <ChevronRight className=" w-4 h-4  " />
+
+              <span>{params.category.subMain}</span>
+            </>
+          )}
+          {params?.category?.semiSub && (
+            <>
+              <ChevronRight className=" w-4 h-4  " />
+              <span>{params.category.semiSub}</span>
+            </>
+          )}
+          {params?.category?.category && (
+            <>
+              <ChevronRight className=" w-4 h-4  " />
+              <span>{params.category.category}</span>
+            </>
+          )}
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Product Images Section */}
           <div className="space-y-4 lg:sticky lg:top-4 h-fit">

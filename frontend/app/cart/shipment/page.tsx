@@ -19,6 +19,7 @@ import { purchaseServerEvent } from "@/actions/metaEvent";
 import { v4 as uuidv4 } from "uuid";
 import { Spinner } from "@/components/ui/spinner";
 import PathaoChargeTable from "@/components/ui/custom/common/PathaoChargeTable";
+import Image from "next/image";
 export default function ShipmentPage() {
   const router = useRouter();
   const { items, totalPrice, totalDiscount } = useCartStore();
@@ -119,9 +120,9 @@ export default function ShipmentPage() {
 
   return (
     <div className="min-h-screen bg-palette-bg">
+      <PageBanner title="Checkout" routes={route} />
       <main className=" container mx-auto px-3 md:px-1  py-8 md:py-12">
         {/* Breadcrumb */}
-        <PageBanner title="Checkout" routes={route} />
 
         {/* Progress Bar */}
         {/* <div className="w-full h-1 bg-gray-200 rounded-full mb-8 overflow-hidden">
@@ -203,6 +204,9 @@ export default function ShipmentPage() {
                         <Label htmlFor="house" className="text-palette-text">
                           Complete Address{" "}
                           <span className="text-red-500">*</span>
+                          <span className=" text-xs  text-palette-accent-3">
+                            (Must include Thana)
+                          </span>
                         </Label>
                         <Textarea
                           id="house"
@@ -275,9 +279,21 @@ export default function ShipmentPage() {
                       key={item._id}
                       className="flex justify-between text-sm py-2 border-b border-gray-100 last:border-0"
                     >
-                      <span className="text-gray-600 truncate pr-2">
-                        {item.name} × {item.quantity}
-                      </span>
+                      {/* <Image
+                        src={item.thumbnail}
+                        width={50}
+                        height={50}
+                        alt="product image"
+                      /> */}
+                      <div className=" flex flex-col">
+                        <span className="text-gray-800 truncate pr-2">
+                          {item.name} × {item.quantity}
+                        </span>
+                        <span className="text-gray-600 truncate pr-2">
+                          {item.variant.size}-{item.variant.color}
+                        </span>
+                      </div>
+
                       <span className="text-palette-text font-medium whitespace-nowrap">
                         ${(item.unitPrice * item.quantity).toFixed(2)}
                       </span>
