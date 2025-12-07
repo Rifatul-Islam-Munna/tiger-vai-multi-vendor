@@ -223,6 +223,7 @@ export default function CartPage() {
           </div>
 
           {/* Order Summary */}
+          {/* Order Summary - SIMPLIFIED */}
           <div>
             <Card className="border border-gray-200 sticky top-8">
               <CardContent className="p-6">
@@ -230,39 +231,34 @@ export default function CartPage() {
                   Order Summary
                 </h2>
 
-                <div className="space-y-3 mb-6 pb-6 border-b border-gray-200">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">
-                      Subtotal ({totalItems} items)
-                    </span>
-                    <span className="text-palette-text font-medium">
-                      ${totalPrice.toFixed(2)}
-                    </span>
-                  </div>
-
-                  {totalDiscount > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-green-600">Discount</span>
-                      <span className="text-green-600 font-medium">
-                        -${totalDiscount.toFixed(2)}
+                <div className="space-y-1.5 mb-6 max-h-40 overflow-y-auto">
+                  {items.map((item) => (
+                    <div
+                      key={item._id}
+                      className="flex justify-between items-start gap-2 text-xs py-1.5 border-b border-gray-100 last:border-0"
+                    >
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <span className="text-gray-800 truncate">
+                          {item.name} × {item.quantity}
+                        </span>
+                        <span className="text-gray-600 text-xs truncate">
+                          {item.variant.size}-{item.variant.color}
+                        </span>
+                      </div>
+                      <span className="text-palette-text font-medium whitespace-nowrap text-xs">
+                        ${(item.unitPrice * item.quantity).toFixed(2)}
                       </span>
                     </div>
-                  )}
-
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Shipping</span>
-                    <span className="text-gray-600">
-                      Calculated at checkout
-                    </span>
-                  </div>
+                  ))}
                 </div>
 
+                {/* ✅ SIMPLIFIED: Only show final total */}
                 <div className="flex justify-between items-center mb-6">
                   <span className="text-gray-600 font-medium">
-                    Estimated Total
+                    Total ({totalItems} items)
                   </span>
                   <span className="text-palette-btn text-2xl font-bold">
-                    ${finalTotal.toFixed(2)}
+                    ${totalPrice.toFixed(2)}
                   </span>
                 </div>
 
@@ -284,9 +280,9 @@ export default function CartPage() {
                 {/* Info Box */}
                 <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                   <p className="text-xs text-gray-600 leading-relaxed">
-                    <strong className="text-palette-text">Note:</strong> Final
-                    shipping charges and discounts will be calculated during
-                    checkout based on your delivery address.
+                    <strong className="text-palette-text">Note:</strong>{" "}
+                    Shipping charges will be calculated during checkout based on
+                    your delivery address.
                   </p>
                 </div>
               </CardContent>
