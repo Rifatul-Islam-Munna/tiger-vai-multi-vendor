@@ -104,6 +104,10 @@ class ShipmentDetails {
 
   @Prop()
   comment: string;
+  @Prop()
+  thana: string;
+  @Prop()
+  district: string;
 }
 
 @Schema({ timestamps: true })

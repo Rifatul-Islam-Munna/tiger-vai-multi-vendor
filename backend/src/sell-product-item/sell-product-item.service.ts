@@ -444,4 +444,12 @@ export class SellProductItemService {
       return true
     }
   }
+
+  async getMyLastOrder (userId:string) {
+    const SellModel = this.sellModel();
+    const sell = await SellModel.findOne({userId:userId}).sort({createdAt:-1}).lean();
+    if(sell){
+      return sell
+    }
+  }
 }

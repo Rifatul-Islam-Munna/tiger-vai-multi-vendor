@@ -214,7 +214,7 @@ export const ViewOrderModal: React.FC<ViewOrderModalProps> = ({
                     Full Name
                   </p>
                   <p className="font-semibold text-sm sm:text-base text-[var(--palette-text)] break-words">
-                    {order.shipment.name}
+                    {order?.shipment?.name}
                   </p>
                 </div>
               </div>
@@ -226,7 +226,7 @@ export const ViewOrderModal: React.FC<ViewOrderModalProps> = ({
                     Phone Number
                   </p>
                   <p className="font-semibold text-sm sm:text-base text-[var(--palette-text)]">
-                    {order.shipment.phone}
+                    {order?.shipment?.phone}
                   </p>
                 </div>
               </div>
@@ -238,8 +238,32 @@ export const ViewOrderModal: React.FC<ViewOrderModalProps> = ({
                     Delivery Address
                   </p>
                   <p className="font-semibold text-sm sm:text-base text-[var(--palette-text)] break-words">
-                    {order.shipment.house}
+                    {order?.shipment?.house}
                   </p>
+                </div>
+              </div>
+              <div className=" grid grid-cols-1 md:grid-cols-2 gap-1">
+                <div className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg sm:col-span-2">
+                  <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-[var(--palette-accent-3)] mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[10px] sm:text-xs text-[var(--palette-accent-3)] mb-1">
+                      Thana
+                    </p>
+                    <p className="font-semibold text-sm sm:text-base text-[var(--palette-text)] break-words">
+                      {order?.shipment?.thana}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg sm:col-span-2">
+                  <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-[var(--palette-accent-3)] mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[10px] sm:text-xs text-[var(--palette-accent-3)] mb-1">
+                      District
+                    </p>
+                    <p className="font-semibold text-sm sm:text-base text-[var(--palette-text)] break-words">
+                      {order?.shipment?.district}
+                    </p>
+                  </div>
                 </div>
               </div>
 

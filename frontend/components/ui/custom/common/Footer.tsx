@@ -1,6 +1,6 @@
 "use client";
 import { cn } from "@/lib/utils";
-import { Facebook, Instagram, ShoppingBag, Twitter } from "lucide-react";
+import { Facebook, Instagram, Twitter } from "lucide-react";
 import { usePathname } from "next/navigation";
 import React from "react";
 import Image from "next/image";
@@ -11,140 +11,208 @@ const Footer = () => {
   return (
     <footer
       id="FOOTER"
-      className={cn("bg-palette-text text-gray-300 pt-16 pb-8", {
+      className={cn("bg-palette-text text-gray-300", {
         hidden: pathName.includes("/admin") || pathName.includes("/user"),
       })}
     >
-      <div className=" container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
-          {/* Company Info */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <Image
-                src={"/logo-black.avif"}
-                width={200}
-                height={100}
-                alt="logo"
-              />
-            </div>
-            <p className="text-sm mb-4">
-              Bangladesh's most trusted multi-vendor e-commerce platform. Shop
-              with confidence from thousands of verified sellers.
-            </p>
-            <div className="flex gap-3">
-              <button className="w-9 h-9 bg-gray-700 hover:bg-palette-btn rounded-full flex items-center justify-center transition">
-                <Facebook className="w-4 h-4" />
-              </button>
-              <button className="w-9 h-9 bg-gray-700 hover:bg-palette-btn rounded-full flex items-center justify-center transition">
-                <Instagram className="w-4 h-4" />
-              </button>
-              <button className="w-9 h-9 bg-gray-700 hover:bg-palette-btn rounded-full flex items-center justify-center transition">
-                <Twitter className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Customer Care */}
-          <div>
-            <h3 className="text-white font-semibold mb-4">Customer Care</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <a href="#" className="hover:text-palette-btn transition">
-                  Help Center
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-palette-btn transition">
-                  How to Buy
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-palette-btn transition">
-                  Track Your Order
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-palette-btn transition">
-                  Returns & Refunds
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-palette-btn transition">
-                  Contact Us
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* About Us */}
-          <div>
-            <h3 className="text-white font-semibold mb-4">About Us</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <a href="#" className="hover:text-palette-btn transition">
-                  About MarketHub
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-palette-btn transition">
-                  Careers
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-palette-btn transition">
-                  Vendor Login
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-palette-btn transition">
-                  Terms & Conditions
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-palette-btn transition">
-                  Privacy Policy
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Payment & Delivery */}
-          <div>
-            <h3 className="text-white font-semibold mb-4">
-              Payment & Delivery
-            </h3>
-            <ul className="space-y-2 text-sm mb-4">
-              <li>
-                <a href="#" className="hover:text-palette-btn transition">
-                  Payment Methods
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-palette-btn transition">
-                  Cash on Delivery
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-palette-btn transition">
-                  Delivery Info
-                </a>
-              </li>
-            </ul>
-            <div className="text-sm pt-4 border-t border-gray-700">
-              <p className="text-white font-semibold mb-1">Customer Service</p>
-              <p className="text-palette-btn text-lg font-bold">
-                +880 1234-567890
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Main Footer Content */}
+        <div className="py-8 lg:py-10">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-10">
+            {/* Company Info - Takes full width on mobile with 2 cols */}
+            <div className="col-span-2 lg:col-span-1">
+              <div className="mb-3">
+                <Image
+                  src={"/logo-black.avif"}
+                  width={200}
+                  height={100}
+                  alt="Tiger vai logo"
+                  className="h-auto"
+                />
+              </div>
+              <p className="text-sm text-gray-400 mb-3 leading-relaxed">
+                Bangladesh's most trusted multi-vendor e-commerce platform. Shop
+                with confidence from thousands of verified sellers across the
+                country.
               </p>
-              <p className="text-xs text-gray-400">Available 24/7</p>
+              <p className="text-xs text-gray-500 mb-3">
+                Connecting buyers and sellers nationwide with secure payments,
+                fast delivery, and excellent customer service.
+              </p>
+              <div className="flex gap-3">
+                <a
+                  href="#"
+                  aria-label="Facebook"
+                  className="w-10 h-10 bg-gray-700 hover:bg-palette-btn rounded-full flex items-center justify-center transition-colors duration-200"
+                >
+                  <Facebook className="w-5 h-5" />
+                </a>
+                <a
+                  href="#"
+                  aria-label="Instagram"
+                  className="w-10 h-10 bg-gray-700 hover:bg-palette-btn rounded-full flex items-center justify-center transition-colors duration-200"
+                >
+                  <Instagram className="w-5 h-5" />
+                </a>
+                <a
+                  href="#"
+                  aria-label="Twitter"
+                  className="w-10 h-10 bg-gray-700 hover:bg-palette-btn rounded-full flex items-center justify-center transition-colors duration-200"
+                >
+                  <Twitter className="w-5 h-5" />
+                </a>
+              </div>
+            </div>
+
+            {/* Customer Care */}
+            <div>
+              <h3 className="text-white font-semibold text-base mb-3">
+                Customer Care
+              </h3>
+              <ul className="space-y-2">
+                <li>
+                  <a
+                    href="#"
+                    className="text-sm text-gray-400 hover:text-palette-btn transition-colors duration-200"
+                  >
+                    Help Center
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="text-sm text-gray-400 hover:text-palette-btn transition-colors duration-200"
+                  >
+                    How to Buy
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="text-sm text-gray-400 hover:text-palette-btn transition-colors duration-200"
+                  >
+                    Track Order
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="text-sm text-gray-400 hover:text-palette-btn transition-colors duration-200"
+                  >
+                    Returns & Refunds
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="text-sm text-gray-400 hover:text-palette-btn transition-colors duration-200"
+                  >
+                    Contact Us
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* About */}
+            <div>
+              <h3 className="text-white font-semibold text-base mb-3">About</h3>
+              <ul className="space-y-2">
+                <li>
+                  <a
+                    href="#"
+                    className="text-sm text-gray-400 hover:text-palette-btn transition-colors duration-200"
+                  >
+                    About Us
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="text-sm text-gray-400 hover:text-palette-btn transition-colors duration-200"
+                  >
+                    Careers
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="text-sm text-gray-400 hover:text-palette-btn transition-colors duration-200"
+                  >
+                    Vendor Login
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="text-sm text-gray-400 hover:text-palette-btn transition-colors duration-200"
+                  >
+                    Terms & Conditions
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="text-sm text-gray-400 hover:text-palette-btn transition-colors duration-200"
+                  >
+                    Privacy Policy
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Contact */}
+            <div>
+              <h3 className="text-white font-semibold text-base mb-3">
+                Contact
+              </h3>
+              <ul className="space-y-2 mb-4">
+                <li>
+                  <a
+                    href="#"
+                    className="text-sm text-gray-400 hover:text-palette-btn transition-colors duration-200"
+                  >
+                    Payment Methods
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="text-sm text-gray-400 hover:text-palette-btn transition-colors duration-200"
+                  >
+                    Cash on Delivery
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="text-sm text-gray-400 hover:text-palette-btn transition-colors duration-200"
+                  >
+                    Delivery Info
+                  </a>
+                </li>
+              </ul>
+              <div className="mt-4 pt-3 border-t border-gray-700">
+                <p className="text-xs text-gray-500 mb-1">Customer Service</p>
+                <a
+                  href="tel:+8801234567890"
+                  className="text-palette-btn font-bold text-lg hover:text-palette-btn/80 transition-colors"
+                >
+                  +880 1234-567890
+                </a>
+                <p className="text-xs text-gray-400 mt-1">Available 24/7</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-gray-700 pt-8 text-center text-sm">
-          <p>
-            © 2025 Tiger vai. All Rights Reserved. | Built for Bangladesh with
-            ❤️
-          </p>
+        {/* Footer Bottom */}
+        <div className="border-t border-gray-700">
+          <div className="py-4 text-center">
+            <p className="text-sm text-gray-400">
+              © 2025 Tiger vai. All Rights Reserved. | Built for Bangladesh with
+              ❤️
+            </p>
+          </div>
         </div>
       </div>
     </footer>

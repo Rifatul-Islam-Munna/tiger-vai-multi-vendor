@@ -73,74 +73,43 @@ const StickyCartBanner: React.FC<{
   show: boolean;
   items: CartItemDetail[];
 }> = ({ totalItems, totalPrice, show, items }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
   if (!show) return null;
+
   console.log("🚨 BANNER RENDER:", { show, totalItems, totalPrice });
+
   return (
-    <div className="fixed top-0 translate-y-28  md:translate-y-30 left-0 right-0 z-40 bg-red-500 text-white shadow-lg">
-      <div className="container mx-auto px-4 py-3">
-        {/* Main Summary Bar - Always Visible */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <ShoppingCart className="w-5 h-5" />
-            <div>
-              <span className="font-bold text-sm md:text-lg">Selected</span>
-              <span className="ml-3 text-xs md:text-sm">
-                {totalItems} item(s) • {items.length} variant(s)
+    <div className="fixed top-0 translate-y-28 md:translate-y-30 left-0 right-0 z-40 bg-gradient-to-r from-[#fe3200]/95 to-[#ff5507]/95 backdrop-blur text-white border-b-1 border-orange-400">
+      <div className="container mx-auto px-3 py-2">
+        {/* No-padding Items - Thin Lines */}
+        <div className="space-y-1">
+          {items.slice(0, 4).map((item, index) => (
+            <div
+              key={index}
+              className="flex items-center justify-between text-xs border-b border-white/20 pb-1.5 last:border-b-0"
+            >
+              <span className="truncate flex-1 pr-2 font-medium">
+                {item.name} • {item.size} • {item.color}
               </span>
+              <div className="flex items-baseline gap-1.5 text-sm font-bold">
+                x{item.quantity} Tk
+                {(item.unitPrice * item.quantity).toLocaleString()}
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="font-bold text-base md:text-xl">
-              Tk {totalPrice.toLocaleString()}
-            </div>
-            {items.length > 0 && (
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="ml-2 p-1 hover:bg-red-600 rounded transition-colors"
-                aria-label={isExpanded ? "Collapse details" : "Expand details"}
-              >
-                {isExpanded ? (
-                  <ChevronRight className="w-5 h-5 rotate-90" />
-                ) : (
-                  <ChevronLeft className="w-5 h-5 -rotate-90" />
-                )}
-              </button>
-            )}
-          </div>
+          ))}
         </div>
 
-        {/* Expandable Product Details */}
-        {isExpanded && items.length > 0 && (
-          <div className="mt-3 pt-3 border-t border-red-400 max-h-60 overflow-y-auto">
-            <div className="space-y-2">
-              {items.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between bg-red-600/30 px-3 py-2 rounded"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm truncate">
-                      {item.name}
-                    </p>
-                    <p className="text-xs opacity-90">
-                      Size: {item.size} | Color: {item.color}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3 ml-3">
-                    <span className="text-sm font-medium">
-                      Qty: {item.quantity}
-                    </span>
-                    <span className="text-sm font-bold">
-                      Tk {(item.unitPrice * item.quantity).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+        {/* Always-Visible Total */}
+        <div className="flex items-center justify-between text-xs mt-1 pt-1.5 border-t border-white/30">
+          <div className="flex items-center gap-1">
+            <ShoppingCart className="w-4 h-4" />
+            <span className="font-semibold">
+              {totalItems} items • {items.length} vars
+            </span>
           </div>
-        )}
+          <span className="text-lg font-black tracking-tight">
+            Tk {totalPrice.toLocaleString()}
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -343,7 +312,7 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
 
   return (
     <section className="relative">
-      <div className="space-y-4">
+      <div className="space-y-1">
         {/* Variant Cards */}
         {Array.from(variantsBySize.entries()).map(([size, variants]) => (
           <VariantCard
@@ -359,17 +328,17 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
         ))}
 
         {/* Buttons */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
           <button
             onClick={() => handleAddAllToCart(false)}
-            className="w-full py-3 px-4 rounded-full font-semibold text-base transition-all bg-[#FFC107] hover:bg-[#FFB300] text-gray-800"
+            className="w-full py-3 px-4 rounded-full font-semibold text-base transition-all bg-gradient-to-r !from-[#ffbd05] !to-[#ffbd05] text-gray-800"
           >
             Add To Cart
           </button>
 
           <button
             onClick={handleOrderNow}
-            className="w-full py-3 px-4 rounded-full font-semibold text-base transition-all bg-[#FF7761] hover:bg-[#FF6550] text-white"
+            className="w-full py-3 px-4 rounded-full font-semibold text-base transition-all bg-gradient-to-b from-[#fe3200] to-[#ff5507] text-white"
           >
             Order Now <span className="text-sm">(আজই কিনুন)</span>
           </button>
@@ -467,7 +436,7 @@ const VariantCard: React.FC<VariantCardProps> = ({
           {/* Top row: Recommended (full width, aligned to right) */}
           {isRecommended && (
             <div className="w-full flex justify-start">
-              <div className="inline-block text-orange-700 py-0.5 text-xs font-semibold">
+              <div className="inline-block text-blue-500 py-0.5 text-xs font-semibold">
                 Recommended: {isRecommended}
               </div>
             </div>
@@ -484,24 +453,6 @@ const VariantCard: React.FC<VariantCardProps> = ({
                   {size}
                 </span>
               </div>
-
-              {/* Price */}
-              <div className="flex items-baseline gap-2 flex-wrap">
-                {originalPrice && (
-                  <span className="text-xs line-through text-gray-400">
-                    Tk {originalPrice.toLocaleString()}
-                  </span>
-                )}
-                <span className="text-base sm:text-lg font-bold text-gray-800">
-                  Tk {currentPrice.toLocaleString()}
-                </span>
-                {/* {discountPercentage > 0 && (
-                  <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-xs font-semibold">
-                    {discountPercentage}% off
-                  </span>
-                )} */}
-              </div>
-
               {/* Color Selection */}
               {colors.length > 0 && (
                 <div className="space-y-1.5">
@@ -522,6 +473,23 @@ const VariantCard: React.FC<VariantCardProps> = ({
                   </div>
                 </div>
               )}
+
+              {/* Price */}
+              <div className="flex items-baseline gap-2 flex-wrap">
+                {originalPrice && (
+                  <span className="text-xs line-through text-gray-400">
+                    Tk {originalPrice.toLocaleString()}
+                  </span>
+                )}
+                <span className="text-base sm:text-lg font-bold text-gray-800">
+                  Tk {currentPrice.toLocaleString()}
+                </span>
+                {/* {discountPercentage > 0 && (
+                  <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-xs font-semibold">
+                    {discountPercentage}% off
+                  </span>
+                )} */}
+              </div>
 
               {/* Stock & Quantity on mobile: under colors */}
               <div className="flex flex-col gap-2 mt-2 md:hidden">
@@ -743,9 +711,9 @@ const ProductPage = ({ params }: { params: Product }) => {
             </>
           )}
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 lg:gap-12">
           {/* Product Images Section */}
-          <div className="space-y-4 lg:sticky lg:top-4 h-fit">
+          <div className="md:space-y-4 lg:sticky lg:top-4 h-fit">
             {/* Image Section - Responsive Thumbnails */}
             <div className="flex flex-col lg:flex-row gap-3">
               {/* Thumbnails - BOTTOM for mobile, LEFT for desktop */}
@@ -812,7 +780,7 @@ const ProductPage = ({ params }: { params: Product }) => {
             </div>
 
             {/* Desktop Description - Under Image - Full Width */}
-            <div className="hidden lg:block pt-6 w-full">
+            <div className="hidden lg:block pt-3 w-full">
               <h3 className="text-xl font-bold text-palette-text mb-4">
                 Product Description
               </h3>
@@ -823,9 +791,9 @@ const ProductPage = ({ params }: { params: Product }) => {
           </div>
 
           {/* Product Info Section */}
-          <div className="space-y-6">
+          <div className=" ">
             {/* Product Title & Brand */}
-            <div className="space-y-3">
+            <div className="space-y-1">
               <h1 className="text-2xl sm:text-3xl font-bold text-palette-text">
                 {params?.name ?? "Product Name"}
               </h1>
@@ -838,7 +806,7 @@ const ProductPage = ({ params }: { params: Product }) => {
 
             {/* Price Range - WITHOUT "Save up to" */}
             {priceRange && (
-              <div className="space-y-1 rounded-lg">
+              <div className=" rounded-lg py-1.5">
                 <div className="flex items-baseline gap-3 flex-wrap">
                   {priceRange.hasDiscount && (
                     <span className="text-base text-gray-400 line-through">
@@ -869,28 +837,28 @@ const ProductPage = ({ params }: { params: Product }) => {
               {params?.shortDescription && (
                 <>
                   <p
-                    className={`text-sm text-gray-600 leading-relaxed ${
+                    className={`text-sm text-gray-600 flex leading-relaxed ${
                       !showFullDescription ? "line-clamp-2" : ""
                     }`}
                   >
                     {params?.shortDescription}
+                    {params?.shortDescription.length > 200 && (
+                      <span
+                        onClick={() =>
+                          setShowFullDescription(!showFullDescription)
+                        }
+                        className="text-palette-btn text-sm font-semibold hover:underline"
+                      >
+                        {showFullDescription ? "See Less" : "See More"}
+                      </span>
+                    )}
                   </p>
-                  {params?.shortDescription.length > 200 && (
-                    <button
-                      onClick={() =>
-                        setShowFullDescription(!showFullDescription)
-                      }
-                      className="text-palette-btn text-sm font-semibold hover:underline"
-                    >
-                      {showFullDescription ? "See Less" : "See More"}
-                    </button>
-                  )}
                 </>
               )}
               <Separator />
               {params?.special_offer && (
                 <div className="bg-green-50/20 px-3 py-2 rounded-lg mt-2">
-                  <span className="text-gray-800 font-bold">
+                  <span className=" text-[#ff5507] font-bold">
                     Special Offer:
                   </span>
                   <p className="text-sm text-gray-800 font-semibold">
@@ -902,10 +870,7 @@ const ProductPage = ({ params }: { params: Product }) => {
 
             {/* Variant Cards with Updated Button Layout */}
             {params?.variants && params.variants.length > 0 && (
-              <div className="space-y-4">
-                <h4 className="text-lg font-bold text-palette-text">
-                  Available Options
-                </h4>
+              <div className="">
                 <ProductVariantCards
                   product={params}
                   user={getUser}
@@ -917,7 +882,7 @@ const ProductPage = ({ params }: { params: Product }) => {
 
             {/* Key Features */}
             {(params?.features?.length ?? 0) > 0 && (
-              <div className="space-y-4">
+              <div className="space-y-2">
                 <h4 className="text-lg font-bold text-palette-text">
                   Key Features
                 </h4>
@@ -945,7 +910,7 @@ const ProductPage = ({ params }: { params: Product }) => {
             )}
 
             {/* Service Features */}
-            <div className="space-y-3 border-t border-gray-200 pt-6">
+            <div className="space-y-1 border-t border-gray-200 pt-6">
               <div className="flex items-start gap-3 p-3 rounded-lg">
                 <Truck className="w-5 h-5 text-palette-btn mt-1 flex-shrink-0" />
                 <div className="min-w-0">
@@ -965,7 +930,7 @@ const ProductPage = ({ params }: { params: Product }) => {
               </div>
 
               {params?.returnPolicy && (
-                <div className="flex items-start gap-3 p-3 rounded-lg">
+                <div className="flex items-start gap-3 p-2 rounded-lg">
                   <RotateCcw className="w-5 h-5 text-palette-btn mt-1 flex-shrink-0" />
                   <div className="min-w-0">
                     <p className="font-semibold text-palette-text text-sm sm:text-base">
@@ -996,7 +961,7 @@ const ProductPage = ({ params }: { params: Product }) => {
         </div>
 
         {/* Tabs Section - Full Width */}
-        <div className="mt-12 sm:mt-16 w-full">
+        <div className="mt-1 w-full">
           {/* Mobile Description - Full Width */}
           <div className="lg:hidden mb-8 w-full">
             <h3 className="text-xl font-bold text-palette-text mb-4">

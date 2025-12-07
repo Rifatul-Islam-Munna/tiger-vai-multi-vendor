@@ -14,6 +14,7 @@ import {
   ChevronRight,
   ShoppingBag,
   X,
+  House,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,7 +34,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { UserProfileDropdown } from "./common/UserProfileDropdown";
 import CartSheet from "./CartSheet";
 import { SearchModal } from "./SearchModal";
@@ -69,6 +70,7 @@ const ClientNavbar = () => {
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const pathName = usePathname();
+  const router = useRouter();
 
   const { data: user } = useUser();
 
@@ -103,6 +105,9 @@ const ClientNavbar = () => {
       )}
     </div>
   );
+  const handelToHome = () => {
+    router.push("/");
+  };
 
   return (
     <nav
@@ -114,12 +119,16 @@ const ClientNavbar = () => {
       <div className="container mx-auto px-4">
         {/* --- Desktop Header Layout --- */}
         <div className="hidden lg:flex justify-between items-center h-16">
-          <Link
-            href={"/"}
-            className=" text-gray-800 font-bold hover:text-palette-btn hover:underline transition-all duration-500"
+          <div
+            onClick={handelToHome}
+            className=" flex flex-col  group justify-center items-center cursor-pointer"
           >
-            Home
-          </Link>
+            <House className=" size-6 group-hover:text-palette-btn" />
+            <span className=" text-sm font-semibold  group-hover:text-palette-btn duration-500">
+              Home
+            </span>
+          </div>
+
           <Link href={"/"}>
             <div className="flex items-center gap-2 ">
               <Image
@@ -143,19 +152,23 @@ const ClientNavbar = () => {
         <div className="lg:hidden flex flex-col py-3 gap-3">
           {/* Row 1: Logo + Actions */}
           <div className="flex justify-between items-center">
-            <Link
-              href={"/"}
-              className=" text-gray-800 font-bold hover:text-palette-btn hover:underline transition-all duration-500"
+            <div
+              onClick={handelToHome}
+              className=" flex flex-col  group justify-center items-center cursor-pointer"
             >
-              Home
-            </Link>
+              <House className=" size-6 group-hover:text-palette-btn" />
+              <span className=" text-sm font-semibold  group-hover:text-palette-btn duration-500">
+                Home
+              </span>
+            </div>
             <Link href={"/"}>
               <Image
                 src={"/logo-black.png"}
-                width={140}
+                width={180}
                 height={70}
                 alt="logo"
                 priority
+                className=""
               />
             </Link>
             <div className="flex items-center gap-3">
@@ -343,7 +356,7 @@ const ClientNavbar = () => {
           </SheetHeader>
 
           {/* Quick Links Row (Icons) */}
-          <div className="grid grid-cols-3 border-b py-3 shrink-0 bg-gray-50/50">
+          {/*   <div className="grid grid-cols-3 border-b py-3 shrink-0 bg-gray-50/50">
             {QUICK_LINKS.map((link) => (
               <Link
                 key={link.label}
@@ -357,7 +370,7 @@ const ClientNavbar = () => {
                 <span className="text-xs font-medium">{link.label}</span>
               </Link>
             ))}
-          </div>
+          </div> */}
 
           {/* Scrollable Category List */}
           <div className="flex-1 overflow-y-auto">
@@ -371,10 +384,10 @@ const ClientNavbar = () => {
                   <Sheet key={category._id}>
                     <SheetTrigger asChild>
                       <button className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-colors text-left border border-transparent hover:border-gray-100">
-                        <CategoryIcon category={category} />
                         <span className="flex-1 font-medium text-gray-800">
                           {category.name}
                         </span>
+                        <CategoryIcon category={category} />
                         <ChevronRight className="w-4 h-4 text-gray-300" />
                       </button>
                     </SheetTrigger>

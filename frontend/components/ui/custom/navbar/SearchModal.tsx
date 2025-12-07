@@ -203,12 +203,14 @@ export function SearchModal() {
         // Mobile: Input-like Button
         <button
           onClick={() => setOpen(true)}
-          className="flex items-center gap-3 w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-white hover:bg-gray-50 transition-colors text-left group"
+          className="flex items-center gap-3 w-full pl-4 border border-gray-200 rounded-full bg-white hover:bg-gray-50 transition-colors text-left group"
         >
-          <Search className="h-4 w-4 text-gray-400 group-hover:text-[var(--palette-btn)] transition-colors" />
           <span className="text-sm text-gray-500 flex-1 truncate">
             Search...
           </span>
+          <p className=" p-3 rounded-full bg-gray-950">
+            <Search className="h-4 w-4 text-white group-hover:text-[var(--palette-btn)] transition-colors " />
+          </p>
         </button>
       )}
 

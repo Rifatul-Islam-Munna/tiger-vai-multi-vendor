@@ -13,6 +13,8 @@ export interface ShipmentDetails {
   house: string;
   paymentMethod: PaymentMethod;
   comment?: string;
+  thana?: string;
+  district?: string;
 }
 
 export interface CheckoutState {

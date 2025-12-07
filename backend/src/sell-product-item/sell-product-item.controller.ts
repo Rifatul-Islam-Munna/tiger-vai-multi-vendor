@@ -69,6 +69,12 @@ export class SellProductItemController {
    
     return this.sellProductItemService.getMyOrder(query,req.user.id);
   }
+  @Get('get-my-last-order')
+  @UseGuards(AuthGuard)
+  async getMyLastOrder( GetOrdersDto,@Req() req:ExpressRequest) {
+   
+    return this.sellProductItemService.getMyLastOrder(req.user.id);
+  }
 
   /**
    * Delete sell (both long & short)

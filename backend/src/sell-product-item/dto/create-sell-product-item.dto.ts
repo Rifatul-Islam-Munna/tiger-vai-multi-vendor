@@ -134,6 +134,14 @@ class ShipmentDetailsDto {
   @IsOptional()
   @IsString()
   comment?: string;
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  thana?: string;
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  district?: string;
 }
 
 export class CreateSellProductItemDto {
