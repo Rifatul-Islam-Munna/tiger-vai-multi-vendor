@@ -211,7 +211,7 @@ export default function CartSheet() {
               {/* Subtotal */}
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Subtotal</span>
-                <span className="font-medium">${totalPrice.toFixed(2)}</span>
+                <span className="font-medium">TK {totalPrice.toFixed(2)}</span>
               </div>
 
               {/* Checkout Button */}

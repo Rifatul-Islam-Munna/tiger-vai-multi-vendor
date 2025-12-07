@@ -258,7 +258,7 @@ export default function CartPage() {
                     Total ({totalItems} items)
                   </span>
                   <span className="text-palette-btn text-2xl font-bold">
-                    ${totalPrice.toFixed(2)}
+                    TK {totalPrice.toFixed(2)}
                   </span>
                 </div>
 
