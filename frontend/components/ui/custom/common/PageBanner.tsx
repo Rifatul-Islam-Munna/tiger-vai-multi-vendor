@@ -28,7 +28,7 @@ const PageBanner: React.FC<PageBannerProps> = ({
 }) => {
   return (
     <div
-      className="relative w-full h-[280px] md:h-[320px] flex flex-col items-center justify-center bg-cover  bg-center bg-no-repeat"
+      className="relative w-full h-[100px] md:h-[150px] flex flex-col items-center justify-center bg-cover  bg-center bg-no-repeat"
       style={{
         backgroundImage: `url(${backgroundImage})`,
       }}
