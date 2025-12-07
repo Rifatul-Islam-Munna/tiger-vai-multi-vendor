@@ -78,35 +78,35 @@ const StickyCartBanner: React.FC<{
   console.log("🚨 BANNER RENDER:", { show, totalItems, totalPrice });
 
   return (
-    <div className="fixed top-0 translate-y-28 md:translate-y-30 left-0 right-0 z-40 bg-gradient-to-r from-[#fe3200]/95 to-[#ff5507]/95 backdrop-blur text-white border-b-1 border-orange-400">
-      <div className="container mx-auto px-3 py-2">
-        {/* No-padding Items - Thin Lines */}
-        <div className="space-y-1">
+    <div className="fixed top-0 translate-y-30 left-0 right-0 z-40 bg-gradient-to-r from-[#fe3200]/95 to-[#ff5507]/95 backdrop-blur text-white border-b border-orange-400">
+      <div className="container mx-auto px-3 py-1.5">
+        {/* Compact Items List */}
+        <div className="space-y-0.5">
           {items.slice(0, 4).map((item, index) => (
             <div
               key={index}
-              className="flex items-center justify-between text-xs border-b border-white/20 pb-1.5 last:border-b-0"
+              className="flex items-center justify-between text-xs py-0.5"
             >
-              <span className="truncate flex-1 pr-2 font-medium">
+              <span className="truncate flex-1 pr-2 font-medium leading-tight">
                 {item.name} • {item.size} • {item.color}
               </span>
-              <div className="flex items-baseline gap-1.5 text-sm font-bold">
-                x{item.quantity} Tk
+              <div className="flex items-baseline gap-1 text-xs font-bold whitespace-nowrap">
+                x{item.quantity} <span className="text-[10px]">Tk</span>
                 {(item.unitPrice * item.quantity).toLocaleString()}
               </div>
             </div>
           ))}
         </div>
 
-        {/* Always-Visible Total */}
-        <div className="flex items-center justify-between text-xs mt-1 pt-1.5 border-t border-white/30">
-          <div className="flex items-center gap-1">
-            <ShoppingCart className="w-4 h-4" />
-            <span className="font-semibold">
+        {/* Compact Total Bar */}
+        <div className="flex items-center justify-between text-xs mt-1 pt-1 border-t border-white/30">
+          <div className="flex items-center gap-1.5">
+            <ShoppingCart className="w-3.5 h-3.5" />
+            <span className="font-semibold text-[11px]">
               {totalItems} items • {items.length} vars
             </span>
           </div>
-          <span className="text-lg font-black tracking-tight">
+          <span className="text-base font-black tracking-tight">
             Tk {totalPrice.toLocaleString()}
           </span>
         </div>
