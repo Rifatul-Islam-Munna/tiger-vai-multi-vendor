@@ -193,7 +193,7 @@ export default function ShipmentPage() {
                         updateShipmentField("thana", e.target.value)
                       }
                       className="border-gray-300 focus:border-palette-btn h-11 sm:h-12 text-sm sm:text-base"
-                      placeholder="Thana* (থানার নাম লিখুন)"
+                      placeholder="police station* (থানার নাম লিখুন)"
                       required
                     />
                   </div>
