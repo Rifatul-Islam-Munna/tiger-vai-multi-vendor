@@ -109,30 +109,32 @@ const ProductTabs = ({
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 p-4 sm:p-6 bg-palette-btn/5 rounded-lg border border-palette-btn/10">
-              <div className="text-center py-3">
-                <h4 className="font-semibold text-palette-text mb-2 text-sm sm:text-base">
-                  Dimensions
-                </h4>
-                <p className="text-sm sm:text-base text-gray-600">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 p-2.5 sm:p-4 bg-palette-btn/5 rounded-lg border border-palette-btn/10">
+              <div className="flex flex-col items-center justify-center py-2 px-1">
+                <span className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
+                  Size
+                </span>
+                <p className="text-xs sm:text-sm font-semibold text-palette-text leading-tight">
                   {params?.height || params?.width
-                    ? `${params?.height ?? 0}cm × ${params?.width ?? 0}cm`
+                    ? `${params?.height ?? 0}×${params?.width ?? 0}`
                     : "N/A"}
                 </p>
               </div>
-              <div className="text-center py-3 border-t sm:border-t-0 sm:border-x border-gray-300">
-                <h4 className="font-semibold text-palette-text mb-2 text-sm sm:text-base">
+
+              <div className="flex flex-col items-center justify-center py-2 px-1 border-x border-gray-200">
+                <span className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
                   Weight
-                </h4>
-                <p className="text-sm sm:text-base text-gray-600">
+                </span>
+                <p className="text-xs sm:text-sm font-semibold text-palette-text leading-tight">
                   {params?.weight ?? "N/A"}
                 </p>
               </div>
-              <div className="text-center py-3 border-t sm:border-t-0">
-                <h4 className="font-semibold text-palette-text mb-2 text-sm sm:text-base">
+
+              <div className="flex flex-col items-center justify-center py-2 px-1">
+                <span className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
                   Brand
-                </h4>
-                <p className="text-sm sm:text-base text-gray-600">
+                </span>
+                <p className="text-xs sm:text-sm font-semibold text-palette-text leading-tight truncate max-w-full">
                   {params?.brand?.name ?? "N/A"}
                 </p>
               </div>
@@ -141,22 +143,24 @@ const ProductTabs = ({
         )}
 
         {activeTab === "specifications" && (
-          <div className="space-y-2">
-            <h3 className="text-xl font-bold text-palette-text">
+          <div className="p-4 sm:p-5 border border-gray-200 rounded-lg bg-white">
+            <h3 className="text-base sm:text-lg font-bold text-palette-text mb-4">
               Technical Specifications
             </h3>
+
+            {/* Compact table */}
             {params?.specifications &&
               Object.keys(params.specifications).length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-1 mb-4">
                   {Object.entries(params.specifications).map(([key, value]) => (
                     <div
                       key={key}
-                      className="flex justify-between items-center py-2 px-4 sm:px-6 border-b border-gray-200"
+                      className="flex justify-between items-center py-1.5 px-1 text-xs sm:text-sm"
                     >
-                      <span className="font-semibold text-palette-text text-sm sm:text-base">
+                      <span className="font-medium text-gray-700 truncate flex-1 pr-2">
                         {key}
                       </span>
-                      <span className="text-gray-600 text-sm sm:text-base text-right ml-4">
+                      <span className="text-gray-600 font-medium min-w-0 truncate">
                         {value}
                       </span>
                     </div>
@@ -164,16 +168,17 @@ const ProductTabs = ({
                 </div>
               )}
 
+            {/* Inline certifications */}
             {(params?.certifications?.length ?? 0) > 0 && (
-              <div className="mt-8">
-                <h4 className="font-semibold text-palette-text mb-4 text-base sm:text-lg">
+              <div className="space-y-2">
+                <h4 className="font-semibold text-xs sm:text-sm text-palette-text">
                   Certifications
                 </h4>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {params?.certifications?.map((cert, index) => (
                     <span
                       key={index}
-                      className="bg-green-50 text-green-700 border border-green-200 px-4 py-2 rounded-full text-sm font-semibold"
+                      className="bg-green-50 text-green-700 border border-green-200 px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap"
                     >
                       {cert}
                     </span>
@@ -220,123 +225,71 @@ const ProductTabs = ({
         )}
 
         {activeTab === "shipping" && (
-          <div className="space-y-2">
-            <h3 className="text-xl font-bold text-palette-text">
+          <div className="space-y-1">
+            <h3 className="text-base sm:text-lg font-bold text-palette-text">
               Shipping & Returns
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-              <div className="p-4 sm:p-6 border border-gray-200 rounded-lg bg-white">
-                <h4 className="font-bold text-palette-text mb-4 text-base sm:text-lg">
-                  Shipping Information
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Shipping Information */}
+              <div className="p-3 border border-gray-200 rounded-lg bg-gradient-to-br from-white to-gray-50">
+                <h4 className="font-semibold text-palette-text mb-2.5 text-xs sm:text-sm flex items-center gap-1.5">
+                  <span className="w-1 h-4 bg-palette-btn rounded-full"></span>
+                  Shipping Info
                 </h4>
-                <div className="space-y-3">
+                <div className="space-y-1.5 text-xs sm:text-sm">
                   {params?.shippingTime && (
-                    <div className="flex justify-between py-2 border-b border-gray-100">
-                      <span className="text-sm sm:text-base text-gray-600">
-                        Delivery Time
-                      </span>
-                      <span className="text-sm sm:text-base font-semibold text-palette-text">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Delivery</span>
+                      <span className="font-medium text-palette-text">
                         {params.shippingTime}
                       </span>
                     </div>
                   )}
-                  <div className="flex justify-between py-2 border-b border-gray-100">
-                    <span className="text-sm sm:text-base text-gray-600">
-                      Shipping Cost
-                    </span>
-                    <span className="text-sm sm:text-base font-semibold text-palette-text">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Cost</span>
+                    <span className="font-medium text-palette-text">
                       {params?.freeShipping
                         ? "Free"
                         : `৳${params?.shippingCost ?? 0}`}
                     </span>
                   </div>
-                  <div className="flex justify-between py-2">
-                    <span className="text-sm sm:text-base text-gray-600">
-                      Express Delivery
-                    </span>
-                    <span className="text-sm sm:text-base font-semibold text-palette-text">
-                      Available
-                    </span>
-                  </div>
+                  {/* <div className="flex justify-between items-center">
+          <span className="text-gray-600">Express</span>
+          <span className="font-medium text-green-600">Available</span>
+        </div> */}
                 </div>
               </div>
 
-              <div className="p-4 sm:p-6 border border-gray-200 rounded-lg bg-white">
-                <h4 className="font-bold text-palette-text mb-4 text-base sm:text-lg">
+              {/* Return Policy */}
+              <div className="p-3 border border-gray-200 rounded-lg bg-gradient-to-br from-white to-gray-50">
+                <h4 className="font-semibold text-palette-text mb-2.5 text-xs sm:text-sm flex items-center gap-1.5">
+                  <span className="w-1 h-4 bg-palette-btn rounded-full"></span>
                   Return Policy
                 </h4>
-                <div className="space-y-3">
+                <div className="space-y-1.5 text-xs sm:text-sm">
                   {params?.returnPolicy && (
-                    <div className="flex justify-between py-2 border-b border-gray-100">
-                      <span className="text-sm sm:text-base text-gray-600">
-                        Return Period
-                      </span>
-                      <span className="text-sm sm:text-base font-semibold text-palette-text">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Period</span>
+                      <span className="font-medium text-palette-text">
                         {params.returnPolicy}
                       </span>
                     </div>
                   )}
                   {params?.warrantyPeriod && (
-                    <div className="flex justify-between py-2 border-b border-gray-100">
-                      <span className="text-sm sm:text-base text-gray-600">
-                        Warranty
-                      </span>
-                      <span className="text-sm sm:text-base font-semibold text-palette-text">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Warranty</span>
+                      <span className="font-medium text-palette-text">
                         {params.warrantyPeriod}
                       </span>
                     </div>
                   )}
-                  <div className="flex justify-between py-2">
-                    <span className="text-sm sm:text-base text-gray-600">
-                      Return Shipping
-                    </span>
-                    <span className="text-sm sm:text-base font-semibold text-palette-text">
-                      Free
-                    </span>
-                  </div>
+                  {/*  <div className="flex justify-between items-center">
+          <span className="text-gray-600">Return Ship</span>
+          <span className="font-medium text-green-600">Free</span>
+        </div> */}
                 </div>
               </div>
-            </div>
-
-            <div className="p-4 sm:p-6 bg-palette-btn/5 border-2 border-palette-btn/20 rounded-lg">
-              <h4 className="font-bold text-palette-text mb-4 text-base sm:text-lg">
-                Return Process
-              </h4>
-              <ol className="space-y-3 text-sm sm:text-base text-gray-700">
-                <li className="flex gap-3">
-                  <span className="font-bold text-palette-btn flex-shrink-0">
-                    1.
-                  </span>
-                  <span>Contact our support team to initiate a return</span>
-                </li>
-                <li className="flex gap-3">
-                  <span className="font-bold text-palette-btn flex-shrink-0">
-                    2.
-                  </span>
-                  <span>Pack the item in its original packaging</span>
-                </li>
-                <li className="flex gap-3">
-                  <span className="font-bold text-palette-btn flex-shrink-0">
-                    3.
-                  </span>
-                  <span>Print the prepaid return label we will email you</span>
-                </li>
-                <li className="flex gap-3">
-                  <span className="font-bold text-palette-btn flex-shrink-0">
-                    4.
-                  </span>
-                  <span>
-                    Drop off at any courier location or schedule pickup
-                  </span>
-                </li>
-                <li className="flex gap-3">
-                  <span className="font-bold text-palette-btn flex-shrink-0">
-                    5.
-                  </span>
-                  <span>Refund will be processed within 3-5 business days</span>
-                </li>
-              </ol>
             </div>
           </div>
         )}
