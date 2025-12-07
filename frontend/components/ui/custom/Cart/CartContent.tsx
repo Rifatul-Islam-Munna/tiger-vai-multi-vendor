@@ -2,7 +2,6 @@
 import { Trash2, ChevronLeft, ShoppingCart, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -15,23 +14,11 @@ export default function CartPage() {
   const {
     items,
     totalPrice,
-    totalDiscount,
     totalItems,
     incrementQuantity,
     decrementQuantity,
     removeFromCart,
   } = useCartStore();
-
-  const finalTotal = totalPrice - totalDiscount;
-
-  const groupedByVendor = items.reduce((acc, item) => {
-    const vendor = item?.name || item.brandName || "Unknown Seller";
-    if (!acc[vendor]) {
-      acc[vendor] = [];
-    }
-    acc[vendor].push(item);
-    return acc;
-  }, {} as Record<string, typeof items>);
 
   const handleCheckout = () => {
     router.push("/cart/shipment");
@@ -72,9 +59,7 @@ export default function CartPage() {
   return (
     <div className="min-h-screen bg-palette-bg">
       <PageBanner title="Cart" routes={route} />
-      <main className=" container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        {/* Breadcrumb */}
-
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         <div className="flex items-center justify-between mb-8 mt-6">
           <h1 className="text-3xl md:text-4xl font-bold text-palette-text">
             Your Shopping Cart
@@ -85,132 +70,111 @@ export default function CartPage() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {/* Cart Items */}
+          {/* Cart Items - NO VENDOR GROUPING */}
           <div className="md:col-span-2 space-y-4">
-            {Object.entries(groupedByVendor).map(([vendor, vendorItems]) => (
-              <Card key={vendor} className="border border-gray-200">
-                <CardContent className="p-6">
-                  {/* Vendor Header with Shipment Info */}
-                  <div className="flex items-start justify-between mb-4 pb-4 border-b border-gray-200">
-                    <div>
-                      <h3 className="font-semibold text-palette-text mb-1">
-                        Sold by {vendor}
-                      </h3>
-                      <div className="flex items-center gap-2 text-xs text-gray-600">
-                        <Package className="w-3.5 h-3.5" />
-                        <span>Ships from vendor warehouse</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-gray-600">
-                        Estimated delivery
-                      </p>
-                      <p className="text-sm font-medium text-palette-text">
-                        3-5 business days
-                      </p>
-                    </div>
-                  </div>
+            <Card className="border border-gray-200">
+              <CardContent className="p-6">
+                {/* Simple header */}
 
-                  <div className="space-y-4">
-                    {vendorItems.map((item) => (
-                      <div
-                        key={item._id}
-                        className="flex gap-4 pb-4 border-b border-gray-100 last:border-0"
+                <div className="space-y-4">
+                  {items.map((item) => (
+                    <div
+                      key={item._id}
+                      className="flex gap-4 pb-4 border-b border-gray-100 last:border-0"
+                    >
+                      {/* Product Image */}
+                      <Link
+                        href={`/product-details/${item.slug}`}
+                        className="w-20 h-20 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden hover:opacity-80 transition"
                       >
-                        {/* Product Image */}
+                        <Image
+                          src={item.thumbnail}
+                          alt={item.name}
+                          width={80}
+                          height={80}
+                          className="w-full h-full object-cover"
+                        />
+                      </Link>
+
+                      {/* Product Info */}
+                      <div className="flex-1 min-w-0">
                         <Link
                           href={`/product-details/${item.slug}`}
-                          className="w-20 h-20 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden hover:opacity-80 transition"
+                          className="font-semibold text-palette-text text-sm mb-1 hover:text-palette-btn transition line-clamp-2 block"
                         >
-                          <Image
-                            src={item.thumbnail}
-                            alt={item.name}
-                            width={80}
-                            height={80}
-                            className="w-full h-full object-cover"
-                          />
+                          {item.name}
                         </Link>
 
-                        {/* Product Info */}
-                        <div className="flex-1 min-w-0">
-                          <Link
-                            href={`/product-details/${item.slug}`}
-                            className="font-semibold text-palette-text text-sm mb-1 hover:text-palette-btn transition line-clamp-2 block"
-                          >
-                            {item.name}
-                          </Link>
+                        {/* Variant Info */}
+                        <div className="flex gap-2 mb-2">
+                          <span className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-700">
+                            {item.variant.color}
+                          </span>
+                          <span className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-700">
+                            {item.variant.size}
+                          </span>
+                        </div>
 
-                          {/* Variant Info */}
-                          <div className="flex gap-2 mb-2">
-                            <span className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-700">
-                              {item.variant.color}
+                        {/* Price */}
+                        <div className="flex items-center gap-2">
+                          <span className="text-palette-btn font-bold text-sm">
+                            TK {item.unitPrice.toFixed(2)}
+                          </span>
+                          {item.variant.discountPrice && (
+                            <span className="text-xs text-gray-500 line-through">
+                              TK {item.variant.price.toFixed(2)}
                             </span>
-                            <span className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-700">
-                              {item.variant.size}
-                            </span>
-                          </div>
-
-                          {/* Price */}
-                          <div className="flex items-center gap-2">
-                            <span className="text-palette-btn font-bold text-sm">
-                              ${item.unitPrice.toFixed(2)}
-                            </span>
-                            {item.variant.discountPrice && (
-                              <span className="text-xs text-gray-500 line-through">
-                                ${item.variant.price.toFixed(2)}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Stock warning */}
-                          {item.quantity >= item.variantStock && (
-                            <p className="text-xs text-amber-600 mt-1">
-                              Only {item.variantStock} in stock
-                            </p>
                           )}
                         </div>
 
-                        {/* Quantity Controls - REFINED */}
-                        <div className="flex flex-col items-end gap-3">
-                          <div className="flex items-center border border-gray-200 rounded">
-                            <button
-                              onClick={() => decrementQuantity(item._id)}
-                              className="px-3 py-1 text-gray-600 hover:text-palette-btn hover:bg-gray-50 transition"
-                            >
-                              −
-                            </button>
-                            <span className="px-4 py-1 text-gray-700 font-medium min-w-[40px] text-center">
-                              {item.quantity}
-                            </span>
-                            <button
-                              onClick={() => incrementQuantity(item._id)}
-                              disabled={item.quantity >= item.variantStock}
-                              className="px-3 py-1 text-gray-600 hover:text-palette-btn hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                            >
-                              +
-                            </button>
-                          </div>
+                        {/* Stock warning */}
+                        {item.quantity >= item.variantStock && (
+                          <p className="text-xs text-amber-600 mt-1">
+                            Only {item.variantStock} in stock
+                          </p>
+                        )}
+                      </div>
 
-                          {/* Subtotal & Remove */}
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm font-semibold text-palette-text">
-                              ${(item.unitPrice * item.quantity).toFixed(2)}
-                            </span>
-                            <button
-                              onClick={() => removeFromCart(item._id)}
-                              className="text-red-500 hover:text-red-600 transition"
-                              aria-label="Remove item"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
+                      {/* Quantity Controls */}
+                      <div className="flex flex-col items-end gap-3">
+                        <div className="flex items-center border border-gray-200 rounded">
+                          <button
+                            onClick={() => decrementQuantity(item._id)}
+                            className="px-3 py-1 text-gray-600 hover:text-palette-btn hover:bg-gray-50 transition"
+                          >
+                            −
+                          </button>
+                          <span className="px-4 py-1 text-gray-700 font-medium min-w-[40px] text-center">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => incrementQuantity(item._id)}
+                            disabled={item.quantity >= item.variantStock}
+                            className="px-3 py-1 text-gray-600 hover:text-palette-btn hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        {/* Subtotal & Remove */}
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-semibold text-palette-text">
+                            TK {(item.unitPrice * item.quantity).toFixed(2)}
+                          </span>
+                          <button
+                            onClick={() => removeFromCart(item._id)}
+                            className="text-red-500 hover:text-red-600 transition"
+                            aria-label="Remove item"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
 
             <Button
               variant="link"
@@ -222,7 +186,6 @@ export default function CartPage() {
             </Button>
           </div>
 
-          {/* Order Summary */}
           {/* Order Summary - SIMPLIFIED */}
           <div>
             <Card className="border border-gray-200 sticky top-8">
@@ -246,13 +209,12 @@ export default function CartPage() {
                         </span>
                       </div>
                       <span className="text-palette-text font-medium whitespace-nowrap text-xs">
-                        ${(item.unitPrice * item.quantity).toFixed(2)}
+                        TK {(item.unitPrice * item.quantity).toFixed(2)}
                       </span>
                     </div>
                   ))}
                 </div>
 
-                {/* ✅ SIMPLIFIED: Only show final total */}
                 <div className="flex justify-between items-center mb-6">
                   <span className="text-gray-600 font-medium">
                     Total ({totalItems} items)
@@ -277,7 +239,6 @@ export default function CartPage() {
                   Continue Shopping
                 </Button>
 
-                {/* Info Box */}
                 <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                   <p className="text-xs text-gray-600 leading-relaxed">
                     <strong className="text-palette-text">Note:</strong>{" "}
