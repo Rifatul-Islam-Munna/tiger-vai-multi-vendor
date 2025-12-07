@@ -328,7 +328,7 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
         ))}
 
         {/* Buttons */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 md:gap-3 pt-1">
           <button
             onClick={() => handleAddAllToCart(false)}
             className="w-full py-3 px-4 rounded-full font-semibold text-base transition-all bg-gradient-to-r !from-[#ffbd05] !to-[#ffbd05] text-gray-800"
