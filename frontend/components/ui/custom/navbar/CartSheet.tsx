@@ -214,26 +214,6 @@ export default function CartSheet() {
                 <span className="font-medium">${totalPrice.toFixed(2)}</span>
               </div>
 
-              {/* Discount */}
-              {totalDiscount > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-green-600">Discount</span>
-                  <span className="font-medium text-green-600">
-                    -${totalDiscount.toFixed(2)}
-                  </span>
-                </div>
-              )}
-
-              <Separator />
-
-              {/* Total */}
-              <div className="flex justify-between text-lg font-bold">
-                <span>Total</span>
-                <span className="text-palette-btn">
-                  ${finalTotal.toFixed(2)}
-                </span>
-              </div>
-
               {/* Checkout Button */}
               <div className=" w-full grid grid-cols-2  gap-1.5">
                 <Button
