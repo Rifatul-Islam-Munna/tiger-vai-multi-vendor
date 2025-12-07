@@ -19,12 +19,14 @@ import { v4 as uuidv4 } from "uuid";
 import { Spinner } from "@/components/ui/spinner";
 import PathaoChargeTable from "@/components/ui/custom/common/PathaoChargeTable";
 import { TbTruckDelivery } from "react-icons/tb";
+
 export default function ShipmentPage() {
   const router = useRouter();
-  const { items, totalPrice, totalDiscount } = useCartStore();
+
+  // ✅ FIXED: Get subtotal, totalPrice, and totalDiscount from store
+  const { items, subtotal, totalPrice, totalDiscount } = useCartStore();
   const { shipment, updateShipmentField } = useCheckoutStore();
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const finalTotal = totalPrice - totalDiscount;
 
   const onCompleteOrder = () => {
     router.push("/cart/success");
@@ -54,16 +56,16 @@ export default function ShipmentPage() {
           size: item?.variant?.size,
           color: item?.variant?.color,
           sku: item?.variant?.sku || undefined,
-          ...(item?.variant?.sku && { sku: item?.variant?.sku }),
           price: item?.variant?.price,
           ...(item?.variant?.discountPrice && {
             discountPrice: item.variant.discountPrice,
           }),
         },
         totalPrice: item?.unitPrice * item?.quantity,
+        // ✅ FIXED: Calculate discount correctly
         discountApplied: item.variant.discountPrice
           ? (item.variant.price - item.variant.discountPrice) * item.quantity
-          : undefined,
+          : 0,
       })),
       shipment: {
         name: shipment?.name,
@@ -74,7 +76,8 @@ export default function ShipmentPage() {
         paymentMethod: shipment?.paymentMethod,
         ...(shipment?.comment?.trim() && { comment: shipment?.comment }),
       },
-      orderTotal: finalTotal,
+      // ✅ FIXED: Use totalPrice (final amount to pay)
+      orderTotal: totalPrice,
       totalDiscount: totalDiscount || 0,
     };
 
@@ -117,24 +120,14 @@ export default function ShipmentPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mt-4 sm:mt-6">
           {/* Shipping Form */}
           <div className="lg:col-span-2">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 sm:mb-6">
-              <div className="w-full sm:w-auto">
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600 flex items-center gap-2 mb-2">
-                  <TbTruckDelivery className="w-5 h-5 sm:w-6 sm:h-6" />
-                  Shipping Address
-                </h1>
-                <p className="text-sm sm:text-base text-gray-600">
-                  আপনার পণ্য ডেলিভারি করার জন্য নিচে তথ্যগুলো দিয়ে সহযোগিতা
-                  করবেন
-                </p>
-              </div>
-              <Link
-                href="/cart"
-                className="text-xs sm:text-sm text-palette-btn hover:text-palette-btn/80 font-medium flex items-center whitespace-nowrap"
-              >
-                <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                Back to Cart
-              </Link>
+            <div className="w-full sm:w-auto mb-1.5 flex flex-col justify-center items-center">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600 flex items-center gap-2 mb-2">
+                <TbTruckDelivery className="w-5 h-5 sm:w-6 sm:h-6" />
+                Shipping Address
+              </h1>
+              <p className="text-sm sm:text-base text-gray-600">
+                আপনার পণ্য ডেলিভারি করার জন্য নিচে তথ্যগুলো দিয়ে সহযোগিতা করবেন
+              </p>
             </div>
 
             <Card className="border shadow-none border-gray-200">
@@ -244,24 +237,9 @@ export default function ShipmentPage() {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Delivery Info */}
-            {/*  <div className="mt-4">
-              <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-blue-50 border border-blue-100 rounded-lg">
-                <Package className="w-4 h-4 sm:w-5 sm:h-5 text-palette-btn mt-0.5 flex-shrink-0" />
-                <div>
-                  <h4 className="font-medium text-palette-text text-sm sm:text-base mb-1">
-                    Estimated Delivery
-                  </h4>
-                  <p className="text-xs sm:text-sm text-gray-600">
-                    Your order will be delivered within 3-5 business days
-                  </p>
-                </div>
-              </div>
-            </div> */}
           </div>
 
-          {/* Order Summary - appears below form on mobile */}
+          {/* Order Summary */}
           <div className="lg:order-2">
             <Card className="border border-gray-200 shadow-none lg:sticky lg:top-8">
               <CardContent className="p-4 sm:p-5 md:p-6">
@@ -284,7 +262,7 @@ export default function ShipmentPage() {
                         </span>
                       </div>
                       <span className="text-palette-text font-medium whitespace-nowrap text-xs sm:text-sm">
-                        ${(item.unitPrice * item.quantity).toFixed(2)}
+                        Tk {(item.unitPrice * item.quantity).toFixed(2)}
                       </span>
                     </div>
                   ))}
@@ -292,34 +270,19 @@ export default function ShipmentPage() {
 
                 <div className="space-y-2 sm:space-y-3 pt-3 sm:pt-4 border-t border-gray-200">
                   <div className="flex justify-between text-xs sm:text-sm">
-                    <span className="text-gray-600">Subtotal</span>
-                    <span className="text-palette-text font-medium">
-                      ${totalPrice.toFixed(2)}
-                    </span>
-                  </div>
-
-                  {totalDiscount > 0 && (
-                    <div className="flex justify-between text-xs sm:text-sm">
-                      <span className="text-green-600">Discount</span>
-                      <span className="text-green-600 font-medium">
-                        -${totalDiscount.toFixed(2)}
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between text-xs sm:text-sm">
                     <span className="text-gray-600">Shipping</span>
                     <span className="text-gray-600 text-[10px] sm:text-xs">
                       Calculated at payment
                     </span>
                   </div>
 
+                  {/* ✅ FIXED: Final total is just totalPrice */}
                   <div className="flex justify-between items-center pt-2 sm:pt-3 border-t border-gray-200">
                     <span className="text-palette-text font-semibold text-sm sm:text-base">
                       Estimated Total
                     </span>
                     <span className="text-palette-btn text-xl sm:text-2xl font-bold">
-                      ${finalTotal.toFixed(2)}
+                      Tk {totalPrice.toFixed(2)}
                     </span>
                   </div>
                 </div>

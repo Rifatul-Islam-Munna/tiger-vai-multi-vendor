@@ -3,7 +3,6 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 // ============ TYPES ============
-// ✅ NEW: Variant type
 export interface ProductVariant {
   size: string;
   color: string;
@@ -11,76 +10,82 @@ export interface ProductVariant {
   discountPrice?: number;
 }
 
-// ✅ UPDATED: CartItem with variant
 export interface CartItem {
-  _id: string; // unique key: productId-size-color
+  _id: string; // unique key: productId|size|color
   productId: string;
   name: string;
   thumbnail: string;
   quantity: number;
   brandName: string;
   slug: string;
-
-  // ✅ NEW: Variant info
   variant: ProductVariant;
-
-  // ✅ NEW: Unit price (variant-specific)
   unitPrice: number; // discountPrice if exists, else price
-
-  // ✅ NEW: Variant stock
   variantStock: number;
 }
 
 export interface CartState {
   items: CartItem[];
-  totalPrice: number;
+  subtotal: number; // ✅ CHANGED: Original total before discount
+  totalPrice: number; // ✅ CHANGED: Final price after discount
   totalDiscount: number;
   totalItems: number;
 
-  // ADD TO CART
   addToCart: (product: Omit<CartItem, "quantity">) => void;
-
-  // REMOVE FROM CART
   removeFromCart: (cartItemId: string) => void;
-
-  // UPDATE QUANTITY
   updateQuantity: (cartItemId: string, quantity: number) => void;
-
-  // INCREMENT QUANTITY
   incrementQuantity: (cartItemId: string) => void;
-
-  // DECREMENT QUANTITY
   decrementQuantity: (cartItemId: string) => void;
-
-  // GET ITEMS
   getCartItems: () => CartItem[];
-
-  // CLEAR CART
   clearCart: () => void;
-
-  // GET CART SUMMARY
   getCartSummary: () => {
     items: CartItem[];
+    subtotal: number;
     totalPrice: number;
     totalDiscount: number;
     totalItems: number;
-    finalTotal: number;
   };
 }
+
+// ✅ HELPER: Calculate totals from items
+const calculateTotals = (items: CartItem[]) => {
+  // Subtotal = sum of ORIGINAL prices
+  const subtotal = items.reduce((sum, item) => {
+    return sum + item.variant.price * item.quantity;
+  }, 0);
+
+  // Total Discount = difference between original and discounted price
+  const totalDiscount = items.reduce((sum, item) => {
+    if (item.variant.discountPrice) {
+      const discount =
+        (item.variant.price - item.variant.discountPrice) * item.quantity;
+      return sum + discount;
+    }
+    return sum;
+  }, 0);
+
+  // Total Price = what customer actually pays (discounted)
+  const totalPrice = items.reduce((sum, item) => {
+    return sum + item.unitPrice * item.quantity;
+  }, 0);
+
+  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+
+  return { subtotal, totalPrice, totalDiscount, totalItems };
+};
 
 // ============ ZUSTAND STORE ============
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
+      subtotal: 0,
       totalPrice: 0,
       totalDiscount: 0,
       totalItems: 0,
 
-      // ✅ ADD TO CART - NOW WITH VARIANTS
+      // ✅ ADD TO CART
       addToCart: (product: Omit<CartItem, "quantity">) => {
         set((state) => {
-          // ✅ CHANGED: Find by cart item ID (includes variant)
           const existingItem = state.items.find(
             (item) => item._id === product._id
           );
@@ -88,7 +93,6 @@ export const useCartStore = create<CartState>()(
           let newItems: CartItem[];
 
           if (existingItem) {
-            // If product + variant exists, increase quantity
             newItems = state.items.map((item) =>
               item._id === product._id
                 ? {
@@ -101,92 +105,31 @@ export const useCartStore = create<CartState>()(
                 : item
             );
           } else {
-            // Add new product variant with quantity 1
-            newItems = [
-              ...state.items,
-              {
-                ...product,
-                quantity: 1,
-              },
-            ];
+            newItems = [...state.items, { ...product, quantity: 1 }];
           }
 
-          // ✅ Calculate totals using variant-specific prices
-          const totalPrice = newItems.reduce((sum, item) => {
-            return sum + item.unitPrice * item.quantity;
-          }, 0);
-
-          // ✅ Calculate discount (only if variant has discountPrice)
-          const totalDiscount = newItems.reduce((sum, item) => {
-            if (item.variant.discountPrice) {
-              const discount =
-                (item.variant.price - item.variant.discountPrice) *
-                item.quantity;
-              return sum + discount;
-            }
-            return sum;
-          }, 0);
-
-          const totalItems = newItems.reduce(
-            (sum, item) => sum + item.quantity,
-            0
-          );
-
-          return {
-            items: newItems,
-            totalPrice,
-            totalDiscount,
-            totalItems,
-          };
+          return { items: newItems, ...calculateTotals(newItems) };
         });
       },
 
-      // ✅ REMOVE FROM CART - USES CART ITEM ID
+      // ✅ REMOVE FROM CART
       removeFromCart: (cartItemId: string) => {
         set((state) => {
           const newItems = state.items.filter(
             (item) => item._id !== cartItemId
           );
-
-          // Recalculate totals
-          const totalPrice = newItems.reduce((sum, item) => {
-            return sum + item.unitPrice * item.quantity;
-          }, 0);
-
-          const totalDiscount = newItems.reduce((sum, item) => {
-            if (item.variant.discountPrice) {
-              const discount =
-                (item.variant.price - item.variant.discountPrice) *
-                item.quantity;
-              return sum + discount;
-            }
-            return sum;
-          }, 0);
-
-          const totalItems = newItems.reduce(
-            (sum, item) => sum + item.quantity,
-            0
-          );
-
-          return {
-            items: newItems,
-            totalPrice,
-            totalDiscount,
-            totalItems,
-          };
+          return { items: newItems, ...calculateTotals(newItems) };
         });
       },
 
-      // ✅ UPDATE QUANTITY - USES CART ITEM ID
+      // ✅ UPDATE QUANTITY
       updateQuantity: (cartItemId: string, quantity: number) => {
         set((state) => {
           let newItems: CartItem[];
 
           if (quantity <= 0) {
-            // Remove item if quantity is 0 or less
             newItems = state.items.filter((item) => item._id !== cartItemId);
           } else {
-            // Update quantity
             newItems = state.items.map((item) =>
               item._id === cartItemId
                 ? {
@@ -197,32 +140,7 @@ export const useCartStore = create<CartState>()(
             );
           }
 
-          // Recalculate totals
-          const totalPrice = newItems.reduce((sum, item) => {
-            return sum + item.unitPrice * item.quantity;
-          }, 0);
-
-          const totalDiscount = newItems.reduce((sum, item) => {
-            if (item.variant.discountPrice) {
-              const discount =
-                (item.variant.price - item.variant.discountPrice) *
-                item.quantity;
-              return sum + discount;
-            }
-            return sum;
-          }, 0);
-
-          const totalItems = newItems.reduce(
-            (sum, item) => sum + item.quantity,
-            0
-          );
-
-          return {
-            items: newItems,
-            totalPrice,
-            totalDiscount,
-            totalItems,
-          };
+          return { items: newItems, ...calculateTotals(newItems) };
         });
       },
 
@@ -233,41 +151,13 @@ export const useCartStore = create<CartState>()(
             if (item._id === cartItemId) {
               return {
                 ...item,
-                quantity: Math.min(
-                  item.quantity + 1,
-                  item.variantStock
-                ),
+                quantity: Math.min(item.quantity + 1, item.variantStock),
               };
             }
             return item;
           });
 
-          // Recalculate totals
-          const totalPrice = newItems.reduce((sum, item) => {
-            return sum + item.unitPrice * item.quantity;
-          }, 0);
-
-          const totalDiscount = newItems.reduce((sum, item) => {
-            if (item.variant.discountPrice) {
-              const discount =
-                (item.variant.price - item.variant.discountPrice) *
-                item.quantity;
-              return sum + discount;
-            }
-            return sum;
-          }, 0);
-
-          const totalItems = newItems.reduce(
-            (sum, item) => sum + item.quantity,
-            0
-          );
-
-          return {
-            items: newItems,
-            totalPrice,
-            totalDiscount,
-            totalItems,
-          };
+          return { items: newItems, ...calculateTotals(newItems) };
         });
       },
 
@@ -286,32 +176,7 @@ export const useCartStore = create<CartState>()(
             })
             .filter((item) => item.quantity > 0);
 
-          // Recalculate totals
-          const totalPrice = newItems.reduce((sum, item) => {
-            return sum + item.unitPrice * item.quantity;
-          }, 0);
-
-          const totalDiscount = newItems.reduce((sum, item) => {
-            if (item.variant.discountPrice) {
-              const discount =
-                (item.variant.price - item.variant.discountPrice) *
-                item.quantity;
-              return sum + discount;
-            }
-            return sum;
-          }, 0);
-
-          const totalItems = newItems.reduce(
-            (sum, item) => sum + item.quantity,
-            0
-          );
-
-          return {
-            items: newItems,
-            totalPrice,
-            totalDiscount,
-            totalItems,
-          };
+          return { items: newItems, ...calculateTotals(newItems) };
         });
       },
 
@@ -324,23 +189,22 @@ export const useCartStore = create<CartState>()(
       clearCart: () => {
         set({
           items: [],
+          subtotal: 0,
           totalPrice: 0,
           totalDiscount: 0,
           totalItems: 0,
         });
       },
 
-      // GET CART SUMMARY - READY FOR CHECKOUT
+      // ✅ GET CART SUMMARY
       getCartSummary: () => {
         const state = get();
-        const finalTotal = state.totalPrice - state.totalDiscount;
-
         return {
           items: state.items,
+          subtotal: state.subtotal,
           totalPrice: state.totalPrice,
           totalDiscount: state.totalDiscount,
           totalItems: state.totalItems,
-          finalTotal,
         };
       },
     }),
@@ -349,6 +213,3 @@ export const useCartStore = create<CartState>()(
     }
   )
 );
-
-
-// have to make uniq id with variant const cartItemId = `${productId}-${variant.size}-${variant.color}`;

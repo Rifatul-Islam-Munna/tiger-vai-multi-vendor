@@ -126,37 +126,6 @@ export default function PathaoChargeTable() {
       </div>
 
       {/* Additional Info */}
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-5 border border-blue-200">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center flex-shrink-0"></div>
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-1">
-                Cash on Delivery
-              </h4>
-              <p className="text-sm text-gray-600">
-                1% of product price (COD fee applies)
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-xl p-5 border border-amber-200">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center flex-shrink-0">
-              <Package className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-1">
-                Return Charge
-              </h4>
-              <p className="text-sm text-gray-600">
-                50% of delivery cost (outside Dhaka only)
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

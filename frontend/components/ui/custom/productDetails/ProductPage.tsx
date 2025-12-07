@@ -78,35 +78,28 @@ const StickyCartBanner: React.FC<{
   console.log("🚨 BANNER RENDER:", { show, totalItems, totalPrice });
 
   return (
-    <div className="fixed top-0 translate-y-30 left-0 right-0 z-40 bg-gradient-to-r from-[#fe3200]/95 to-[#ff5507]/95 backdrop-blur text-white border-b border-orange-400">
-      <div className="container mx-auto lg:w-[50%] lg:ml-auto  px-3 py-1.5">
-        {/* Compact Items List */}
-        <div className="space-y-0.5">
-          {items.slice(0, 4).map((item, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-center text-sm py-0.5"
-            >
-              <span className="truncate flex-1 pr-2 font-medium leading-tight">
-                {item.name} • {item.size} • {item.color}
-              </span>
-              <div className="flex items-baseline gap-1 text-xs font-bold whitespace-nowrap">
-                x{item.quantity} <span className="text-[10px]">Tk</span>
-                {(item.unitPrice * item.quantity).toLocaleString()}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Compact Total Bar */}
-        <div className="flex items-center justify-between text-xs mt-1 pt-1 border-t border-white/30">
-          <div className="flex items-center gap-1.5">
-            <ShoppingCart className="w-3.5 h-3.5" />
-            <span className="font-semibold text-sm">{totalItems} items</span>
+    <div className="fixed top-0 left-0 translate-y-[120px] md:translate-y-[120px] right-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+      <div className="container mx-auto px-4 py-2 lg:flex lg:justify-end">
+        <div className="lg:w-[45%] lg:max-w-xl lg:mr-8">
+          {/* Selected Header */}
+          <div className="text-red-600 font-semibold text-sm mb-1">
+            Selected
           </div>
-          <span className="text-base font-black tracking-tight">
-            Tk {totalPrice.toLocaleString()}
-          </span>
+
+          {/* Compact Items List */}
+          <div className="space-y-0.5 text-gray-800 text-sm">
+            {items.slice(0, 4).map((item, index) => (
+              <div key={index} className="leading-tight">
+                {item.name}-{item.size}-{item.color} - {item.size} (qty{" "}
+                {item.quantity})
+              </div>
+            ))}
+          </div>
+
+          {/* Total Bar */}
+          <div className="text-sm font-semibold text-gray-900 mt-1.5 pt-1.5 border-t border-gray-200">
+            Total = {totalItems} item(s), Tk {totalPrice.toLocaleString()}
+          </div>
         </div>
       </div>
     </div>
@@ -326,17 +319,17 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
         ))}
 
         {/* Buttons */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 md:gap-3 pt-1">
+        <div className="grid  grid-cols-2 gap-1 md:gap-3 pt-1">
           <button
             onClick={() => handleAddAllToCart(false)}
-            className="w-full py-3 px-4 rounded-full font-semibold text-base transition-all bg-gradient-to-r !from-[#ffbd05] !to-[#ffbd05] text-gray-800"
+            className="w-full py-3 md:px-4 rounded-full font-semibold text-sm md:text-base transition-all bg-gradient-to-r !from-[#ffbd05] !to-[#ffbd05] text-gray-800"
           >
             Add To Cart
           </button>
 
           <button
             onClick={handleOrderNow}
-            className="w-full py-3 px-4 rounded-full font-semibold text-base transition-all bg-gradient-to-b from-[#fe3200] to-[#ff5507] text-white"
+            className="w-full py-3 md:px-4 rounded-full font-semibold text-sm md:text-base transition-all bg-gradient-to-b from-[#fe3200] to-[#ff5507] text-white"
           >
             Order Now <span className="text-sm">(আজই কিনুন)</span>
           </button>
@@ -345,7 +338,7 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
         {/* Chat Button */}
         <button
           onClick={handleChatWithSeller}
-          className="w-full py-3 px-4 rounded-full font-semibold text-base transition-all bg-[#2196F3] hover:bg-[#1976D2] text-white flex items-center justify-center gap-2"
+          className="w-full py-3 px-4 rounded-full font-semibold text-base transition-all bg-[#2E83F2] hover:bg-[#1976D2] text-white flex items-center justify-center gap-2"
         >
           <MessageCircle className="w-5 h-5" />
           Chat with Seller
@@ -416,7 +409,7 @@ const VariantCard: React.FC<VariantCardProps> = ({
   };
 
   return (
-    <div className="relative bg-white border border-gray-200 rounded-lg overflow-hidden">
+    <div className="relative bg-white border border-gray-100/80 rounded-lg overflow-hidden">
       <div className="flex flex-row gap-3 sm:gap-4 p-3 sm:p-4">
         {/* Left: Product Image */}
         {image && (
@@ -424,7 +417,7 @@ const VariantCard: React.FC<VariantCardProps> = ({
             <img
               src={image}
               alt={`${product.name} - ${size}`}
-              className="w-full h-full object-contain rounded"
+              className="w-full h-full  rounded"
             />
           </div>
         )}
@@ -434,14 +427,14 @@ const VariantCard: React.FC<VariantCardProps> = ({
           {/* Top row: Recommended (full width, aligned to right) */}
           {isRecommended && (
             <div className="w-full flex justify-start">
-              <div className="inline-block text-blue-500 py-0.5 text-xs font-semibold">
-                Recommended: {isRecommended}
+              <div className="inline-block text-blue-800 py-0.5 text-xs font-semibold">
+                {isRecommended}
               </div>
             </div>
           )}
 
           {/* Middle + bottom are responsive columns/rows */}
-          <div className="flex flex-col md:flex-row md:items-stretch gap-3">
+          <div className="flex flex-row md:items-stretch gap-3">
             {/* Middle: Product Details */}
             <div className="flex-1 space-y-2 min-w-0">
               {/* Size */}
@@ -452,7 +445,7 @@ const VariantCard: React.FC<VariantCardProps> = ({
                 </span>
               </div>
               {/* Color Selection */}
-              {colors.length > 0 && (
+              {colors.length > 1 && (
                 <div className="space-y-1.5">
                   <div className="flex gap-2 flex-wrap">
                     {colors.map((color) => (
@@ -482,42 +475,11 @@ const VariantCard: React.FC<VariantCardProps> = ({
                 <span className="text-base sm:text-lg font-bold text-gray-800">
                   Tk {currentPrice.toLocaleString()}
                 </span>
-                {/* {discountPercentage > 0 && (
-                  <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-xs font-semibold">
-                    {discountPercentage}% off
-                  </span>
-                )} */}
-              </div>
-
-              {/* Stock & Quantity on mobile: under colors */}
-              <div className="flex flex-col gap-2 mt-2 md:hidden">
-                <span className="text-gray-800 font-bold text-sm">
-                  Stock: {stock > 0 ? stock : "Out"}
-                </span>
-                <div className="flex items-center border border-gray-300 rounded w-fit">
-                  <button
-                    onClick={handleDecrement}
-                    disabled={currentQuantity === 0}
-                    className="w-6 sm:w-7 h-6 sm:h-7 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <Minus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                  </button>
-                  <span className="w-8 sm:w-10 text-center font-semibold text-sm text-gray-800 border-x border-gray-300">
-                    {currentQuantity}
-                  </span>
-                  <button
-                    onClick={handleIncrement}
-                    disabled={currentQuantity >= stock || !selectedColor}
-                    className="w-6 sm:w-7 h-6 sm:h-7 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                  </button>
-                </div>
               </div>
             </div>
 
             {/* Right: Stock & Quantity (desktop/tablet only) */}
-            <div className="hidden md:flex sm:w-20 md:w-28 flex-shrink-0 flex-col gap-3 sm:gap-4 justify-center items-start">
+            <div className="flex sm:w-20 md:w-28 flex-shrink-0 flex-col gap-3 sm:gap-4 justify-center items-start">
               <div className="text-left sm:text-right">
                 <span className="text-gray-800 font-bold text-sm">
                   Stock: {stock > 0 ? stock : "Out"}
@@ -750,7 +712,7 @@ const ProductPage = ({ params }: { params: Product }) => {
                 />
 
                 {priceRange?.hasDiscount && (
-                  <div className="absolute top-4 left-4 bg-palette-btn text-white px-4 py-2 rounded-full text-sm font-bold">
+                  <div className="absolute top-4 left-4 bg-[#BD1920] text-white px-4 py-2 rounded-full text-sm font-bold">
                     SALE
                   </div>
                 )}

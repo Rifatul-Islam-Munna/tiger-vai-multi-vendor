@@ -4,9 +4,27 @@ import { Facebook, Instagram, Twitter } from "lucide-react";
 import { usePathname } from "next/navigation";
 import React from "react";
 import Image from "next/image";
+import facebook from "@/app/assets/facebook.png";
+import instagram from "@/app/assets/instagram.png";
+import tiktok from "@/app/assets/tiktok.png";
+import youtube from "@/app/assets/youtube.png";
 
 const Footer = () => {
   const pathName = usePathname();
+  const Logos = [
+    {
+      icon: facebook.src,
+    },
+    {
+      icon: instagram.src,
+    },
+    {
+      icon: tiktok.src,
+    },
+    {
+      icon: youtube.src,
+    },
+  ];
 
   return (
     <footer
@@ -39,28 +57,17 @@ const Footer = () => {
                 Connecting buyers and sellers nationwide with secure payments,
                 fast delivery, and excellent customer service.
               </p>
-              <div className="flex gap-3">
-                <a
-                  href="#"
-                  aria-label="Facebook"
-                  className="w-10 h-10 bg-gray-700 hover:bg-palette-btn rounded-full flex items-center justify-center transition-colors duration-200"
-                >
-                  <Facebook className="w-5 h-5" />
-                </a>
-                <a
-                  href="#"
-                  aria-label="Instagram"
-                  className="w-10 h-10 bg-gray-700 hover:bg-palette-btn rounded-full flex items-center justify-center transition-colors duration-200"
-                >
-                  <Instagram className="w-5 h-5" />
-                </a>
-                <a
-                  href="#"
-                  aria-label="Twitter"
-                  className="w-10 h-10 bg-gray-700 hover:bg-palette-btn rounded-full flex items-center justify-center transition-colors duration-200"
-                >
-                  <Twitter className="w-5 h-5" />
-                </a>
+              <div className="flex gap-3 ">
+                {Logos?.map((logo, idx) => (
+                  <Image
+                    src={logo.icon}
+                    width={50}
+                    height={50}
+                    alt="logo"
+                    key={idx}
+                    className=" w-10 aspect-square"
+                  />
+                ))}
               </div>
             </div>
 
@@ -197,9 +204,11 @@ const Footer = () => {
                   href="tel:+8801234567890"
                   className="text-palette-btn font-bold text-lg hover:text-palette-btn/80 transition-colors"
                 >
-                  +880 1234-567890
+                  +880 1903-961752
                 </a>
-                <p className="text-xs text-gray-400 mt-1">Available 24/7</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Available 10 Am to 8 Pm
+                </p>
               </div>
             </div>
           </div>

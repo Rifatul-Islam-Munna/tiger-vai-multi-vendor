@@ -82,7 +82,7 @@ const WhatsAppSupport = () => {
         )}
       </AnimatePresence>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1">
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}

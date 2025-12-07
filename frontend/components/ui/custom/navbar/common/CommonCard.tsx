@@ -55,13 +55,10 @@ export function ProductCard({
     return (
       <Card
         onClick={() => handlPushToProduct(product.slug)}
-        className="group relative border pt-0 rounded-lg  overflow-hidden bg-white transition-all shadow-none duration-300 hover:border-gray-300 flex flex-col"
+        className="group relative border pt-0 rounded-lg p-0 pb-1.5  overflow-hidden bg-white transition-all shadow-none duration-300 hover:border-gray-300 flex flex-col"
       >
         {/* 1:1 Square Image Container */}
-        <div className="relative w-full aspect-square group bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden flex-shrink-0">
-          {/* Discount Badge */}
-
-          {/* Product Image */}
+        <div className="relative w-full aspect-square  group bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden flex-shrink-0">
           <img
             src={
               imageError
@@ -70,13 +67,18 @@ export function ProductCard({
             }
             onError={() => setImageError(true)}
             alt={product?.name}
-            className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full   group-hover:scale-105 transition-transform duration-300"
           />
 
           {/* Wishlist Button */}
           <div className="absolute top-2 right-2">
             <WishlistButton productId={product._id} />
           </div>
+          {product?.hasOffer && discount > 0 && (
+            <Badge className=" absolute bottom-0 right-0 bg-[#ffff00] -translate-x-1.5 -translate-y-1.5 text-gray-900 border-0 text-[10px] sm:text-xs px-2  font-bold ">
+              {discount}% OFF
+            </Badge>
+          )}
 
           {/* Stock Badge */}
           <div className="absolute bottom-0 hidden left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 sm:p-3">
@@ -107,38 +109,26 @@ export function ProductCard({
         </div>
 
         {/* Card Content */}
-        <CardContent className="p-2 flex flex-col flex-grow">
-          {/* Brand Name */}
-          {product?.brandName && (
-            <p className="text-[10px] hidden sm:text-xs text-gray-500 font-medium uppercase tracking-wide mb-1 truncate">
-              {product?.brandName}
-            </p>
-          )}
-
+        <CardContent className="p-1 px-2 flex flex-col flex-grow">
           {/* Product Name */}
-          <h3 className="font-semibold text-gray-900 text-xs sm:text-sm md:text-base line-clamp-2 group-hover:text-palette-btn transition-colors leading-tight mb-2">
+          <h3 className="font-semibold text-gray-900 text-xs sm:text-sm md:text-base line-clamp-2 group-hover:text-palette-btn transition-colors leading-tight ">
             {product?.name}
           </h3>
 
           {/* Price Section */}
-          <div className="mt-auto">
+          <div className="">
             <div className="flex items-baseline gap-2">
               {product.hasOffer && product.offerPrice && (
                 <span className="text-xs sm:text-sm text-gray-400 line-through">
-                  ৳{product?.price?.toLocaleString()}
+                  TK {product?.price?.toLocaleString()}
                 </span>
               )}
               <span className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-palette-btn">
-                ৳
+                <span>TK </span>
                 {product?.offerPrice
                   ? product?.offerPrice?.toLocaleString()
                   : product?.price?.toLocaleString()}
               </span>
-              {product?.hasOffer && discount > 0 && (
-                <Badge className=" bg-palette-btn/70 text-white border-0 text-[10px] sm:text-xs px-2  font-bold ">
-                  {discount}% OFF
-                </Badge>
-              )}
             </div>
           </div>
         </CardContent>
@@ -149,7 +139,7 @@ export function ProductCard({
   // Compact variant
   if (variant === "compact") {
     return (
-      <Card className="group relative border border-gray-200 rounded-lg overflow-hidden bg-white transition-all duration-300 hover:shadow-md flex flex-col">
+      <Card className="group relative border border-gray-200 rounded-lg overflow-hidden bg-white transition-all duration-300 hover:shadow-md flex flex-col gap-1">
         <Link
           href={isOutOfStock ? "#" : `/product-details/${product?.slug}`}
           className={isOutOfStock ? "pointer-events-none opacity-60" : ""}
@@ -186,7 +176,7 @@ export function ProductCard({
             </div>
           </div>
 
-          <CardContent className="p-2 sm:p-2.5 flex flex-col flex-grow">
+          <CardContent className="px-2 sm:px-2.5 flex flex-col flex-grow">
             {/* Product Name */}
             <h4 className="font-medium text-gray-900 text-[11px] sm:text-xs md:text-sm line-clamp-2 group-hover:text-purple-600 transition-colors leading-tight h-8 sm:h-9 mb-1.5">
               {product?.name}

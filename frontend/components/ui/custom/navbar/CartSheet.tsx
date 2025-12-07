@@ -22,7 +22,7 @@ import { useCartStore } from "@/zustan-hook/cart";
 import { getUserInfo } from "@/actions/auth";
 import { initiateCheckoutEvent } from "@/lib/google-tag-manager";
 import { initiateCheckoutServerEvent } from "@/actions/metaEvent";
-
+import CartIcons from "@/app/assets/cart.png";
 export default function CartSheet() {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
@@ -67,7 +67,8 @@ export default function CartSheet() {
           variant="outline"
           className="relative shadow-none border-none border-0"
         >
-          <ShoppingCart className="w-4 h-4 mr-2" />
+          <Image src={CartIcons} alt="cart" width={20} height={20} />
+          {/* <ShoppingCart className="w-4 h-4 mr-2" /> */}
           <span className=" sr-only">Cart ({totalItems})</span>
 
           {totalItems > 0 && (
