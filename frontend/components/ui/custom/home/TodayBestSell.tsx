@@ -14,12 +14,12 @@ const TodayBestSell = async () => {
   const { data } = await getBestProduct();
   return (
     <section id="feature" className="bg-gray-50 py-16">
-      <div className="container mx-auto ">
+      <div className="container mx-auto px-3 md:px-0 ">
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold text-palette-text">
+          <h2 className=" text-2xl md:text-3xl font-bold text-palette-text">
             Today's Best Deals
           </h2>
-          <div className="flex items-center gap-3">
+          {/*  <div className="flex items-center gap-3">
             <span className="text-sm text-palette-text/70">Ends in:</span>
             <div className="flex gap-2">
               {["02", "18", "43"].map((time) => (
@@ -31,7 +31,7 @@ const TodayBestSell = async () => {
                 </Badge>
               ))}
             </div>
-          </div>
+          </div> */}
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">

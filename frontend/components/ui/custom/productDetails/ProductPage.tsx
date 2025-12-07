@@ -85,14 +85,14 @@ const StickyCartBanner: React.FC<{
           <div className="flex items-center gap-3">
             <ShoppingCart className="w-5 h-5" />
             <div>
-              <span className="font-bold text-lg">Selected</span>
-              <span className="ml-3 text-sm">
+              <span className="font-bold text-sm md:text-lg">Selected</span>
+              <span className="ml-3 text-xs md:text-sm">
                 {totalItems} item(s) • {items.length} variant(s)
               </span>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="font-bold text-xl">
+            <div className="font-bold text-base md:text-xl">
               Tk {totalPrice.toLocaleString()}
             </div>
             {items.length > 0 && (
