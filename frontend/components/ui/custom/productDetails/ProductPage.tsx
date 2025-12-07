@@ -85,9 +85,9 @@ const StickyCartBanner: React.FC<{
           {items.slice(0, 4).map((item, index) => (
             <div
               key={index}
-              className="flex items-center justify-center gap-3 text-sm py-0.5"
+              className="flex items-center justify-center text-sm py-0.5"
             >
-              <span className="truncate  w-fit pr-2 font-medium leading-tight">
+              <span className="truncate flex-1 pr-2 font-medium leading-tight">
                 {item.name} • {item.size} • {item.color}
               </span>
               <div className="flex items-baseline gap-1 text-xs font-bold whitespace-nowrap">
@@ -99,12 +99,10 @@ const StickyCartBanner: React.FC<{
         </div>
 
         {/* Compact Total Bar */}
-        <div className="flex items-center justify-center gap-3 text-xs mt-1 pt-1 border-t border-white/30">
+        <div className="flex items-center justify-between text-xs mt-1 pt-1 border-t border-white/30">
           <div className="flex items-center gap-1.5">
             <ShoppingCart className="w-3.5 h-3.5" />
-            <span className="font-semibold text-sm">
-              {totalItems} items • {items.length} vars
-            </span>
+            <span className="font-semibold text-sm">{totalItems} items</span>
           </div>
           <span className="text-base font-black tracking-tight">
             Tk {totalPrice.toLocaleString()}
