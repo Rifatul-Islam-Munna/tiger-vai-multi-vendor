@@ -923,7 +923,7 @@ const ProductPage = ({ params }: { params: Product }) => {
         {/* Tabs Section - Full Width */}
         <div className="mt-1 w-full">
           {/* Mobile Description - Full Width */}
-          <div className="lg:hidden mb-8 w-full">
+          <div className="lg:hidden mb-1 w-full">
             <h3 className="text-xl font-bold text-palette-text mb-1.5">
               Product Description
             </h3>
