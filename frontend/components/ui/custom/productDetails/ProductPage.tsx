@@ -79,7 +79,7 @@ const StickyCartBanner: React.FC<{
 
   return (
     <div className="fixed top-0 translate-y-30 left-0 right-0 z-40 bg-gradient-to-r from-[#fe3200]/95 to-[#ff5507]/95 backdrop-blur text-white border-b border-orange-400">
-      <div className="container mx-auto px-3 py-1.5">
+      <div className="container mx-auto lg:w-[50%] lg:ml-auto  px-3 py-1.5">
         {/* Compact Items List */}
         <div className="space-y-0.5">
           {items.slice(0, 4).map((item, index) => (
