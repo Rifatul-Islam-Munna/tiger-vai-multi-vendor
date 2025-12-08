@@ -91,8 +91,7 @@ const StickyCartBanner: React.FC<{
           <div className="space-y-0.5 text-gray-800 text-sm">
             {items.slice(0, 4).map((item, index) => (
               <div key={index} className="leading-tight">
-                {item.name}-{item.size}-{item.color} - {item.size} (qty{" "}
-                {item.quantity})
+                {item.size}-{item.color}(qty {item.quantity})
               </div>
             ))}
           </div>
