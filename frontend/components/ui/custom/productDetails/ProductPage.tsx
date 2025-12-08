@@ -44,6 +44,7 @@ import { BasicUser } from "@/@types/userType";
 import DescriptionComponent from "./RenderDesription";
 import ProductTabs from "./ProductTabs";
 import { Separator } from "../../separator";
+import ShortDescription from "./ShortDiscription";
 
 interface ProductVariantCardsProps {
   product: Product;
@@ -408,99 +409,133 @@ const VariantCard: React.FC<VariantCardProps> = ({
     }
   };
 
+  const isOut = stock <= 0;
+
   return (
-    <div className="relative bg-white border border-gray-100/80 rounded-lg overflow-hidden">
-      <div className="flex flex-row gap-3 sm:gap-4 ">
-        {/* Left: Product Image */}
+    <div
+      className={`border border-border/30 rounded bg-card ${
+        isOut ? "opacity-60" : ""
+      }`}
+    >
+      <div className="flex min-h-[110px]">
+        {/* Variant image on the left taking full height */}
         {image && (
-          <div className="w-20 md:w-24 flex-shrink-0">
+          <div className="w-24 flex-shrink-0">
             <img
               src={image}
               alt={`${product.name} - ${size}`}
-              className="w-full h-full object-contain  rounded"
+              className="w-full h-full object-contain"
             />
           </div>
         )}
 
-        {/* Right side content (full flex-1) */}
-        <div className="flex-1 min-w-0 flex flex-col gap-2">
-          {/* Top row: Recommended (full width, aligned to right) */}
-          {isRecommended && (
-            <div className="w-full flex justify-start">
-              <div className="inline-block text-[#2E83F2] py-0.5 text-xs font-semibold">
+        {/* Content and right-side controls */}
+        <div className="flex-1 p-2 flex flex-col gap-2">
+          {/* Line 1: Color Title and Recommended */}
+          <div className="flex flex-col items-start justify-start">
+            {/*  <div className="font-semibold text-card-foreground">
+              {selectedColor || colors[0]}
+            </div> */}
+            {isRecommended && (
+              <div className="text-sm text-black font-normal mt-0.5">
                 {isRecommended}
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* Middle + bottom are responsive columns/rows */}
-          <div className="flex flex-row md:items-stretch gap-3">
-            {/* Middle: Product Details */}
-            <div className="flex-1 space-y-1 min-w-0">
-              {/* Size */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-600">Size:</span>
-                <span className="text-xs md:text-sm font-bold text-gray-800">
-                  {size}
+          {/* Main Content Area */}
+          <div className="space-y-1.5">
+            <div
+              className={`border border-border rounded-md px-2 py-1 ${
+                isOut ? "opacity-60" : ""
+              }`}
+            >
+              {/* Top row: Size full width */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-card-foreground">
+                  Size: {size}
                 </span>
               </div>
-              {/* Color Selection */}
+
+              {/* Color Selection (if multiple colors) */}
               {colors.length > 1 && (
-                <div className="space-y-1.5">
-                  <div className="flex gap-2 flex-wrap">
-                    {colors.map((color) => (
-                      <button
-                        key={color}
-                        onClick={() => setSelectedColor(color || "")}
-                        className={`px-2 sm:px-2.5 py-1 rounded border text-xs font-medium transition-all ${
-                          selectedColor === color
-                            ? "border-palette-btn bg-palette-btn text-white"
-                            : "border-gray-300 bg-white text-gray-700 hover:border-palette-btn"
-                        }`}
-                      >
-                        {color}
-                      </button>
-                    ))}
+                <div className="mt-1.5 mb-1.5">
+                  <div className="flex flex-wrap gap-2">
+                    {colors.map((color) => {
+                      const isSelected = selectedColor === color;
+                      return (
+                        <button
+                          key={color}
+                          type="button"
+                          onClick={() => setSelectedColor(color || "")}
+                          className={`border border-border py-1 px-2 rounded text-sm leading-tight ${
+                            isSelected
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-background hover:bg-accent hover:text-accent-foreground"
+                          }`}
+                        >
+                          {color}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
-              <div className=" flex justify-between items-center">
-                {/* Price */}
-                <div className="flex items-baseline gap-2 flex-wrap">
+
+              {/* Second row: Prices left, Qty control right with stock centered above qty */}
+              <div className="mt-1 flex items-center justify-between gap-2">
+                <div className="flex flex-col items-start justify-center">
                   {originalPrice && (
-                    <span className="text-xs line-through text-gray-400">
+                    <span className="text-sm font-bold text-muted-foreground line-through">
                       Tk {originalPrice.toLocaleString()}
                     </span>
                   )}
-                  <span className="text-base sm:text-lg font-bold text-gray-800">
-                    Tk {currentPrice.toLocaleString()}
-                  </span>
-                </div>
-                {/* Right: Stock & Quantity (desktop/tablet only) */}
-                <div className="flex sm:w-20 md:w-28 flex-shrink-0 flex-col   justify-center items-center">
-                  <div className="text-left sm:text-right">
-                    <span className="text-gray-800 font-bold text-xs">
-                      Stock: {stock > 0 ? stock : "Out"}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-foreground">
+                      Tk {currentPrice.toLocaleString()}
                     </span>
+                    {discountPercentage > 0 && (
+                      <span className="text-xs text-green-600">
+                        ({discountPercentage}% off)
+                      </span>
+                    )}
                   </div>
+                </div>
 
-                  <div className="flex items-center border border-gray-300 rounded">
+                <div className="flex flex-col items-center justify-center gap-1">
+                  <span className="text-sm font-bold text-muted-foreground">
+                    Stock: {stock ?? 0}
+                  </span>
+                  <div className="flex items-center justify-center h-10 sm:h-11 gap-0 border border-border rounded-full bg-background">
                     <button
+                      type="button"
+                      disabled={isOut || currentQuantity <= 0}
+                      className={`sm:h-11 sm:w-10 h-10 w-9 flex justify-center items-center text-foreground hover:bg-accent text-base ${
+                        isOut || currentQuantity <= 0
+                          ? "cursor-not-allowed opacity-50"
+                          : ""
+                      }`}
                       onClick={handleDecrement}
-                      disabled={currentQuantity === 0}
-                      className="w-6 sm:w-7 h-6 sm:h-7 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
-                      <Minus className="w-4 h-4 " />
+                      <span className="text-lg sm:text-xl font-bold">-</span>
                     </button>
-                    <span className="w-8 sm:w-10 text-center font-semibold text-sm text-gray-800 border-x border-gray-300">
-                      {currentQuantity}
-                    </span>
+                    <input
+                      type="text"
+                      value={currentQuantity}
+                      className="sm:w-10 w-9 text-center border-none outline-none bg-transparent text-foreground text-base"
+                      readOnly
+                    />
                     <button
+                      type="button"
+                      disabled={isOut || currentQuantity >= stock}
+                      className={`sm:h-11 sm:w-10 h-10 w-9 flex justify-center items-center text-foreground hover:bg-accent text-base ${
+                        isOut || currentQuantity >= stock
+                          ? "cursor-not-allowed opacity-50"
+                          : ""
+                      }`}
                       onClick={handleIncrement}
-                      disabled={currentQuantity >= stock || !selectedColor}
-                      className="w-6 sm:w-7 h-6 sm:h-7 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
-                      <Plus className="w-4 h-4 " />
+                      <span className="text-lg sm:text-xl font-bold">+</span>
                     </button>
                   </div>
                 </div>
@@ -794,7 +829,7 @@ const ProductPage = ({ params }: { params: Product }) => {
 
             {/* Short Description with Line Clamp & See More */}
             <div className="space-y-2">
-              {params?.shortDescription && (
+              {/*  {params?.shortDescription && (
                 <div>
                   <p className="text-sm text-gray-600 leading-relaxed">
                     {!showFullDescription &&
@@ -813,6 +848,9 @@ const ProductPage = ({ params }: { params: Product }) => {
                     )}
                   </p>
                 </div>
+              )} */}
+              {params?.shortDescription && (
+                <ShortDescription text={params?.shortDescription} />
               )}
 
               <Separator />

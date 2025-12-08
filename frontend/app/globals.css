@@ -188,4 +188,5 @@
 html,
 body {
   width: 100%;
+  font-family: var(--font-kumbh-sans), sans-serif;
 }
