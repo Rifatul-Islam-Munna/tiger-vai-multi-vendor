@@ -75,7 +75,7 @@ export function ProductCard({
             <WishlistButton productId={product._id} />
           </div>
           {product?.hasOffer && discount > 0 && (
-            <Badge className=" absolute bottom-0 text-[8px] right-0 bg-[#ffff00]  text-gray-900 border-0  sm:text-xs px-1 md:px-2  font-bold ">
+            <Badge className=" absolute bottom-0 text-[9px] right-0 bg-[#ffff00]  text-gray-900 border-0  sm:text-xs px-1 md:px-2  font-bold ">
               {discount}% OFF
             </Badge>
           )}
