@@ -100,7 +100,7 @@ const ProductTabs = ({
           <div className="space-y-2">
             {params?.company_details && (
               <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                <h4 className="text-lg font-bold text-palette-text mb-3">
+                <h4 className="text-2xl font-bold text-palette-text mb-3">
                   Company Details
                 </h4>
                 <p className="text-base text-gray-700">

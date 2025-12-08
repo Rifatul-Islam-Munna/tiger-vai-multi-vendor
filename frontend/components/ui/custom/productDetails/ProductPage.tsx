@@ -775,7 +775,7 @@ const ProductPage = ({ params }: { params: Product }) => {
 
             {/* Desktop Description - Under Image - Full Width */}
             <div className="hidden lg:block pt-3 w-full">
-              <h3 className="text-xl font-bold text-palette-text mb-1.5">
+              <h3 className="text-2xl font-bold text-palette-text mb-1.5">
                 Product Description
               </h3>
               <div className="w-full">
@@ -961,7 +961,7 @@ const ProductPage = ({ params }: { params: Product }) => {
         <div className="mt-1 w-full">
           {/* Mobile Description - Full Width */}
           <div className="lg:hidden mb-1 w-full">
-            <h3 className="text-xl font-bold text-palette-text mb-1.5">
+            <h3 className="text-2xl font-bold text-palette-text mb-1.5">
               Product Description
             </h3>
             <div className="w-full">
