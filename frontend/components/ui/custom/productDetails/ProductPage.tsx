@@ -788,7 +788,7 @@ const ProductPage = ({ params }: { params: Product }) => {
           <div className=" ">
             {/* Product Title & Brand */}
             <div className="space-y-1">
-              <h1 className="text-2xl sm:text-3xl font-bold text-palette-text">
+              <h1 className="text-3xl font-bold text-palette-text">
                 {params?.name ?? "Product Name"}
               </h1>
 
@@ -803,13 +803,13 @@ const ProductPage = ({ params }: { params: Product }) => {
               <div className=" rounded-lg py-1.5">
                 <div className="flex items-baseline gap-3 flex-wrap">
                   {priceRange.hasDiscount && (
-                    <span className="text-base text-gray-400 line-through">
+                    <span className="text-lg  text-muted-foreground line-through">
                       Tk {priceRange.originalMin.toLocaleString()}
                       {priceRange.originalMin !== priceRange.originalMax &&
                         ` - ${priceRange.originalMax.toLocaleString()}`}
                     </span>
                   )}
-                  <span className="text-2xl sm:text-3xl font-bold text-palette-text">
+                  <span className="text-2xl  font-semibold text-palette-text">
                     Tk {priceRange.min.toLocaleString()}
                     {priceRange.min !== priceRange.max &&
                       ` - ${priceRange.max.toLocaleString()}`}
