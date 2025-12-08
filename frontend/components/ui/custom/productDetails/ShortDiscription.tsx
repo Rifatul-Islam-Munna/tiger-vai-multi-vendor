@@ -35,7 +35,7 @@ const ShortDescription = ({ text }: { text: string }) => {
           {shouldShowButton && !isExpanded && (
             <button
               onClick={() => setIsExpanded(true)}
-              className="absolute right-2 bottom-2 text-primary hover:text-primary/80 text-xs sm:text-sm font-medium bg-card"
+              className="absolute right-2 bottom-2 text-[#4692F5] hover:text-[#4692F5]/80 text-xs sm:text-sm font-medium bg-card"
             >
               See more
             </button>
@@ -43,7 +43,7 @@ const ShortDescription = ({ text }: { text: string }) => {
           {shouldShowButton && isExpanded && (
             <button
               onClick={() => setIsExpanded(false)}
-              className="mt-1 text-primary hover:text-primary/80 text-xs sm:text-sm font-medium inline-block"
+              className="mt-1 text-[#4692F5] hover:text-[#4692F5]/80 text-xs sm:text-sm font-medium inline-block"
             >
               See less
             </button>
