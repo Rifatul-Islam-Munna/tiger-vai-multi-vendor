@@ -20,7 +20,17 @@ import {
 } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Eye, Search, ShoppingBag, Filter, X } from "lucide-react";
+import {
+  Eye,
+  Search,
+  ShoppingBag,
+  Filter,
+  X,
+  User,
+  Phone,
+  Calendar,
+  Package,
+} from "lucide-react";
 import { ViewOrderModal } from "@/components/ui/custom/admin/order-manage/ViewOrderModal";
 import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
 import { OrdersResponse } from "@/@types/order";
@@ -83,7 +93,7 @@ export default function MyOrdersPage() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setPage(1); // Reset to first page on new search
+    setPage(1);
   };
 
   // Loading skeleton
@@ -204,74 +214,91 @@ export default function MyOrdersPage() {
           </form>
         </div>
 
-        {/* Mobile Orders List */}
-        <div className="space-y-4 md:hidden">
+        {/* Mobile/Tablet Card Layout - Updated with all table info */}
+        <div className="space-y-3 lg:hidden">
           {orders?.data?.map((order) => (
-            <div
+            <Card
               key={order._id}
-              className="bg-white border border-gray-200 rounded-lg p-4"
+              className="bg-white border border-gray-200 overflow-hidden"
             >
-              <div className="space-y-3">
-                {/* Order Header */}
-                <div className="flex justify-between items-start gap-2">
+              <CardContent className="p-3">
+                {/* Order Header: Number + Status */}
+                <div className="flex justify-between items-start gap-2 mb-3 pb-2 border-b border-gray-100">
                   <div className="flex-1 min-w-0">
-                    <p className="font-mono text-xs text-palette-text/60 truncate">
+                    <p className="font-mono text-xs text-palette-text/60 mb-1">
                       #{order.orderNumber}
                     </p>
-                    <p className="font-bold text-lg text-palette-text mt-1">
+                    <p className="font-bold text-base text-palette-text">
                       ৳{order.orderTotal.toLocaleString()}
                     </p>
+                    {order.totalDiscount > 0 && (
+                      <p className="text-xs text-green-600 font-medium">
+                        Saved ৳{order.totalDiscount.toLocaleString()}
+                      </p>
+                    )}
                   </div>
                   <Badge
                     className={`${STATUS_COLORS[order.orderStatus]?.bg} ${
                       STATUS_COLORS[order.orderStatus]?.text
-                    } border-0 whitespace-nowrap`}
+                    } border-0 text-xs px-2 py-1 whitespace-nowrap`}
                   >
                     {STATUS_COLORS[order.orderStatus]?.icon} {order.orderStatus}
                   </Badge>
                 </div>
 
-                {/* Order Info */}
-                <div className="space-y-1.5 text-sm">
-                  <div className="flex justify-between">
+                {/* Customer Info */}
+                <div className="space-y-2 mb-3">
+                  <div className="flex items-start gap-2">
+                    <User className="h-3.5 w-3.5 text-palette-text/60 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-palette-text truncate">
+                        {order.shipment.name}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-3.5 w-3.5 text-palette-text/60 flex-shrink-0" />
+                    <p className="text-sm text-palette-text/70">
+                      {order.shipment.phone}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Order Details Grid */}
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-3 text-xs">
+                  <div className="flex items-center gap-2">
+                    <Package className="h-3.5 w-3.5 text-palette-text/60" />
                     <span className="text-palette-text/60">Items:</span>
-                    <span className="font-medium text-palette-text">
+                    <span className="font-semibold text-palette-text">
                       {order.products.length}
                     </span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-3.5 w-3.5 text-palette-text/60" />
                     <span className="text-palette-text/60">Date:</span>
                     <span className="font-medium text-palette-text">
                       {formatDate(order.createdAt)}
                     </span>
                   </div>
-                  {order.totalDiscount > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-palette-text/60">Saved:</span>
-                      <span className="font-medium text-green-600">
-                        ৳{order.totalDiscount.toLocaleString()}
-                      </span>
-                    </div>
-                  )}
                 </div>
 
-                {/* Actions */}
+                {/* View Button */}
                 <Button
                   size="sm"
                   variant="outline"
-                  className="w-full border-gray-200"
+                  className="w-full border-gray-200 h-8 text-xs"
                   onClick={() => handleViewOrder(order)}
                 >
-                  <Eye className="h-4 w-4 mr-2" />
+                  <Eye className="h-3.5 w-3.5 mr-1.5" />
                   View Details
                 </Button>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
 
-        {/* Desktop Table */}
-        <div className="hidden md:block bg-white border border-gray-200 rounded-lg overflow-hidden">
+        {/* Desktop Table - Hidden on mobile/tablet */}
+        <div className="hidden lg:block bg-white border border-gray-200 rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="bg-palette-btn hover:bg-palette-btn">
