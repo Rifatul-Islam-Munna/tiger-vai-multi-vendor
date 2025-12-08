@@ -95,7 +95,7 @@ const ProductTabs = ({
           ))}
         </nav>
       </div>
-      <div className="py-6 sm:py-8">
+      <div className="py-3">
         {activeTab === "Details" && (
           <div className="space-y-2">
             {params?.company_details && (
@@ -121,7 +121,7 @@ const ProductTabs = ({
                 </p>
               </div>
 
-              <div className="flex flex-col items-center justify-center py-2 px-1 border-x border-gray-200">
+              <div className="flex flex-col items-center justify-center py-2 px-1 border-r  border-gray-200">
                 <span className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
                   Weight
                 </span>
