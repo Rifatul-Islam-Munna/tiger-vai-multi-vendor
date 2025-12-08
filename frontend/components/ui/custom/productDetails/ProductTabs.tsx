@@ -109,8 +109,8 @@ const ProductTabs = ({
               </div>
             )}
 
-            <div className="grid grid-cols-3 gap-2 sm:gap-3 p-2.5 sm:p-4 bg-palette-btn/5 rounded-lg border border-palette-btn/10">
-              <div className="flex flex-col items-center justify-center py-2 px-1">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 p-2.5 sm:p-4 bg-palette-btn/5 rounded-lg border border-palette-btn/10">
+              <div className=" flex-col hidden items-center justify-center py-2 px-1">
                 <span className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
                   Size
                 </span>
