@@ -436,7 +436,7 @@ const VariantCard: React.FC<VariantCardProps> = ({
               {selectedColor || colors[0]}
             </div> */}
             {isRecommended && (
-              <div className=" text-base md:text-lg text-black font-semibold mt-0.5">
+              <div className=" text-sm md:text-base text-black font-semibold mt-0.5">
                 {isRecommended}
               </div>
             )}
