@@ -514,7 +514,7 @@ const VariantCard: React.FC<VariantCardProps> = ({
                       }`}
                       onClick={handleDecrement}
                     >
-                      <span className="text-lg sm:text-xl font-bold">-</span>
+                      <span className="text-xl font-bold">-</span>
                     </button>
                     <input
                       type="text"
@@ -532,7 +532,7 @@ const VariantCard: React.FC<VariantCardProps> = ({
                       }`}
                       onClick={handleIncrement}
                     >
-                      <span className="text-lg sm:text-xl font-bold">+</span>
+                      <span className="text-xl font-bold">+</span>
                     </button>
                   </div>
                 </div>

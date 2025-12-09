@@ -36,7 +36,7 @@ const Footer = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Footer Content */}
         <div className="py-8 lg:py-10">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-10">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-10">
             {/* Company Info - Takes full width on mobile with 2 cols */}
             <div className="col-span-2 lg:col-span-1">
               <div className="mb-3">
@@ -118,6 +118,21 @@ const Footer = () => {
                   </a>
                 </li>
               </ul>
+              {/* Contact */}
+              <div>
+                <div className="mt-4 pt-3  border-gray-700">
+                  <p className="text-xs text-gray-500 mb-1">Customer Service</p>
+                  <a
+                    href="tel:+8801234567890"
+                    className="text-palette-btn font-bold text-sm md:text-lg hover:text-palette-btn/80 transition-colors"
+                  >
+                    +880 1903-961752
+                  </a>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Available 10 Am to 8 Pm
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* About */}
@@ -165,22 +180,6 @@ const Footer = () => {
                   </a>
                 </li>
               </ul>
-            </div>
-
-            {/* Contact */}
-            <div>
-              <div className="mt-4 pt-3  border-gray-700">
-                <p className="text-xs text-gray-500 mb-1">Customer Service</p>
-                <a
-                  href="tel:+8801234567890"
-                  className="text-palette-btn font-bold text-sm md:text-lg hover:text-palette-btn/80 transition-colors"
-                >
-                  +880 1903-961752
-                </a>
-                <p className="text-xs text-gray-400 mt-1">
-                  Available 10 Am to 8 Pm
-                </p>
-              </div>
             </div>
           </div>
         </div>
