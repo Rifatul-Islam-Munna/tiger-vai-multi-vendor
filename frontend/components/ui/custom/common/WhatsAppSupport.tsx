@@ -40,7 +40,7 @@ const WhatsAppSupport = () => {
           >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-green-500 rounded-full   flex items-center justify-center ">
                   <FaWhatsapp className="text-white text-sm" />
                 </div>
                 <div>
@@ -62,8 +62,7 @@ const WhatsAppSupport = () => {
 
             <div className="bg-gray-50 rounded-xl p-3 mb-3">
               <p className="text-sm text-gray-700">
-                Need help with your order? Our support team is here to assist
-                you!
+                Need help ? Our support team is here to assist you!
               </p>
             </div>
 
@@ -92,7 +91,10 @@ const WhatsAppSupport = () => {
           aria-label="Open WhatsApp Support"
           className="relative bg-green-500 hover:bg-green-600 text-white w-14 h-14 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center overflow-visible"
         >
-          <FaWhatsapp size={24} className="transform scale-x-[-1]" />
+          <FaWhatsapp
+            size={24}
+            className="transform scale-x-[-1] -translate-x-0.5"
+          />
           {/* Subtle pulse behind the icon */}
           <motion.div
             aria-hidden
