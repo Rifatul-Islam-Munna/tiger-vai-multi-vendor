@@ -428,14 +428,14 @@ const VariantCard: React.FC<VariantCardProps> = ({
         )}
 
         {/* Content and right-side controls */}
-        <div className="flex-1 py-2 flex flex-col gap-2">
+        <div className="flex-1 pb-1 flex flex-col gap-2">
           {/* Line 1: Color Title and Recommended */}
           <div className="flex flex-col items-start justify-start">
             {/*  <div className="font-semibold text-card-foreground">
               {selectedColor || colors[0]}
             </div> */}
             {isRecommended && (
-              <div className=" text-sm md:text-base text-black  leading-tight mt-0.5">
+              <div className=" text-sm pl-1 md:text-base text-black  leading-tight mt-0.5">
                 {isRecommended}
               </div>
             )}
@@ -501,7 +501,7 @@ const VariantCard: React.FC<VariantCardProps> = ({
                 </div>
 
                 <div className="flex flex-col items-center justify-center gap-1">
-                  <span className="text-sm font-bold text-muted-foreground">
+                  <span className="text-sm  text-muted-foreground">
                     Stock: {stock ?? 0}
                   </span>
                   <div className="flex items-center justify-center h-10 sm:h-11 gap-0 border border-border rounded-full bg-background">
