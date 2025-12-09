@@ -119,7 +119,7 @@ export function ProductCard({
           <div className="">
             <div className="flex items-baseline gap-2">
               {product.hasOffer && product.offerPrice && (
-                <span className="text-xs sm:text-sm text-gray-400 line-through">
+                <span className="text-xs sm:text-sm  text-muted-foreground line-through">
                   TK {product?.price?.toLocaleString()}
                 </span>
               )}
