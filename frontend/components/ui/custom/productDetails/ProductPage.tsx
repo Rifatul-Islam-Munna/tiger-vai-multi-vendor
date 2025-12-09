@@ -905,7 +905,7 @@ const ProductPage = ({ params }: { params: Product }) => {
             )}
 
             {/* Service Features */}
-            <div className="space-y-1 border-t border-gray-200 pt-6">
+            {/* <div className="space-y-1 border-t border-gray-200 pt-6">
               <div className="flex items-start gap-3 px-3 py-0.5 rounded-lg">
                 <Truck className="w-5 h-5 text-palette-btn mt-1 flex-shrink-0" />
                 <div className="min-w-0">
@@ -951,7 +951,7 @@ const ProductPage = ({ params }: { params: Product }) => {
                   </div>
                 </div>
               )}
-            </div>
+            </div> */}
           </div>
         </div>
 
