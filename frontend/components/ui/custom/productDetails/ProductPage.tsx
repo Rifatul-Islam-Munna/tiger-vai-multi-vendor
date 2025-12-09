@@ -80,11 +80,11 @@ const StickyCartBanner: React.FC<{
   console.log("🚨 BANNER RENDER:", { show, totalItems, totalPrice });
 
   return (
-    <div className="fixed top-0 left-0 translate-y-[108px] md:translate-y-[125px] right-0 z-40 bg-green-400 border-b border-gray-200 shadow-sm">
+    <div className="fixed top-0 left-0 translate-y-[108px] md:translate-y-[125px] right-0 z-40 bg-green-200 border-b border-gray-200 shadow-sm">
       <div className="container mx-auto px-4 py-1 lg:flex lg:justify-end">
         <div className="lg:w-[45%] lg:max-w-xl lg:mr-8">
           {/* Selected Header */}
-          <div className=" text-gray-800 font-semibold text-sm ">Selected</div>
+          <div className=" text-red-700 font-semibold text-sm ">Selected</div>
 
           {/* Compact Items List */}
           <div className=" text-gray-800 text-sm">
