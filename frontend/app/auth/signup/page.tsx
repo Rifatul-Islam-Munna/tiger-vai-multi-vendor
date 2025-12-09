@@ -235,7 +235,7 @@ const SignUpPage = () => {
             </div>
 
             {/* Social Sign Up */}
-            <Button
+            {/*   <Button
               type="button"
               variant="outline"
               className="w-full border-2 border-gray-200 h-11 rounded-lg hover:border-palette-btn hover:bg-palette-bg transition font-medium text-palette-text bg-white"
@@ -259,7 +259,7 @@ const SignUpPage = () => {
                 />
               </svg>
               Sign Up with Google
-            </Button>
+            </Button> */}
           </form>
 
           {/* Sign In Link */}

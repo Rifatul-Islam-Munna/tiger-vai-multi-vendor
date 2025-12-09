@@ -64,17 +64,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-palette-bg flex flex-col items-center justify-center p-4">
       {/* Logo Section */}
-      <div className="mb-12">
-        <div className="w-14 h-14 bg-palette-btn rounded-lg flex items-center justify-center shadow-md mb-3 mx-auto">
-          <ShoppingBag className="w-7 h-7 text-white" />
-        </div>
-        <h2 className="text-2xl font-bold text-palette-text text-center">
-          MarketHub
-        </h2>
-        <p className="text-sm text-gray-500 text-center mt-1">
-          Your trusted marketplace
-        </p>
-      </div>
 
       <Card className="w-full max-w-md border-0 shadow-lg">
         <CardContent className="p-8">
@@ -157,7 +146,7 @@ export default function LoginPage() {
             )}
 
             {/* Divider */}
-            <div className="relative py-2">
+            {/*  <div className="relative py-2">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300"></div>
               </div>
@@ -166,10 +155,10 @@ export default function LoginPage() {
                   OR
                 </span>
               </div>
-            </div>
+            </div> */}
 
             {/* Social Login */}
-            <Button
+            {/*     <Button
               type="button"
               variant="outline"
               className="w-full border-2 border-gray-200 h-11 bg-white hover:border-palette-btn hover:bg-palette-bg transition font-medium text-palette-text"
@@ -185,7 +174,7 @@ export default function LoginPage() {
             >
               <span className="mr-2">f</span>
               Login with Facebook
-            </Button>
+            </Button> */}
 
             {/* Sign Up */}
             <p className="text-center text-gray-600 text-sm pt-4">
