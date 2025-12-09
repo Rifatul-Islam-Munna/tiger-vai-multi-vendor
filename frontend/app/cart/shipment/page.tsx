@@ -116,7 +116,7 @@ export default function ShipmentPage() {
     <div className="min-h-screen bg-palette-bg">
       <PageBanner title="Checkout" routes={route} />
 
-      <main className="container mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 lg:py-12">
+      <main className="container mx-auto px-3 sm:px-4 md:px-6 py-2 sm:py-4 md:py-6 lg:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mt-4 sm:mt-6">
           {/* Shipping Form */}
           <div className="lg:col-span-2">
@@ -228,7 +228,7 @@ export default function ShipmentPage() {
                   {/* Place Order Button */}
                   <Button
                     onClick={handlePlaceOrder}
-                    className="w-full mt-2 bg-red-600 hover:bg-red-700 text-white h-11 sm:h-12 font-semibold rounded-md transition text-sm sm:text-base"
+                    className="w-full mt-2 bg-gradient-to-r from-green-500 to-emerald-600  text-white h-11 sm:h-12 font-semibold rounded-md transition text-sm sm:text-base"
                     disabled={!isShippingValid() || isPending}
                   >
                     {isPending && <Spinner className="mr-2" />}
@@ -279,7 +279,7 @@ export default function ShipmentPage() {
                   {/* ✅ FIXED: Final total is just totalPrice */}
                   <div className="flex justify-between items-center pt-2 sm:pt-3 border-t border-gray-200">
                     <span className="text-palette-text font-semibold text-sm sm:text-base">
-                      Estimated Total
+                      Total Payment
                     </span>
                     <span className="text-palette-btn text-xl sm:text-2xl font-bold">
                       Tk {totalPrice.toFixed(2)}

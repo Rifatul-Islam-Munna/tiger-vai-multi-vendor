@@ -9,6 +9,10 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import Cart from "@/app/assets/cart.png";
+import Image from "next/image";
+import Car from "@/app/assets/car.png";
+import Del from "@/app/assets/del.png";
 
 interface BreadcrumbRoute {
   title: string;
@@ -28,7 +32,7 @@ const PageBanner: React.FC<PageBannerProps> = ({
 }) => {
   return (
     <div
-      className="relative w-full h-[100px] md:h-[150px] flex flex-col items-center justify-center bg-cover  bg-center bg-no-repeat"
+      className="relative w-full h-[50px] md:h-[100px] flex flex-col items-center justify-center bg-cover  bg-center bg-no-repeat"
       style={{
         backgroundImage: `url(${backgroundImage})`,
       }}
@@ -37,40 +41,20 @@ const PageBanner: React.FC<PageBannerProps> = ({
       <div className="absolute inset-0 bg-black/5" />
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center space-y-4">
+      <div className="relative z-10 flex  items-center justify-center space-y-4 gap-1.5">
+        <Image src={Cart.src} width={40} height={40} alt="cart" />
         {/* Title */}
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900">
           {title}
         </h1>
-
-        {/* Breadcrumb */}
-        <Breadcrumb>
-          <BreadcrumbList>
-            {/* Home - Always default */}
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/">Home</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-
-            {/* Dynamic routes */}
-            {routes.map((route, index) => (
-              <React.Fragment key={index}>
-                <BreadcrumbSeparator>/</BreadcrumbSeparator>
-                <BreadcrumbItem>
-                  {index === routes.length - 1 ? (
-                    // Last item is the current page
-                    <BreadcrumbPage>{route.title}</BreadcrumbPage>
-                  ) : (
-                    <BreadcrumbLink asChild>
-                      <Link href={route.link}>{route.title}</Link>
-                    </BreadcrumbLink>
-                  )}
-                </BreadcrumbItem>
-              </React.Fragment>
-            ))}
-          </BreadcrumbList>
-        </Breadcrumb>
+        <Image src={Car.src} width={40} height={40} alt="cart" />
+        <Image
+          src={Del.src}
+          width={40}
+          height={40}
+          alt="cart"
+          className=" -translate-y-2"
+        />
       </div>
     </div>
   );
