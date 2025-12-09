@@ -82,15 +82,7 @@ const Footer = () => {
                     href="#"
                     className="text-sm text-gray-400 hover:text-palette-btn transition-colors duration-200"
                   >
-                    Contact Us
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-sm text-gray-400 hover:text-palette-btn transition-colors duration-200"
-                  >
-                    How to Buy
+                    Buy And Sell
                   </a>
                 </li>
                 <li>
@@ -114,20 +106,16 @@ const Footer = () => {
                     href="#"
                     className="text-sm text-gray-400 hover:text-palette-btn transition-colors duration-200"
                   >
-                    Help Center
+                    Help Center:{" "}
+                    <span className=" text-palette-btn">+8801903-961752</span>
                   </a>
                 </li>
               </ul>
               {/* Contact */}
               <div>
-                <div className="mt-4 pt-3  border-gray-700">
+                <div className="mt-2  border-gray-700">
                   <p className="text-xs text-gray-500 mb-1">Customer Service</p>
-                  <a
-                    href="tel:+8801234567890"
-                    className="text-palette-btn font-bold text-sm md:text-lg hover:text-palette-btn/80 transition-colors"
-                  >
-                    +880 1903-961752
-                  </a>
+
                   <p className="text-xs text-gray-400 mt-1">
                     Available 10 Am to 8 Pm
                   </p>
