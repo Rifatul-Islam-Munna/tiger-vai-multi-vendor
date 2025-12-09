@@ -15,6 +15,7 @@ import {
   MessageCircle,
   ShoppingCart,
   X,
+  CircleX,
 } from "lucide-react";
 import { Product, ReviewStats } from "@/@types/fullProduct";
 import { useQueryState } from "nuqs";
@@ -224,7 +225,9 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
       });
       setVariantQuantities({});
     } else {
-      toast.error("Please select quantity for at least one variant");
+      toast.error("আপনার অর্ডার সিলেক্ট করুন", {
+        icon: <CircleX className="text-red-500 size-5" />,
+      });
     }
   };
 
@@ -291,7 +294,9 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
       setVariantQuantities({});
       router.push("/cart/shipment");
     } else {
-      toast.error("Please select quantity for at least one variant");
+      toast.error("আপনার অর্ডার সিলেক্ট করুন", {
+        icon: <CircleX className="text-red-500 size-5" />,
+      });
     }
   };
 
