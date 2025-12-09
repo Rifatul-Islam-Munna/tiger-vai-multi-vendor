@@ -382,7 +382,7 @@ export default function EditProductPage() {
                       }}
                     /> */}
                     <RichTextEditor
-                      description={formData.description}
+                      description={formData?.description ?? ""}
                       updateField={updateField}
                     />
                   </div>

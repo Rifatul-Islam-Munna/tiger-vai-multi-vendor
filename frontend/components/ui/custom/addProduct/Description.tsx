@@ -67,6 +67,17 @@ export default function RichTextEditor({
       },
     },
   });
+  useEffect(() => {
+    if (editor && description !== undefined) {
+      const currentContent = editor.getHTML();
+      // Only update if the content is actually different to avoid unnecessary updates
+      if (currentContent !== description) {
+        editor.commands.setContent(description || "", {
+          emitUpdate: false, // Prevents triggering update events
+        });
+      }
+    }
+  }, [description, editor]);
 
   const [html, setHtml] = useState("");
   const [textSize, setTextSize] = useState("paragraph");
@@ -96,7 +107,7 @@ export default function RichTextEditor({
   };
 
   useEffect(() => {
-    if (!editor) return;
+    if (!editor && description !== undefined) return;
 
     const update = () => {
       setHtml(editor.getHTML());
