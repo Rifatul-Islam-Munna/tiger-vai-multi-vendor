@@ -409,11 +409,7 @@ const VariantCard: React.FC<VariantCardProps> = ({
   const isOut = stock <= 0;
 
   return (
-    <div
-      className={`border border-border/30 rounded bg-card ${
-        isOut ? "opacity-60" : ""
-      }`}
-    >
+    <div className={` rounded bg-card ${isOut ? "opacity-60" : ""}`}>
       <div className="flex min-h-[110px]">
         {/* Variant image on the left taking full height */}
         {image && (
@@ -826,26 +822,6 @@ const ProductPage = ({ params }: { params: Product }) => {
 
             {/* Short Description with Line Clamp & See More */}
             <div className="space-y-2">
-              {/*  {params?.shortDescription && (
-                <div>
-                  <p className="text-sm text-gray-600 leading-relaxed">
-                    {!showFullDescription &&
-                    params?.shortDescription.length > 200
-                      ? params?.shortDescription.slice(0, 200) + "... "
-                      : params?.shortDescription}
-                    {params?.shortDescription.length > 200 && (
-                      <button
-                        onClick={() =>
-                          setShowFullDescription(!showFullDescription)
-                        }
-                        className="text-palette-btn text-sm font-semibold hover:underline ml-1"
-                      >
-                        {showFullDescription ? "See Less" : "See More"}
-                      </button>
-                    )}
-                  </p>
-                </div>
-              )} */}
               {params?.shortDescription && (
                 <ShortDescription text={params?.shortDescription} />
               )}
@@ -905,39 +881,7 @@ const ProductPage = ({ params }: { params: Product }) => {
             )}
 
             {/* Service Features */}
-            {/* <div className="space-y-1 border-t border-gray-200 pt-6">
-              <div className="flex items-start gap-3 px-3 py-0.5 rounded-lg">
-                <Truck className="w-5 h-5 text-palette-btn mt-1 flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="font-semibold text-palette-text text-sm sm:text-base">
-                    {params?.freeShipping
-                      ? "Free Shipping"
-                      : params?.shippingCost
-                      ? `Shipping: ৳${params.shippingCost}/kg`
-                      : "Shipping Available"}
-                  </p>
-                  {params?.shippingTime && (
-                    <p className="text-sm text-gray-600 mt-0.5">
-                      Delivery in {params.shippingTime}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {params?.returnPolicy && (
-                <div className="flex items-start gap-3 px-2 py-0.5 rounded-lg">
-                  <RotateCcw className="w-5 h-5 text-palette-btn mt-1 flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="font-semibold text-palette-text text-sm sm:text-base">
-                      Returns Policy
-                    </p>
-                    <p className="text-sm text-gray-600 mt-0.5">
-                      {params.returnPolicy}
-                    </p>
-                  </div>
-                </div>
-              )}
-
+            <div className="space-y-1 border-t border-gray-200 pt-6">
               {params?.warrantyPeriod && (
                 <div className="flex items-start gap-3 px-3 py-0.5 rounded-lg">
                   <Shield className="w-5 h-5 text-palette-btn mt-1 flex-shrink-0" />
@@ -951,21 +895,13 @@ const ProductPage = ({ params }: { params: Product }) => {
                   </div>
                 </div>
               )}
-            </div> */}
+            </div>
           </div>
         </div>
 
         {/* Tabs Section - Full Width */}
         <div className="mt-1 w-full">
           {/* Mobile Description - Full Width */}
-          <div className="lg:hidden mb-1 w-full">
-            <h3 className="text-2xl font-bold text-palette-text mb-1.5">
-              Product Description
-            </h3>
-            <div className="w-full">
-              <DescriptionComponent params={params?.description} />
-            </div>
-          </div>
 
           <ProductTabs
             params={params}

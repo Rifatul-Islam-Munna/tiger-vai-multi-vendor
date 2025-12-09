@@ -4,6 +4,7 @@ import ReviewForm from "./Rating-form";
 import ReviewsList from "./user-review";
 import { Star } from "lucide-react";
 import { Review } from "@/@types/review";
+import DescriptionComponent from "./RenderDesription";
 
 const RatingBreakdown = ({ stats }: { stats: ReviewStats | undefined }) => {
   const getCount = (rating: number): number => {
@@ -98,6 +99,14 @@ const ProductTabs = ({
       <div className="py-3">
         {activeTab === "Details" && (
           <div className="space-y-2">
+            <div className="lg:hidden mb-1 w-full">
+              <h3 className="text-2xl font-bold text-palette-text mb-1.5">
+                Product Description
+              </h3>
+              <div className="w-full">
+                <DescriptionComponent params={params?.description} />
+              </div>
+            </div>
             {params?.company_details && (
               <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
                 <h4 className="text-2xl font-bold text-palette-text mb-3">
@@ -276,14 +285,7 @@ const ProductTabs = ({
                       </span>
                     </div>
                   )}
-                  {params?.warrantyPeriod && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Warranty</span>
-                      <span className="font-medium text-palette-text">
-                        {params.warrantyPeriod}
-                      </span>
-                    </div>
-                  )}
+
                   {/*  <div className="flex justify-between items-center">
           <span className="text-gray-600">Return Ship</span>
           <span className="font-medium text-green-600">Free</span>
