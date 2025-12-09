@@ -149,7 +149,7 @@ const ClientNavbar = () => {
         </div>
 
         {/* --- Mobile Header Layout --- */}
-        <div className="lg:hidden flex flex-col py-3 gap-3">
+        <div className="lg:hidden flex flex-col pt-2 pb-1 md:py-3 gap-3">
           {/* Row 1: Logo + Actions */}
           <div className="flex justify-between items-center">
             <div

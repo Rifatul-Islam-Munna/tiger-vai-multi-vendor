@@ -50,7 +50,7 @@ const HeroSection = () => {
               </Button>
             </div>
             {/* Vendor Trust/Stats */}
-            <div className="flex gap-6 mt-10 text-sm font-medium">
+            {/*  <div className="flex gap-6 mt-10 text-sm font-medium">
               <div className="flex items-center gap-2 text-palette-accent-3">
                 <Store className="w-4 h-4" />
                 <span>1,250+ Shops</span>
@@ -63,7 +63,7 @@ const HeroSection = () => {
                 <span className="w-2 h-2 bg-palette-accent-2 rounded-full block" />
                 <span>Nationwide Delivery</span>
               </div>
-            </div>
+            </div> */}
           </div>
           {/* Right Column: Visual */}
           <div className="md:col-span-6 lg:col-span-7 flex justify-center">

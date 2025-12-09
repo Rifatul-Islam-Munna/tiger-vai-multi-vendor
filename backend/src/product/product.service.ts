@@ -580,7 +580,7 @@ export class ProductService {
     price: `${product.price}.00 BDT`,
     sale_price: product.hasOffer ? `${product.offerPrice}.00 BDT` : "",
 
-    link: `https://your-website.com/product/${product.slug}`,
+    link: `https://tigerbhai.online/product-details/${product.slug}`,
     image_link: product.thumbnail,
 
     brand: product.brandName,

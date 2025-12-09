@@ -82,7 +82,7 @@ const Footer = () => {
                     href="#"
                     className="text-sm text-gray-400 hover:text-palette-btn transition-colors duration-200"
                   >
-                    Help Center
+                    Contact Us
                   </a>
                 </li>
                 <li>
@@ -114,7 +114,7 @@ const Footer = () => {
                     href="#"
                     className="text-sm text-gray-400 hover:text-palette-btn transition-colors duration-200"
                   >
-                    Contact Us
+                    Help Center
                   </a>
                 </li>
               </ul>
@@ -169,36 +169,7 @@ const Footer = () => {
 
             {/* Contact */}
             <div>
-              <h3 className="text-white font-semibold text-base mb-3">
-                Contact
-              </h3>
-              <ul className="space-y-2 mb-4">
-                <li>
-                  <a
-                    href="#"
-                    className="text-sm text-gray-400 hover:text-palette-btn transition-colors duration-200"
-                  >
-                    Payment Methods
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-sm text-gray-400 hover:text-palette-btn transition-colors duration-200"
-                  >
-                    Cash on Delivery
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-sm text-gray-400 hover:text-palette-btn transition-colors duration-200"
-                  >
-                    Delivery Info
-                  </a>
-                </li>
-              </ul>
-              <div className="mt-4 pt-3 border-t border-gray-700">
+              <div className="mt-4 pt-3  border-gray-700">
                 <p className="text-xs text-gray-500 mb-1">Customer Service</p>
                 <a
                   href="tel:+8801234567890"
@@ -218,8 +189,8 @@ const Footer = () => {
         <div className="border-t border-gray-700">
           <div className="py-4 text-center">
             <p className="text-sm text-gray-400">
-              © 2025 Tiger vai. All Rights Reserved. | Built for Bangladesh with
-              ❤️
+              © 2025 Tiger Bhai. All Rights Reserved. | Built for Bangladesh
+              with ❤️
             </p>
           </div>
         </div>

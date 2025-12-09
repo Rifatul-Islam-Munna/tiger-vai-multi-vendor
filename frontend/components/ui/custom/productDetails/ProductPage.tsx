@@ -79,16 +79,14 @@ const StickyCartBanner: React.FC<{
   console.log("🚨 BANNER RENDER:", { show, totalItems, totalPrice });
 
   return (
-    <div className="fixed top-0 left-0 translate-y-[120px] md:translate-y-[120px] right-0 z-40 bg-[#D0FAE5] border-b border-gray-200 shadow-sm">
-      <div className="container mx-auto px-4 py-2 lg:flex lg:justify-end">
+    <div className="fixed top-0 left-0 translate-y-[108px] md:translate-y-[125px] right-0 z-40 bg-[#D0FAE5] border-b border-gray-200 shadow-sm">
+      <div className="container mx-auto px-4 py-1 lg:flex lg:justify-end">
         <div className="lg:w-[45%] lg:max-w-xl lg:mr-8">
           {/* Selected Header */}
-          <div className="text-red-600 font-semibold text-sm mb-1">
-            Selected
-          </div>
+          <div className="text-red-600 font-semibold text-sm ">Selected</div>
 
           {/* Compact Items List */}
-          <div className="space-y-0.5 text-gray-800 text-sm">
+          <div className=" text-gray-800 text-sm">
             {items.slice(0, 4).map((item, index) => (
               <div key={index} className="leading-tight">
                 {item.size}-{item.color}(qty {item.quantity})
@@ -97,7 +95,7 @@ const StickyCartBanner: React.FC<{
           </div>
 
           {/* Total Bar */}
-          <div className="text-sm font-semibold text-gray-900 mt-1.5 pt-1.5 border-t border-gray-200">
+          <div className="text-sm font-semibold text-gray-900    border-gray-200">
             Total = {totalItems} item(s), Tk {totalPrice.toLocaleString()}
           </div>
         </div>
@@ -429,14 +427,14 @@ const VariantCard: React.FC<VariantCardProps> = ({
         )}
 
         {/* Content and right-side controls */}
-        <div className="flex-1 p-2 flex flex-col gap-2">
+        <div className="flex-1 py-2 flex flex-col gap-2">
           {/* Line 1: Color Title and Recommended */}
           <div className="flex flex-col items-start justify-start">
             {/*  <div className="font-semibold text-card-foreground">
               {selectedColor || colors[0]}
             </div> */}
             {isRecommended && (
-              <div className=" text-sm md:text-base text-black font-semibold mt-0.5">
+              <div className=" text-sm md:text-base text-black  leading-tight mt-0.5">
                 {isRecommended}
               </div>
             )}
@@ -445,7 +443,7 @@ const VariantCard: React.FC<VariantCardProps> = ({
           {/* Main Content Area */}
           <div className="space-y-1.5">
             <div
-              className={`border border-border rounded-md px-2 py-1 ${
+              className={`border border-border rounded-md pl-2 py-1 ${
                 isOut ? "opacity-60" : ""
               }`}
             >
