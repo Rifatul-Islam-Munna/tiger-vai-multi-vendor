@@ -33,7 +33,7 @@ const kumbhSans = Kumbh_Sans({
 export const metadata: Metadata = {
   // Basic Info
   title: {
-    default: "Tiger vai - Buy & Sell Online | Multi-Vendor Marketplace",
+    default: "Tiger Bhai - Buy & Sell Online | Multi-Vendor Marketplace",
     template: "%s | Tiger vai", // For child pages: "Product Name | YourStore"
   },
   description:
