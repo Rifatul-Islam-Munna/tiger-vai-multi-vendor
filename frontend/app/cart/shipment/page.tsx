@@ -29,7 +29,7 @@ export default function ShipmentPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const onCompleteOrder = (data) => {
-    console.log("Order completed:", data);
+    console.log("Order completed-data for passing:", data);
     sessionStorage.setItem("orderData", JSON.stringify(data));
     router.push(`/cart/success`);
   };
@@ -85,7 +85,7 @@ export default function ShipmentPage() {
         userId: getUser?.id,
       }),
     };
-    console.log("orderPayload", orderPayload);
+    console.log("orderPayload-for order", orderPayload);
 
     mutate(orderPayload);
     const eventId = uuidv4();

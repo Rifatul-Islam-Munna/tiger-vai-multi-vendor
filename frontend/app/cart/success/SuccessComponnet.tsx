@@ -3,9 +3,9 @@
 import { CheckCircle, Package, ShoppingBag, Home } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+
 import { useCartStore } from "@/zustan-hook/cart";
-import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
+
 import { CreateSellResponse } from "@/@types/success";
 
 export interface Order {
@@ -64,7 +64,6 @@ export interface Shipment {
 
 export default function OrderSuccessPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const [orderData, setOrderData] = useState<CreateSellResponse | null>();
   const { clearCart } = useCartStore();
@@ -81,35 +80,6 @@ export default function OrderSuccessPage() {
       router.push("/");
     }
   }, []);
-
-  /* const { data, isPending } = useQueryWrapper<Order>(
-    ["order-get-last-order", orderId],
-    "/sell-product-item/get-my-last-order"
-  ); */
-
-  /* if (isPending) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
-      </div>
-    );
-  }
-
-  if (!data) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <p className="text-gray-600 mb-4">Order not found</p>
-          <button
-            onClick={() => router.push("/")}
-            className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
-          >
-            Go Home
-          </button>
-        </div>
-      </div>
-    );
-  } */
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center p-4">
