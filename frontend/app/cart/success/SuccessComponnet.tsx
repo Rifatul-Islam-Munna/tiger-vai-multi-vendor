@@ -72,14 +72,17 @@ export default function OrderSuccessPage() {
     clearCart();
   }, [clearCart]);
   useEffect(() => {
-    const data = sessionStorage.getItem("orderData");
-    if (data) {
-      setOrderData(JSON.parse(data));
-      /*  sessionStorage.removeItem("orderData"); */ // Delete immediately after reading
-    } else {
-      router.push("/");
-    }
-  }, []);
+    const getData = () => {
+      const data = sessionStorage.getItem("orderData");
+      if (data) {
+        setOrderData(JSON.parse(data));
+        /*  sessionStorage.removeItem("orderData"); */ // Delete immediately after reading
+      } else {
+        router.push("/");
+      }
+    };
+    getData();
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center p-4">

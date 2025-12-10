@@ -14,11 +14,16 @@ export function PageViewTracker() {
       pathname +
       (searchParams?.toString() ? `?${searchParams.toString()}` : "");
 
-    pageViewEvent({
-      event_id: uuidv4(), // or use your own ID generator
-      url: url,
-      page_title: document.title,
-    });
+    // Small delay to ensure document.title is updated
+    const timer = setTimeout(() => {
+      pageViewEvent({
+        event_id: uuidv4(),
+        url: url,
+        page_title: document.title,
+      });
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [pathname, searchParams]);
 
   return null;
