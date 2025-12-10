@@ -74,6 +74,7 @@ export default function OrderSuccessPage() {
   useEffect(() => {
     const getData = () => {
       const data = sessionStorage.getItem("orderData");
+      console.log("data", data);
       if (data) {
         setOrderData(JSON.parse(data));
         /*  sessionStorage.removeItem("orderData"); */ // Delete immediately after reading

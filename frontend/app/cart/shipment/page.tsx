@@ -86,8 +86,6 @@ export default function ShipmentPage() {
       }),
     };
     console.log("orderPayload-for order", orderPayload);
-
-    mutate(orderPayload);
     const eventId = uuidv4();
 
     const extraData = {
@@ -98,7 +96,9 @@ export default function ShipmentPage() {
       ...orderPayload,
     };
     purchaseEvent(extraData);
-    await purchaseServerEvent(extraData);
+    purchaseServerEvent(extraData);
+
+    mutate(orderPayload);
   };
 
   const isShippingValid = () => {
