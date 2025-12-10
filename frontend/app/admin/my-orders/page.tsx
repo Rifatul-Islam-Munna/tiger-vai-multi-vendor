@@ -110,7 +110,11 @@ export default function OrderManagementPage() {
   query.set("sortBy", selectedSortBy);
   query.set("orderStatus", selectedStatus);
 
-  const { data: orders, isPending } = useQueryWrapper<OrdersResponse>(
+  const {
+    data: orders,
+    isPending,
+    refetch,
+  } = useQueryWrapper<OrdersResponse>(
     ["orders-admin", page, limit, sortOrder, selectedSortBy, selectedStatus],
     `/sell-product-item/get-admin-order?${query.toString()}`
   );
@@ -120,7 +124,7 @@ export default function OrderManagementPage() {
     method: "DELETE",
     successMessage: "Deleted successfully",
     onSuccess: () => {
-      queryClient.refetchQueries({ queryKey: ["orders"] });
+      refetch();
     },
   });
 
