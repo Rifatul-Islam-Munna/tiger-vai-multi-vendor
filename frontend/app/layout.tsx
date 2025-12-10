@@ -209,11 +209,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <GoogleTagManager gtmId="GTM-TW7XR5TX" />
+      <GoogleTagManager gtmId="GTM-53K4CD6D" />
 
       <Suspense>
         <WhatsAppSupport />
       </Suspense>
+      <Script id="text">
+        <noscript>
+          <iframe
+            src="https://www.googletagmanager.com/ns.html?id=GTM-53K4CD6D"
+            height="0"
+            width="0"
+            className="display:none;visibility:hidden"
+          ></iframe>
+        </noscript>
+      </Script>
       <body
         className={`${kumbhSans.variable} antialiased bg-palette-bg h-full`}
       >
