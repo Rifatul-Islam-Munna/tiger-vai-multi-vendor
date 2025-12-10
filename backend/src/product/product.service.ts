@@ -597,7 +597,7 @@ export class ProductService {
 }
   async getProductInCSV(query:getProductCsv) {
     const shortProduct  =  this.shortProductModel();
-    const datQuery:Record<string,unknown> ={}
+    const datQuery:Record<string,unknown> ={isActive: true}
     if(query.main) datQuery.main = query.main
     if(query.category) datQuery.category = query.category
     if(query.subMain) datQuery.subMain = query.subMain
