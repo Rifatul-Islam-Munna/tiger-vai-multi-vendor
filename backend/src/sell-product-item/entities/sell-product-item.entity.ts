@@ -118,7 +118,7 @@ export class Sell {
   @Prop({ type: ShipmentDetails, required: true })
   shipment: ShipmentDetails;
 
-  @Prop({ type: MongooseSchema.Types.ObjectId, required: true })
+  @Prop({ type: MongooseSchema.Types.ObjectId})
   userId: string;
 
   @Prop({ required: true })

@@ -28,8 +28,10 @@ export default function ShipmentPage() {
   const { shipment, updateShipmentField } = useCheckoutStore();
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const onCompleteOrder = () => {
-    router.push("/cart/success");
+  const onCompleteOrder = (data) => {
+    console.log("Order completed:", data);
+    sessionStorage.setItem("orderData", JSON.stringify(data));
+    router.push(`/cart/success`);
   };
 
   const { mutate, isPending } = useApiMutation(
@@ -44,7 +46,7 @@ export default function ShipmentPage() {
       setErrors({ form: "Please fill all required fields" });
       return;
     }
-
+    const getUser = await getUserInfo();
     const orderPayload = {
       products: items.map((item) => ({
         productId: item?.productId,
@@ -79,11 +81,15 @@ export default function ShipmentPage() {
       // ✅ FIXED: Use totalPrice (final amount to pay)
       orderTotal: totalPrice,
       totalDiscount: totalDiscount || 0,
+      ...(getUser?.id && {
+        userId: getUser?.id,
+      }),
     };
+    console.log("orderPayload", orderPayload);
 
     mutate(orderPayload);
     const eventId = uuidv4();
-    const getUser = await getUserInfo();
+
     const extraData = {
       userId: getUser?.id,
       userName: getUser?.name,

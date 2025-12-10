@@ -41,7 +41,7 @@ export class SellProductItemService {
   /**
    * ✅ UPDATED: Create Sell - Use ShortProduct ONLY
    */
-  async createSell(dto: CreateSellProductItemDto,userId:string) {
+  async createSell(dto: CreateSellProductItemDto) {
     const ShortProductModel = this.shortProductModel();
     const SellModel = this.sellModel();
 
@@ -122,7 +122,8 @@ export class SellProductItemService {
       const sellDoc = await SellModel.create({
         products,
         shipment: dto.shipment,
-        userId: userId,
+        ...(dto?.userId && { userId: dto.userId }),
+
         isAdmin: products[0].isAdmin,
         orderStatus: OrderStatus.PENDING,
         orderTotal,
@@ -136,11 +137,19 @@ export class SellProductItemService {
       totalDiscount += discount;
     }
     this.logger.debug(results)
-
+  const allProducts = results.flatMap(order => order.products);
     return {
       message: 'Sell(s) created successfully',
-      data: results,
+     /*  data: results, */
       summary: { totalOrderAmount, totalDiscount },
+      orderId:results?.[0]._id,
+      data: {                      // <-- THIS is the object your frontend wants
+    products: allProducts,
+    orderTotal: totalOrderAmount,
+    totalDiscount,
+    shipment: dto.shipment,
+    orderType : dto.shipment?.paymentMethod ?? "COD"
+  }
     };
   }
 

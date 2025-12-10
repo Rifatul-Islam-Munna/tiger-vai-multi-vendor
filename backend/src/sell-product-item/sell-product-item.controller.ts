@@ -27,9 +27,8 @@ export class SellProductItemController {
    * Create sell(s) (grouped by vendor)
    */
   @Post()
-  @UseGuards(AuthGuard, RolesGuard)
-  async create(@Body() dto: CreateSellProductItemDto,@Req() req:ExpressRequest) {
-    return this.sellProductItemService.createSell(dto,req?.user?.id);
+  async create(@Body() dto: CreateSellProductItemDto) {
+    return this.sellProductItemService.createSell(dto);
   }
 
   /**

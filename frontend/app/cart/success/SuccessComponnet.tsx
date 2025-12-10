@@ -2,10 +2,11 @@
 
 import { CheckCircle, Package, ShoppingBag, Home } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useCartStore } from "@/zustan-hook/cart";
 import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
+import { CreateSellResponse } from "@/@types/success";
 
 export interface Order {
   _id: string;
@@ -64,20 +65,29 @@ export interface Shipment {
 export default function OrderSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const orderId = searchParams.get("orderId");
 
+  const [orderData, setOrderData] = useState<CreateSellResponse | null>();
   const { clearCart } = useCartStore();
 
   useEffect(() => {
     clearCart();
   }, [clearCart]);
+  useEffect(() => {
+    const data = sessionStorage.getItem("orderData");
+    if (data) {
+      setOrderData(JSON.parse(data));
+      /*  sessionStorage.removeItem("orderData"); */ // Delete immediately after reading
+    } else {
+      router.push("/");
+    }
+  }, []);
 
-  const { data, isPending } = useQueryWrapper<Order>(
+  /* const { data, isPending } = useQueryWrapper<Order>(
     ["order-get-last-order", orderId],
     "/sell-product-item/get-my-last-order"
-  );
+  ); */
 
-  if (isPending) {
+  /* if (isPending) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
@@ -99,7 +109,7 @@ export default function OrderSuccessPage() {
         </div>
       </div>
     );
-  }
+  } */
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center p-4">
@@ -128,7 +138,7 @@ export default function OrderSuccessPage() {
             Order Placed Successfully!
           </h1>
           <p className="text-green-100 text-sm relative z-10">
-            Order #{data.orderNumber}
+            Order #{orderData?.orderId}
           </p>
         </div>
 
@@ -142,22 +152,22 @@ export default function OrderSuccessPage() {
             </h2>
 
             <div className="space-y-3 mb-4">
-              {data.products.map((item, index) => (
+              {orderData?.data?.products?.map((item, index) => (
                 <div
                   key={index}
                   className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition"
                 >
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-900 text-sm truncate">
-                      {item.name}
+                      {item?.name}
                     </p>
                     <p className="text-xs text-gray-500">
-                      Qty: {item.quantity} • {item.variant.size} -{" "}
-                      {item.variant.color}
+                      Qty: {item?.quantity} • {item?.variant?.size} -{" "}
+                      {item?.variant?.color}
                     </p>
                   </div>
                   <p className="font-semibold text-gray-900 text-sm">
-                    ৳{item.totalPrice.toFixed(2)}
+                    ৳{item?.totalPrice?.toFixed(2)}
                   </p>
                 </div>
               ))}
@@ -170,16 +180,20 @@ export default function OrderSuccessPage() {
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-600">Subtotal</span>
                   <span className="font-medium text-gray-900">
-                    ৳{(data.orderTotal + data.totalDiscount).toFixed(2)}
+                    ৳
+                    {(
+                      (orderData?.data?.orderTotal ?? 0) +
+                      (orderData?.data?.totalDiscount ?? 0)
+                    ).toFixed(2)}
                   </span>
                 </div>
 
                 {/* Discount */}
-                {data.totalDiscount > 0 && (
+                {(orderData?.data?.totalDiscount ?? 0) > 0 && (
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-green-600">Discount</span>
                     <span className="font-medium text-green-600">
-                      -৳{data.totalDiscount.toFixed(2)}
+                      -৳{orderData?.data?.totalDiscount.toFixed(2)}
                     </span>
                   </div>
                 )}
@@ -193,7 +207,7 @@ export default function OrderSuccessPage() {
                     Total Amount
                   </span>
                   <span className="text-2xl font-bold text-green-600">
-                    ৳{data.orderTotal.toFixed(2)}
+                    ৳{orderData?.data?.orderTotal.toFixed(2)}
                   </span>
                 </div>
 
@@ -201,7 +215,7 @@ export default function OrderSuccessPage() {
                 <div className="flex justify-between items-center mt-2 text-sm pt-2 border-t border-green-200">
                   <span className="text-gray-600">Payment Method</span>
                   <span className="font-medium text-gray-900 uppercase">
-                    {data.shipment.paymentMethod}
+                    {orderData?.data?.orderType}
                   </span>
                 </div>
               </div>
