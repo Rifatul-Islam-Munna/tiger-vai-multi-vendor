@@ -150,11 +150,11 @@ export default function CartSheet() {
                       {/* Price */}
                       <div className="flex items-center gap-2 mt-2">
                         <span className="font-semibold text-palette-text">
-                          ${item.unitPrice.toFixed(2)}
+                          TK {item.unitPrice.toFixed(2)}
                         </span>
                         {item.variant.discountPrice && (
                           <span className="text-xs text-gray-500 line-through">
-                            ${item.variant.price.toFixed(2)}
+                            TK {item.variant.price.toFixed(2)}
                           </span>
                         )}
                       </div>
