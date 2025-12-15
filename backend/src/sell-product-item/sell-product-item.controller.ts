@@ -11,7 +11,7 @@ import {
   UseGuards
 } from '@nestjs/common';
 import { SellProductItemService } from './sell-product-item.service';
-import { CreateSellProductItemDto, GetOrdersDto } from './dto/create-sell-product-item.dto';
+import { CreateSellProductItemDto, GetOrdersDto, MySellsDto } from './dto/create-sell-product-item.dto';
 import { OrderStatus } from './entities/sell-product-item.entity';
 import { AuthGuard, type ExpressRequest } from 'src/auth/auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
@@ -73,6 +73,12 @@ export class SellProductItemController {
   async getMyLastOrder( GetOrdersDto,@Req() req:ExpressRequest) {
    
     return this.sellProductItemService.getMyLastOrder(req.user.id);
+  }
+  @Get('get-my-dashboard-sells')
+  @UseGuards(AuthGuard)
+  async getMyDashBoardSells( @Query() query: MySellsDto,@Req() req:ExpressRequest) {
+   
+    return this.sellProductItemService.getMySellDashboard(query,req.user.id,req.user.role);
   }
 
   /**

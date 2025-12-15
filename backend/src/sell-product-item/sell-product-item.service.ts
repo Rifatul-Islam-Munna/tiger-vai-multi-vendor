@@ -4,10 +4,11 @@ import { TenantConnectionService } from 'lib/connection/mongooseConnection.servi
 import { globalProducts, globalSells } from 'lib/global-db/globaldb';
 import { ShortProductSchema, ShortProductDocument } from '../product/entities/short-product.schema';
 import { OrderStatus, Sell, SellSchema, SellDocument } from './entities/sell-product-item.entity';
-import { CreateSellProductItemDto, GetOrdersDto } from './dto/create-sell-product-item.dto';
+import { CreateSellProductItemDto, GetOrdersDto, MySellsDto, SellsType } from './dto/create-sell-product-item.dto';
 import { randomBytes, randomUUID } from "crypto";
 import { MeilisearchService } from 'src/meilisearch/meilisearch.service';
-import { ObjectId } from 'mongoose';
+import { ObjectId, PipelineStage, Types } from 'mongoose';
+import { UserRole } from 'src/user/entities/user.schema';
 
 @Injectable()
 export class SellProductItemService {
@@ -461,4 +462,227 @@ export class SellProductItemService {
       return sell
     }
   }
+ private resolveRange(dto: MySellsDto) {
+    const now = new Date();
+
+    const to = new Date(now);
+    to.setHours(23, 59, 59, 999);
+
+    const type = dto?.type ?? SellsType.TODAY;
+
+    if (type === SellsType.TODAY) {
+      const from = new Date(now);
+      from.setHours(0, 0, 0, 0);
+      return { from, to, unit: 'day' as const, format: '%Y-%m-%d' };
+    }
+
+    if (type === SellsType.LAST_7_DAYS) {
+      const from = new Date(now);
+      from.setDate(from.getDate() - 6);
+      from.setHours(0, 0, 0, 0);
+      return { from, to, unit: 'day' as const, format: '%Y-%m-%d' };
+    }
+
+    if (type === SellsType.LAST_30_DAYS) {
+      const from = new Date(now);
+      from.setDate(from.getDate() - 29);
+      from.setHours(0, 0, 0, 0);
+      return { from, to, unit: 'day' as const, format: '%Y-%m-%d' };
+    }
+
+    if (type === SellsType.THIS_YEAR) {
+      const from = new Date(now.getFullYear(), 0, 1);
+      from.setHours(0, 0, 0, 0);
+      return { from, to, unit: 'month' as const, format: '%Y-%m' };
+    }
+
+    // CUSTOM
+    const from = dto.fromDate ? new Date(dto.fromDate) : new Date(now);
+    from.setHours(0, 0, 0, 0);
+
+    const customTo = dto.toDate ? new Date(dto.toDate) : new Date(now);
+    customTo.setHours(23, 59, 59, 999);
+
+    return { from, to: customTo, unit: 'day' as const, format: '%Y-%m-%d' };
+  }
+
+ async getMySellDashboard(dto: MySellsDto,id:string,role:string) {
+    const SellModel = this.sellModel();
+    const {isAdmin} = dto
+    const { from, to, unit, format } = this.resolveRange(dto);
+
+    // Use plain string list to avoid any enum/runtime surprises
+    const FULFILLED_STATUSES = ["SHIPPED", "DELIVERED"] as const;
+
+    const match: Record<string, any> = {
+      createdAt: { $gte: from, $lte: to },
+      orderStatus: { $ne: OrderStatus.CANCELLED },
+      ...(isAdmin ? {} : role === UserRole.ADMIN ? { isAdmin: true } : { vendorId: id }),
+      
+    };
+    this.logger.log("match",match)
+
+    const pipeline: PipelineStage[] = [
+      { $match: match },
+
+      // Compute totals safely:
+      // - If orderTotal wasn't stored (or stays 0), fallback to sum of products.totalPrice
+      {
+        $addFields: {
+          _orderTotalSafe: { $ifNull: ["$orderTotal", 0] },
+          _itemsTotal: { $ifNull: [{ $sum: "$products.totalPrice" }, 0] },
+          _discountSafe: { $ifNull: ["$totalDiscount", 0] },
+        },
+      },
+      {
+        $addFields: {
+          effectiveOrderTotal: {
+            $cond: [{ $gt: ["$_orderTotalSafe", 0] }, "$_orderTotalSafe", "$_itemsTotal"],
+          },
+        },
+      },
+
+      {
+        $facet: {
+          // CARDS
+          cards: [
+            {
+              $group: {
+                _id: null,
+
+                totalOrders: { $sum: 1 },
+
+                pendingOrders: {
+                  $sum: { $cond: [{ $eq: ["$orderStatus", "PENDING"] }, 1, 0] },
+                },
+
+                pendingAmount: {
+                  $sum: {
+                    $cond: [{ $eq: ["$orderStatus", "PENDING"] }, "$effectiveOrderTotal", 0],
+                  },
+                },
+
+                // All non-cancelled (GMV-ish)
+                grossRevenueAll: { $sum: "$effectiveOrderTotal" },
+                totalDiscountAll: { $sum: "$_discountSafe" },
+                avgOrderValueAll: { $avg: "$effectiveOrderTotal" },
+
+                // Fulfilled only (revenue-ish)
+                grossRevenueFulfilled: {
+                  $sum: {
+                    $cond: [
+                      { $in: ["$orderStatus", [...FULFILLED_STATUSES]] },
+                      "$effectiveOrderTotal",
+                      0,
+                    ],
+                  },
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                totalOrders: 1,
+                pendingOrders: 1,
+                pendingAmount: 1,
+
+                grossRevenueAll: 1,
+                totalDiscountAll: 1,
+                netRevenueAll: { $subtract: ["$grossRevenueAll", "$totalDiscountAll"] },
+                avgOrderValueAll: { $ifNull: ["$avgOrderValueAll", 0] },
+
+                grossRevenueFulfilled: 1,
+              },
+            },
+          ],
+
+          // SALES SERIES (for chart)
+          salesSeries: [
+            {
+              $group: {
+                _id: {
+                  bucketDate: {
+                    $dateTrunc: {
+                      date: "$createdAt",
+                      unit,
+                      timezone: "Asia/Dhaka",
+                    },
+                  },
+                },
+                orders: { $sum: 1 },
+                grossRevenueAll: { $sum: "$effectiveOrderTotal" },
+                totalDiscountAll: { $sum: "$_discountSafe" },
+                grossRevenueFulfilled: {
+                  $sum: {
+                    $cond: [
+                      { $in: ["$orderStatus", [...FULFILLED_STATUSES]] },
+                      "$effectiveOrderTotal",
+                      0,
+                    ],
+                  },
+                },
+              },
+            },
+            { $sort: { "_id.bucketDate": 1 as const } },
+            {
+              $project: {
+                _id: 0,
+                date: {
+                  $dateToString: {
+                    format,
+                    date: "$_id.bucketDate",
+                    timezone: "Asia/Dhaka",
+                  },
+                },
+                orders: 1,
+                grossRevenueAll: 1,
+                totalDiscountAll: 1,
+                netRevenueAll: { $subtract: ["$grossRevenueAll", "$totalDiscountAll"] },
+                grossRevenueFulfilled: 1,
+              },
+            },
+          ],
+
+          // STATUS BREAKDOWN
+          statusBreakdown: [
+            {
+              $group: {
+                _id: "$orderStatus",
+                orders: { $sum: 1 },
+                grossRevenue: { $sum: "$effectiveOrderTotal" },
+              },
+            },
+            { $project: { _id: 0, status: "$_id", orders: 1, grossRevenue: 1 } },
+            { $sort: { orders: -1 as const } },
+          ],
+        },
+      },
+    ];
+
+    const [result] = await SellModel.aggregate(pipeline);
+
+    const cards = result?.cards?.[0] ?? {
+      totalOrders: 0,
+      pendingOrders: 0,
+      pendingAmount: 0,
+      grossRevenueAll: 0,
+      totalDiscountAll: 0,
+      netRevenueAll: 0,
+      avgOrderValueAll: 0,
+      grossRevenueFulfilled: 0,
+    };
+
+    return {
+      cards,
+      charts: {
+        salesSeries: result?.salesSeries ?? [],
+        statusBreakdown: result?.statusBreakdown ?? [],
+      },
+      range: { from: from.toISOString(), to: to.toISOString() },
+      meta: { bucket: unit },
+    };
+  }
+
+
+
 }

@@ -3,6 +3,8 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import {
   IsArray,
+  IsBoolean,
+  IsDateString,
   IsEnum,
   IsIn,
   IsNotEmpty,
@@ -248,4 +250,38 @@ export class GetOrdersDto {
 //   "orderTotal": 900,            // ✅ SUM of all totalPrice
 //   "totalDiscount": 100          // ✅ SUM of all discountApplied
 // } 
+
+
+export enum SellsType {
+  TODAY = 'TODAY',
+  LAST_7_DAYS = 'LAST_7_DAYS',
+  LAST_30_DAYS = 'LAST_30_DAYS',
+  THIS_YEAR = 'THIS_YEAR',
+  CUSTOM = 'CUSTOM',
+}
+
+export class MySellsDto {
+  @ApiPropertyOptional({ default: SellsType.TODAY, enum: SellsType })
+  @IsEnum(SellsType)
+  @IsOptional()
+  type?: SellsType;
+
+  @ApiPropertyOptional({ example: '2025-12-01' })
+  @IsDateString()
+  @IsOptional()
+  fromDate?: string;
+
+  @ApiPropertyOptional({ example: '2025-12-15' })
+  @IsDateString()
+  @IsOptional()
+  toDate?: string;
+
+
+  @ApiProperty()
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
+  @IsOptional()
+  isAdmin: boolean
+
+}
 
