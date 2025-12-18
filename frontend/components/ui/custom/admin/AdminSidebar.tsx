@@ -88,6 +88,11 @@ const personalMenuItems = [
     url: "/admin/settings",
     icon: Settings,
   },
+  {
+    title: "chat",
+    url: "/admin/chat",
+    icon: Settings,
+  },
 ];
 
 export function AdminSidebar({

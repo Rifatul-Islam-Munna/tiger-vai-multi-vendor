@@ -110,6 +110,17 @@ const Footer = () => {
                     <span className=" text-palette-btn">+8801903-961752</span>
                   </a>
                 </li>
+                <li>
+                  <a
+                    href="#"
+                    className="text-sm text-gray-400 hover:text-palette-btn transition-colors duration-200"
+                  >
+                    Email:{" "}
+                    <span className=" text-palette-btn">
+                      tigerbhaioffice@gmail.com
+                    </span>
+                  </a>
+                </li>
               </ul>
               {/* Contact */}
               <div>

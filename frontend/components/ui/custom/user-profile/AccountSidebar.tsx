@@ -54,6 +54,11 @@ const accountMenuItems = [
     url: "/user/notifications",
     icon: Bell,
   },
+  {
+    title: "chat",
+    url: "/user/chat",
+    icon: Bell,
+  },
 
   {
     title: "Help & Support",
