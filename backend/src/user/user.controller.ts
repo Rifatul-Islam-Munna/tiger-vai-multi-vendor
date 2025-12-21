@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req, Logger } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto, LoginUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -8,6 +8,7 @@ import { AuthGuard, type ExpressRequest } from 'src/auth/auth.guard';
 
 @Controller('user')
 export class UserController {
+  private logger = new Logger(UserController.name);
   constructor(private readonly userService: UserService) {}
 
   @Post('create-user')
@@ -36,6 +37,15 @@ export class UserController {
   @UseGuards(AuthGuard)
   getMyProfile(@Req() req: ExpressRequest) {
     return this.userService.getSingleUser(req?.user?.id!);
+  }
+  @Get('am-i-authenticated')
+  @UseGuards(AuthGuard)
+  amIAuthenticated(@Req() req: ExpressRequest) {
+    this.logger.debug("am-i-authenticated->",req?.user)
+    return{
+      data:true,
+      message:"you are authenticated"
+    }
   }
   @Get('find-all-users')
   findAll(@Query() query:PaginationDto) {

@@ -143,7 +143,7 @@ const ContactsList = ({
             }
             className={`
               w-full flex items-center gap-3 p-4 text-left transition-colors hover:bg-accent
-              ${selectedContact === room.id ? "bg-accent" : ""}
+              ${selectedContact === room.room_id ? "bg-accent" : ""}
             `}
           >
             <Avatar className="h-12 w-12 flex-shrink-0">

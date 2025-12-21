@@ -2,7 +2,7 @@
 
 import { LoginResponse } from "@/@types/auth-response";
 import { BasicUser } from "@/@types/userType";
-import { PostRequestAxios } from "@/api-hook/api-hook";
+import { GetRequestNormal, PostRequestAxios } from "@/api-hook/api-hook";
 import { refresh, revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -68,4 +68,9 @@ export const logOut = async (currentPath?: string) => {
   } else {
     redirect("/");
   }
+}
+
+export const AmIAuthenticated = async () => {
+ const response = await GetRequestNormal<{data:boolean,message:string}>(`/user/am-i-authenticated`)
+ return response
 }

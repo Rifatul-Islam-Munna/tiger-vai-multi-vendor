@@ -14,6 +14,7 @@ import {
   Lock,
   HelpCircle,
   LogOut,
+  MessageSquare,
 } from "lucide-react";
 import {
   Sidebar,
@@ -57,7 +58,7 @@ const accountMenuItems = [
   {
     title: "chat",
     url: "/user/chat",
-    icon: Bell,
+    icon: MessageSquare,
   },
 
   {

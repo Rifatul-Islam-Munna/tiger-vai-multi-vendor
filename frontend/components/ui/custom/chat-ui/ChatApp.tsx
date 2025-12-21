@@ -279,7 +279,7 @@ export default function ChatApp() {
               </Avatar>
               <div className="flex-1">
                 <div className="font-semibold text-foreground">Chat Room</div>
-                <div className="text-xs text-muted-foreground">Online</div>
+                {/*   <div className="text-xs text-muted-foreground">Online</div> */}
               </div>
             </div>
 

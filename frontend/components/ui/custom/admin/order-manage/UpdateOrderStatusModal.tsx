@@ -148,7 +148,7 @@ const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl bg-white border-gray-200">
+      <DialogContent className="max-w-3xl max-h-dvh overflow-y-scroll bg-white border-gray-200">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-2xl font-bold text-[var(--palette-text)] flex items-center gap-2">

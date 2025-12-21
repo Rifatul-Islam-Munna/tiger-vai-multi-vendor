@@ -15,6 +15,7 @@ import {
   TrendingUp,
   LogOut,
   Settings,
+  MessageCircle,
 } from "lucide-react";
 import {
   Sidebar,
@@ -91,7 +92,7 @@ const personalMenuItems = [
   {
     title: "chat",
     url: "/admin/chat",
-    icon: Settings,
+    icon: MessageCircle,
   },
 ];
 
