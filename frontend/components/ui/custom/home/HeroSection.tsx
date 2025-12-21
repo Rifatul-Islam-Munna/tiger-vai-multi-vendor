@@ -67,19 +67,25 @@ const HeroSection = () => {
           </div>
           {/* Right Column: Visual */}
           <div className="md:col-span-6 lg:col-span-7 flex justify-center">
-            <div className="aspect-[4/3] md:h-[480px] md:min-h-[380px] w-full rounded-3xl  bg-white flex items-center justify-center relative overflow-hidden shadow-sm">
+            <div className="aspect-[4/3] md:h-[480px] md:min-h-[380px] w-full rounded   flex items-center justify-center relative overflow-hidden ">
               <div className="flex flex-col items-center text-palette-accent-2">
-                <Image src={"/home.avif"} width={500} height={500} alt="hero" />
+                <Image
+                  src={"/home-page.jpeg"}
+                  width={500}
+                  height={500}
+                  className=" w-full h-full rounded"
+                  alt="hero"
+                />
               </div>
               {/* Featured Vendor Floating Card */}
-              <div className="absolute bottom-8 left-8 bg-white/90 backdrop-blur-sm p-4 rounded-xl  max-w-[220px] hidden sm:block">
+              {/*    <div className="absolute bottom-8 left-8 bg-white/90 backdrop-blur-sm p-4 rounded-xl  max-w-[220px] hidden sm:block">
                 <p className="text-xs uppercase tracking-wider mb-1 text-palette-accent-1 font-semibold">
                   Featured Vendor
                 </p>
                 <p className="font-medium text-sm text-palette-text">
                   Modern Home Store
                 </p>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

@@ -515,8 +515,9 @@ export class SellProductItemService {
     const FULFILLED_STATUSES = ["SHIPPED", "DELIVERED"] as const;
 
     const match: Record<string, any> = {
-      createdAt: { $gte: from, $lte: to },
-      orderStatus: { $ne: OrderStatus.CANCELLED },
+         orderStatus: { $ne: OrderStatus.CANCELLED }, 
+      updatedAt: { $gte: from, $lte: to },
+     
       ...(isAdmin ? {} : role === UserRole.ADMIN ? { isAdmin: true } : { vendorId: id }),
       
     };

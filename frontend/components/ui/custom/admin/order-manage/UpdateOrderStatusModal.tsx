@@ -280,21 +280,17 @@ const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
                         <div
                           className={`
                           w-6 h-6 rounded-full border flex items-center justify-center transition-all
-                          ${
-                            isSelected
-                              ? `${config.borderColor} bg-white`
-                              : "border-gray-300"
-                          }
+                          ${isSelected ? ` bg-green-500 ` : "border-gray-300"}
                         `}
                         >
-                          {isSelected && (
+                          {/*   {isSelected && (
                             <div
                               className={`w-3 h-3 rounded-full ${config.textColor.replace(
                                 "text-",
                                 "bg-"
                               )}`}
                             />
-                          )}
+                          )} */}
                         </div>
                       </div>
                     </button>

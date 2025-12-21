@@ -211,7 +211,7 @@ export default function OrderSuccessPage() {
           </div> */}
 
           {/* Delivery Info */}
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          {/*   <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
             <div className="flex items-center gap-3">
               <div className="bg-blue-100 rounded-full p-2">
                 <Package className="w-5 h-5 text-blue-600" />
@@ -220,10 +220,10 @@ export default function OrderSuccessPage() {
                 <h3 className="font-semibold text-gray-900 text-sm">
                   Estimated Delivery
                 </h3>
-                <p className="text-gray-600 text-sm">5-7 Business Days</p>
+                <p className="text-gray-600 text-sm">{orderData?.data?.products?.[0]?.}</p>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-2">
