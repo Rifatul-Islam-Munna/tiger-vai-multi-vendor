@@ -93,6 +93,11 @@ export interface Product extends CreateProduct {
   _id: string;
   createdAt: Date;
   updatedAt: Date;
+  createdBy:{
+    _id:string;
+    name:string;
+    shopName?:string
+  }
 }
 export interface ReviewStats {
   _id: string;            // or Types.ObjectId if you're using mongoose ObjectId

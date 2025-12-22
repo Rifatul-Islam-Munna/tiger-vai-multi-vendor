@@ -101,6 +101,7 @@ const ContactsList = ({
 
   // Subscribe to real-time updates
   useEffect(() => {
+    if (!user?.id) return;
     fetchRooms(1);
 
     // Subscribe to chat_room collection
@@ -118,7 +119,7 @@ const ContactsList = ({
     return () => {
       pb.collection("chat_room").unsubscribe("*");
     };
-  }, [updateRoom]);
+  }, [updateRoom, user]);
 
   // Load more handler
   const handleLoadMore = () => {
@@ -157,7 +158,9 @@ const ContactsList = ({
             </Avatar>
             <div className="flex-1 overflow-hidden">
               <div className="font-semibold text-foreground">
-                {room.buyer_name}
+                {user?.id === room.buyer_id
+                  ? room.seller_name
+                  : room.buyer_name}
               </div>
               <div className="truncate text-sm text-muted-foreground">
                 {new Date(room.last_message_send).toLocaleString()}

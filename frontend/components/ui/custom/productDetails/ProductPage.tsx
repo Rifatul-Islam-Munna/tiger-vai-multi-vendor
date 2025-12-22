@@ -46,6 +46,8 @@ import DescriptionComponent from "./RenderDesription";
 import ProductTabs from "./ProductTabs";
 import { Separator } from "../../separator";
 import ShortDescription from "./ShortDiscription";
+import pb from "@/lib/poacktbase";
+import { Spinner } from "../../spinner";
 
 interface ProductVariantCardsProps {
   product: Product;
@@ -113,6 +115,7 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
 }) => {
   const { addToCart, items, updateQuantity } = useCartStore();
   const router = useRouter();
+  const [isChatPending, setChatPending] = useState(false);
 
   const variantsBySize = React.useMemo(() => {
     const grouped = new Map<string, typeof product.variants>();
@@ -300,8 +303,55 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
     }
   };
 
-  const handleChatWithSeller = () => {
-    toast.info("Chat feature coming soon!");
+  const handleChatWithSeller = async (
+    vendorId: string,
+    shopName: string | undefined,
+    isAdminCreated: boolean
+  ) => {
+    setChatPending(true);
+    const shop = isAdminCreated
+      ? "tiger bhai shop"
+      : shopName
+      ? shopName
+      : "unknown shop";
+
+    const roomId = `${user?.id}-${vendorId}`; // first user id then vendor id
+
+    try {
+      // 1) Try to find existing room
+      const existing = await pb
+        .collection("chat_room")
+        .getFirstListItem(`room_id = "${roomId}"`);
+
+      // if found, just navigate
+      router.push(`/user/chat?conversationId=${roomId}&receiverId=${vendorId}`);
+      console.log("pushing to existing room", existing);
+      setChatPending(false);
+      return;
+    } catch (err: any) {
+      // 2) 404 = room does not exist -> create it
+      if (err?.status !== 404) {
+        console.error("Error checking chat_room:", err);
+        return; // or show toast, etc.
+      }
+    }
+
+    // 3) Create new room if not found
+    const createRoom = await pb.collection("chat_room").create({
+      buyer_name: user?.name,
+      buyer_id: user?.id,
+      seller_name: shop,
+      seller_id: vendorId,
+      room_id: roomId,
+      last_message_send: new Date().toISOString(),
+      is_buyer_seen: true,
+      is_seller_seen: true,
+    });
+
+    console.log("created new room", createRoom);
+
+    router.push(`/user/chat?conversationId=${roomId}&receiverId=${vendorId}`);
+    setChatPending(false);
   };
 
   return (
@@ -340,10 +390,21 @@ const ProductVariantCards: React.FC<ProductVariantCardsProps> = ({
 
         {/* Chat Button */}
         <button
-          onClick={handleChatWithSeller}
+          onClick={() =>
+            handleChatWithSeller(
+              product?.createdBy?._id,
+              product?.createdBy?.shopName,
+              product?.isAdminCreated
+            )
+          }
+          disabled={isChatPending}
           className="w-full py-3 px-4 rounded-full font-semibold text-base transition-all bg-[#2E83F2] hover:bg-[#1976D2] text-white flex items-center justify-center gap-2"
         >
-          <MessageCircle className="w-5 h-5" />
+          {isChatPending ? (
+            <Spinner className="  w-5 h-5" />
+          ) : (
+            <MessageCircle className="w-5 h-5" />
+          )}
           Chat with Seller
         </button>
       </div>

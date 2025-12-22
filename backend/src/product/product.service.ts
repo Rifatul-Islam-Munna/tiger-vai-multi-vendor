@@ -75,10 +75,17 @@ export class ProductService {
 
   async getProduct(slug:string){
     const ProductModel = this.productModel();
-    return ProductModel.findOne({slug}).populate({
+    return ProductModel.findOne({slug}).populate([{
       path:"stats",
       model: this.reviewStatsModel(),
-    });
+
+    },
+    {
+      path:"createdBy",
+      model: this.userModel(),
+      select:"shopName name"
+    }
+  ]).lean();
 
   }
   async getAllReviews(query:PaginationDto){
