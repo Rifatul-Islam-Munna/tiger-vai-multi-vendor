@@ -260,6 +260,7 @@ export class ProductService {
         ...shortProductData,
         vendorId: updated.createdBy,
       },
+      {new:true}
     );
     if(!updateProduct) throw new HttpException('Short product not found', 404);
     const updateMili = this.convertToMiliProduct(updateProduct)
@@ -299,6 +300,7 @@ export class ProductService {
    const updateProduct =  await ShortProductModel.findOneAndUpdate(
       { slug: updated.slug },
       shortProductData,
+      {new:true}
     );
        if(!updateProduct) throw new HttpException('Short product not found', 404);
     const updateMili = this.convertToMiliProduct(updateProduct)
