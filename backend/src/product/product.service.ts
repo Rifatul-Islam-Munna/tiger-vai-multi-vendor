@@ -229,6 +229,7 @@ export class ProductService {
       vendorId: userId,
     });
     const miliProduct  = this.convertToMiliProduct(shortProductCreated)
+    this.logger.log('🟡 Product created',miliProduct);
     await this.melieSeach.create(miliProduct);
 
     return { message: 'Product created successfully', data: newProduct };
@@ -237,7 +238,7 @@ export class ProductService {
   // ✅ UPDATED: Admin Update Product
   async adminUpdateProduct(productId: string, dto: UpdateProductDto) {
     const ProductModel = this.productModel();
-
+ this.logger.log('🟡 Updating product image',dto.thumbnail);
     // ✅ Calculate new averages if variants changed
    /*  let updateData = { ...dto };
     if (dto.variants && dto.variants.length > 0) {
@@ -262,12 +263,14 @@ export class ProductService {
     );
     if(!updateProduct) throw new HttpException('Short product not found', 404);
     const updateMili = this.convertToMiliProduct(updateProduct)
+    this.logger.log('🟡 Product updated-admin',updateMili);
     await this.melieSeach.update(updateProduct._id.toString(),updateMili);
     return { message: 'Product updated by admin', data: updated };
   }
 
   // ✅ UPDATED: Vendor Update Product (Restricted)
   async vendorUpdateProduct(productId: string, userId: string, dto: UpdateProductDto) {
+    this.logger.log('🟡 Updating product image',dto.thumbnail);
     const ProductModel = this.productModel();
     const ShortProductModel = this.shortProductModel();
 
@@ -299,6 +302,7 @@ export class ProductService {
     );
        if(!updateProduct) throw new HttpException('Short product not found', 404);
     const updateMili = this.convertToMiliProduct(updateProduct)
+    this.logger.log('🟡 Product updated',updateMili);
     await this.melieSeach.update(updateProduct._id.toString(),updateMili);
 
     return {
