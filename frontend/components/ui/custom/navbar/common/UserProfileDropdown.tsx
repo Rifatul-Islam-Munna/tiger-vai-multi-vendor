@@ -61,11 +61,11 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
   // Get user initials
   const getInitials = (name: string) => {
     return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
+      ?.split(" ")
+      ?.map((n) => n[0])
+      ?.join("")
+      ?.toUpperCase()
+      ?.slice(0, 2);
   };
 
   return (
@@ -74,9 +74,9 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
         <button
           className="flex items-center text-xs justify-center w-9 h-9 rounded-full font-semibold text-white transition-all hover:shadow-md hover:scale-105 focus:outline-none ring-2 ring-offset-1 ring-transparent focus:ring-[var(--palette-btn)]"
           style={{ backgroundColor: "var(--palette-btn)" }}
-          title={user.name}
+          title={user?.name}
         >
-          {getInitials(user.name)}
+          {getInitials(user?.name)}
         </button>
       </PopoverTrigger>
 
@@ -114,24 +114,24 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
                     user.role === "vendor"
                       ? "rgba(240, 212, 168, 0.2)"
                       : user.role === "admin"
-                      ? "rgba(255, 107, 122, 0.1)"
-                      : "rgba(168, 179, 191, 0.2)",
+                        ? "rgba(255, 107, 122, 0.1)"
+                        : "rgba(168, 179, 191, 0.2)",
                   color:
                     user.role === "vendor"
                       ? "var(--palette-accent-1, #d97706)"
                       : user.role === "admin"
-                      ? "red"
-                      : "gray",
+                        ? "red"
+                        : "gray",
                 }}
               >
-                {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                {user?.role?.charAt(0)?.toUpperCase() + user?.role?.slice(1)}
               </span>
             </div>
           </div>
         </div>
 
         {/* Vendor Info (if vendor) */}
-        {user.role === "vendor" && user.shopName && (
+        {user?.role === "vendor" && user.shopName && (
           <div className="px-6 py-4 border-b border-gray-100">
             <p className="text-xs font-semibold mb-2 uppercase tracking-wide text-gray-500">
               Your Shop
@@ -151,8 +151,8 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
                 user.role === "vendor"
                   ? "/dashboard/vendor"
                   : user.role === "admin"
-                  ? "/admin"
-                  : "/user/profile"
+                    ? "/admin"
+                    : "/user/profile",
               )
             }
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all hover:bg-gray-50 group"

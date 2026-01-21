@@ -6,12 +6,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, Send, ArrowDown } from "lucide-react";
+import { ArrowLeft, Send, ArrowDown, Loader2 } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import ContactsList from "./ContactsList";
 import pb from "@/lib/poacktbase";
-import { useUser } from "@/hooks/useUser"; // Your custom hook
+import { useUser } from "@/hooks/useUser";
 import { toast } from "sonner";
 
 export interface Message {
@@ -43,16 +43,19 @@ export default function ChatApp() {
   const pathName = usePathname();
   const selectedContact = searchParams.get("conversationId");
   const receiverId = searchParams.get("receiverId");
+  const names = searchParams.get("name");
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const previousScrollHeightRef = useRef<number>(0);
 
-  const { data: user } = useUser(); // Get current user ID
+  const { data: user } = useUser();
   const currentUserId = user?.id;
 
-  const handelPushToChat = (id: string, receiverId: string) => {
-    router.push(`${pathName}?conversationId=${id}&receiverId=${receiverId}`);
+  const handelPushToChat = (id: string, receiverId: string, name: string) => {
+    router.push(
+      `${pathName}?conversationId=${id}&receiverId=${receiverId}&name=${name}`,
+    );
   };
 
   useEffect(() => {
@@ -61,13 +64,11 @@ export default function ChatApp() {
     }
   }, [selectedContact]);
 
-  // Scroll to bottom function
   const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
     messagesEndRef.current?.scrollIntoView({ behavior });
     setShowScrollButton(false);
   }, []);
 
-  // Fetch messages with pagination
   const fetchChatData = async (currentPage: number, isLoadMore = false) => {
     if (!selectedContact) return;
 
@@ -77,28 +78,25 @@ export default function ChatApp() {
         .collection("message")
         .getList(currentPage, MESSAGES_PER_PAGE, {
           filter: `room_id = "${selectedContact}"`,
-          sort: "created", // Oldest first for proper display
+          sort: "created",
         });
 
       setTotalItems(result.totalItems);
 
       if (isLoadMore) {
-        // Store current scroll height before adding messages
         if (scrollAreaRef.current) {
           previousScrollHeightRef.current = scrollAreaRef.current.scrollHeight;
         }
 
-        // Prepend older messages
         setChatData((prev) => {
           const existingIds = new Set(prev.map((msg) => msg.id));
           const newMessages = result.items.filter(
-            (msg) => !existingIds.has(msg.id)
+            (msg) => !existingIds.has(msg.id),
           );
           return [...(newMessages as Message[]), ...prev];
         });
       } else {
         setChatData(result.items as Message[]);
-        // Scroll to bottom on initial load
         setTimeout(() => scrollToBottom("auto"), 100);
       }
     } catch (error) {
@@ -108,7 +106,6 @@ export default function ChatApp() {
     }
   };
 
-  // Maintain scroll position after loading older messages
   useEffect(() => {
     if (previousScrollHeightRef.current && scrollAreaRef.current) {
       const newScrollHeight = scrollAreaRef.current.scrollHeight;
@@ -118,7 +115,6 @@ export default function ChatApp() {
     }
   }, [chatData]);
 
-  // Handle scroll detection
   const handleScroll = useCallback(() => {
     if (!scrollAreaRef.current) return;
 
@@ -129,34 +125,24 @@ export default function ChatApp() {
     setShowScrollButton(!isAtBottom && scrollTop > 100);
   }, []);
 
-  // Initial fetch and real-time subscription
   useEffect(() => {
     if (!selectedContact) return;
 
-    // Reset state when conversation changes
     setChatData([]);
     setPage(1);
     fetchChatData(1, false);
 
-    // Subscribe to real-time messages
     pb.collection("message").subscribe("*", (e) => {
       console.log("Real-time message:", e.action, e.record);
 
       if (e.action === "create") {
         const newMessage = e.record as Message;
 
-        // Only add if it's for this room
         if (newMessage.room_id === selectedContact) {
           setChatData((prev) => {
-            // Avoid duplicates
             if (prev.some((msg) => msg.id === newMessage.id)) return prev;
 
             const updated = [...prev, newMessage];
-
-            // Auto-scroll only if user sent the message
-            /* if (newMessage.sender === currentUserId) {
-              setTimeout(() => scrollToBottom("smooth"), 100);
-            } */
             setTimeout(() => scrollToBottom("smooth"), 100);
 
             return updated;
@@ -167,8 +153,8 @@ export default function ChatApp() {
         if (updatedMessage.room_id === selectedContact) {
           setChatData((prev) =>
             prev.map((msg) =>
-              msg.id === updatedMessage.id ? updatedMessage : msg
-            )
+              msg.id === updatedMessage.id ? updatedMessage : msg,
+            ),
           );
         }
       } else if (e.action === "delete") {
@@ -176,13 +162,11 @@ export default function ChatApp() {
       }
     });
 
-    // Cleanup subscription
     return () => {
       pb.collection("message").unsubscribe("*");
     };
   }, [selectedContact, currentUserId, scrollToBottom]);
 
-  // Load more older messages
   const handleLoadMore = () => {
     const nextPage = page + 1;
     setPage(nextPage);
@@ -191,7 +175,6 @@ export default function ChatApp() {
 
   const hasMore = chatData.length < totalItems;
 
-  // Send message
   const handleSendMessage = async () => {
     if (
       !inputMessage.trim() ||
@@ -206,24 +189,21 @@ export default function ChatApp() {
       const newMessage = {
         room_id: selectedContact,
         sender: currentUserId,
-        receiver: receiverId, // You need to determine receiver from room
+        receiver: receiverId,
         message: inputMessage.trim(),
         is_seen_receiver: "false",
       };
 
       await pb.collection("message").create(newMessage);
-      // 2️⃣ Find chat room by room_id (NOT default id)
       const room = await pb
         .collection("chat_room")
         .getFirstListItem(`room_id = "${selectedContact}"`);
 
-      // 3️⃣ Update chat room using its real id
       await pb.collection("chat_room").update(room.id, {
         last_message_send: new Date().toISOString(),
       });
       setInputMessage("");
 
-      // Auto-scroll when user sends
       setTimeout(() => scrollToBottom("smooth"), 100);
     } catch (error) {
       console.error("Error sending message:", error);
@@ -238,16 +218,18 @@ export default function ChatApp() {
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-[92dvh] bg-[var(--palette-bg)]">
       {/* Contacts List */}
       <div
         className={`
         ${selectedContact ? "hidden md:flex" : "flex"}
-        w-full md:w-96 flex-col border-r border-border bg-card
+        w-full md:w-96 flex-col bg-white shadow-sm
       `}
       >
-        <div className="flex items-center justify-between border-b border-border p-4">
-          <h1 className="text-xl font-semibold">Chats</h1>
+        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5 bg-white">
+          <h1 className="text-2xl font-bold text-[var(--palette-text)]">
+            Messages
+          </h1>
         </div>
         <ContactsList
           selectedContact={selectedContact}
@@ -259,82 +241,110 @@ export default function ChatApp() {
       <div
         className={`
         ${selectedContact ? "flex" : "hidden md:flex"}
-        flex-1 flex-col bg-background
+        flex-1 flex-col bg-white
       `}
       >
         {selectedContact ? (
           <>
             {/* Chat Header */}
-            <div className="flex items-center gap-3 border-b border-border p-4">
+            <div className="flex items-center gap-4 border-b border-gray-200 px-4 md:px-6 py-4 bg-white shadow-sm">
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden"
+                className="md:hidden hover:bg-gray-100 rounded-full"
                 onClick={() => router.push(pathName)}
               >
-                <ArrowLeft className="h-5 w-5" />
+                <ArrowLeft className="h-5 w-5 text-[var(--palette-text)]" />
               </Button>
-              <Avatar className="h-10 w-10">
-                <AvatarFallback>U</AvatarFallback>
+              <Avatar className="h-11 w-11 border-2 border-[var(--palette-btn)]/20">
+                <AvatarFallback className="bg-[var(--palette-accent-2)] text-white font-semibold">
+                  {names?.charAt(0).toUpperCase()}
+                </AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <div className="font-semibold text-foreground">Chat Room</div>
-                {/*   <div className="text-xs text-muted-foreground">Online</div> */}
+                <div className="font-semibold text-[var(--palette-text)] text-lg">
+                  {names}
+                </div>
               </div>
             </div>
 
             {/* Messages Container */}
-            <div className="flex-1 relative overflow-hidden">
+            <div className="flex-1 relative overflow-hidden bg-[var(--palette-bg)]">
               <ScrollArea
-                className="h-full p-4"
+                className="h-full px-4 md:px-6 py-6"
                 ref={scrollAreaRef}
                 onScroll={handleScroll}
               >
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-4 max-w-5xl mx-auto">
                   {/* Load More Button */}
                   {hasMore && (
-                    <div className="flex justify-center mb-4">
+                    <div className="flex justify-center mb-2">
                       <Button
                         onClick={handleLoadMore}
                         disabled={isLoading}
                         variant="outline"
                         size="sm"
+                        className="rounded-full border-[var(--palette-accent-1)]/20 hover:bg-white hover:border-[var(--palette-btn)] transition-all"
                       >
-                        {isLoading ? "Loading..." : "Load Older Messages"}
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Loading...
+                          </>
+                        ) : (
+                          "Load Previous Messages"
+                        )}
                       </Button>
                     </div>
                   )}
 
                   {/* Messages */}
-                  {chatData.map((message) => {
+                  {chatData.map((message, index) => {
                     const isSent = message.sender === currentUserId;
+                    const showAvatar =
+                      index === 0 ||
+                      chatData[index - 1].sender !== message.sender;
+
                     return (
                       <div
                         key={message.id}
-                        className={`flex ${
+                        className={`flex gap-2 ${
                           isSent ? "justify-end" : "justify-start"
-                        }`}
+                        } ${showAvatar ? "mt-2" : "mt-0.5"}`}
                       >
+                        {!isSent && showAvatar && (
+                          <Avatar className="h-8 w-8 mt-1">
+                            <AvatarFallback className="bg-[var(--palette-accent-1)] text-white text-xs">
+                              {names?.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
+                        {!isSent && !showAvatar && <div className="w-8" />}
+
                         <div
                           className={`
-                            max-w-[85%] md:max-w-[70%] rounded-lg px-4 py-2
+                            max-w-[85%] md:max-w-[60%] rounded-2xl px-4 py-2.5 shadow-sm
                             ${
                               isSent
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted text-foreground"
+                                ? "bg-[var(--palette-btn)] text-white rounded-br-md"
+                                : "bg-white text-[var(--palette-text)] border border-gray-200 rounded-bl-md"
                             }
                           `}
                         >
-                          <p className="text-sm md:text-base break-words whitespace-pre-wrap">
+                          <p className="text-[15px] leading-relaxed break-words whitespace-pre-wrap">
                             {message.message}
                           </p>
-                          <span className="text-xs opacity-70 mt-1 block">
+                          <span
+                            className={`text-[11px] mt-1.5 block ${
+                              isSent ? "text-white/80" : "text-gray-500"
+                            }`}
+                          >
                             {new Date(message.created).toLocaleTimeString(
                               "en-US",
                               {
-                                hour: "2-digit",
+                                hour: "numeric",
                                 minute: "2-digit",
-                              }
+                              },
                             )}
                           </span>
                         </div>
@@ -351,38 +361,47 @@ export default function ChatApp() {
               {showScrollButton && (
                 <Button
                   size="icon"
-                  className="absolute bottom-4 right-4 rounded-full shadow-lg"
+                  className="absolute bottom-6 right-6 bg-[var(--palette-btn)] hover:bg-[var(--palette-accent-3)] text-white rounded-full shadow-lg h-12 w-12 transition-all"
                   onClick={() => scrollToBottom("smooth")}
                 >
-                  <ArrowDown className="h-4 w-4" />
+                  <ArrowDown className="h-5 w-5" />
                 </Button>
               )}
             </div>
 
             {/* Message Input */}
-            <div className="border-t border-border p-3 md:p-4">
-              <div className="flex items-center gap-2">
+            <div className="border-t border-gray-200 px-4 md:px-6 py-4 bg-white">
+              <div className="flex items-end gap-3 max-w-5xl mx-auto">
                 <Input
-                  placeholder="Type a message"
+                  placeholder="Type your message..."
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="flex-1"
+                  className="flex-1 rounded-full border-gray-300 focus:border-[var(--palette-btn)] focus:ring-[var(--palette-btn)] px-5 py-6 text-[15px] resize-none"
                 />
                 <Button
                   size="icon"
                   onClick={handleSendMessage}
                   disabled={!inputMessage.trim()}
+                  className="bg-[var(--palette-btn)] hover:bg-[var(--palette-accent-3)] text-white rounded-full h-12 w-12 shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Send className="h-4 w-4" />
+                  <Send className="h-5 w-5" />
                 </Button>
               </div>
             </div>
           </>
         ) : (
-          <div className="hidden md:flex flex-1 items-center justify-center text-muted-foreground">
-            <div className="text-center">
-              <p className="text-lg">Select a chat to start messaging</p>
+          <div className="hidden md:flex flex-1 items-center justify-center bg-[var(--palette-bg)]">
+            <div className="text-center px-6">
+              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-[var(--palette-btn)]/10 flex items-center justify-center">
+                <Send className="h-10 w-10 text-[var(--palette-btn)]" />
+              </div>
+              <h2 className="text-2xl font-bold text-[var(--palette-text)] mb-2">
+                Welcome to Messages
+              </h2>
+              <p className="text-gray-500">
+                Select a conversation to start chatting
+              </p>
             </div>
           </div>
         )}
