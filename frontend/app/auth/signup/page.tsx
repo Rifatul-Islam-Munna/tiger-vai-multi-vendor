@@ -12,6 +12,8 @@ import { PostRequestAxios } from "@/api-hook/api-hook";
 import { toast } from "sonner";
 import { SignUpUser } from "@/actions/auth";
 import { useRouter } from "next/navigation";
+import { Separator } from "@/components/ui/separator";
+import LoginWithGoogle from "@/components/ui/custom/common/googleLogin";
 
 const SignUpPage = () => {
   const { formData, setFormData, resetForm, getCleanFormData } = useAuthStore();
@@ -261,7 +263,8 @@ const SignUpPage = () => {
               Sign Up with Google
             </Button> */}
           </form>
-
+          <Separator className=" my-6" />
+          <LoginWithGoogle />
           {/* Sign In Link */}
           <p className="text-center text-gray-600 text-sm mt-6">
             Already have an account?{" "}

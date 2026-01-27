@@ -1,6 +1,6 @@
 // src/user/user.service.ts
 
-import { HttpException, Injectable, ForbiddenException } from '@nestjs/common';
+import { HttpException, Injectable, ForbiddenException, Logger } from '@nestjs/common';
 import { CreateUserDto, LoginUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -12,9 +12,11 @@ import { User, UserDocument, UserSchema, UserRole } from './entities/user.schema
 import { PaginationDto } from 'lib/pagination.dto';
 import { TenantConnectionService } from 'lib/connection/mongooseConnection.service';
 import { globalUser } from 'lib/global-db/globaldb';
+import {OAuth2Client } from "google-auth-library"
 
 @Injectable()
 export class UserService {
+  private logger = new Logger(UserService.name);
   constructor(
     private jwtService: JwtService,
     private tenantConnectionService: TenantConnectionService,
@@ -31,6 +33,7 @@ export class UserService {
   // ✅ ************ USER SIGNUP (CUSTOMER) ************ //
   async userSignup(dto: CreateUserDto) {
     if (dto.role !== UserRole.USER) dto.role = UserRole.USER;
+    
    
     const createUser ={
       ...dto,
@@ -67,6 +70,7 @@ export class UserService {
   // ✅ Base create method (used by all signup types)
   private async createBaseUser(dto: CreateUserDto) {
     const model = this.userModel();
+    if (!dto.password) throw new HttpException('Password is required', 400);
 
     // generate slug
     const rawSlug = `${dto.name}-${dto.email}`;
@@ -105,6 +109,65 @@ export class UserService {
 
     const isMatch = await bcrypt.compare(dto.password, user.password);
     if (!isMatch) throw new HttpException('Invalid credentials', 400);
+
+    // token payload
+    const payload = {
+      id: user._id,
+      email: user.email,
+      role: user.role,
+      slug: user.slug,
+    };
+
+    const access_token = this.jwtService.sign(payload, {
+      expiresIn: '60d',
+      secret: process.env.ACCESS_TOKEN,
+    });
+
+    const refresh_token = this.jwtService.sign(payload, {
+      expiresIn: '30d',
+      secret: process.env.REFRESH_TOKEN,
+    });
+
+    return {
+      message: 'Login successful',
+      access_token,
+      refresh_token,
+      user,
+    };
+  }
+
+
+    async loginWithGoogle(tokenId:string) {
+      const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+       const ticket = await client.verifyIdToken({
+      idToken: tokenId,
+      audience: process.env.GOOGLE_CLIENT_ID
+    })
+   const googlePayload = ticket.getPayload();
+   this.logger.debug('googlePayload',googlePayload)
+   const {email,name,picture,} = googlePayload as {email:string,name:string,picture:string}
+  
+ 
+
+
+    const model = this.userModel();
+
+   let user = await model.findOne({ email });
+
+if (!user) {
+     const rawSlug = `${name}-${email}`;
+    const slug = slugify(rawSlug);
+  user = await model.create({
+    email,
+    name,
+    role: UserRole.USER,
+    isVerified: true,
+    slug
+  });
+}
+
+
+
 
     // token payload
     const payload = {

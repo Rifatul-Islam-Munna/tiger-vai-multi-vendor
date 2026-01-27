@@ -95,3 +95,13 @@ export class LoginUserDto {
     @MinLength(6, { message: 'Password must be at least 6 characters long' })
     password: string;
   }
+  export class LoginUserGoogleDto {
+    @ApiProperty({
+      description: 'The email of the user',
+      example: 'user@example.com',
+    })
+  
+    idToken: string;
+  
+    
+  }

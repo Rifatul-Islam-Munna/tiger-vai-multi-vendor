@@ -28,7 +28,7 @@ export class User {
   @Prop()
   phone: string;
 
-  @Prop({ required: true })
+  @Prop()
   password: string;
 
   @Prop()

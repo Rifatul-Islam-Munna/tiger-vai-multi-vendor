@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req, Logger } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto, LoginUserDto } from './dto/create-user.dto';
+import { CreateUserDto, LoginUserDto, LoginUserGoogleDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserRole } from './entities/user.schema';
 import { DeleteDto, PaginationDto } from 'lib/pagination.dto';
@@ -26,6 +26,11 @@ export class UserController {
   @Post('login-user')
   userLogin(@Body() login: LoginUserDto) {
     return this.userService.login(login);
+
+  }
+  @Post('login-user-with-google')
+  userLoginWithGoogle(@Body() login: LoginUserGoogleDto) {
+    return this.userService.loginWithGoogle(login.idToken);
 
   }
 

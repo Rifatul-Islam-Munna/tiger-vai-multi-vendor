@@ -14,6 +14,8 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import useProfilePopStore from "@/zustan-hook/profile-pop";
 import Link from "next/link";
+import { Separator } from "@/components/ui/separator";
+import LoginWithGoogle from "@/components/ui/custom/common/googleLogin";
 export default function LoginPage() {
   const { formData, setFormData, resetForm, getCleanFormData } =
     useLoginStore();
@@ -187,6 +189,8 @@ export default function LoginPage() {
               </Link>
             </p>
           </form>
+          <Separator className=" my-6" />
+          <LoginWithGoogle />
         </CardContent>
       </Card>
 
