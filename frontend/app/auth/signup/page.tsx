@@ -68,7 +68,7 @@ const SignUpPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-palette-bg flex flex-col">
+    <div className="min-h-screen bg-palette-bg flex flex-col justify-start">
       {/* Header */}
       {/*  <div className="bg-white border-b border-gray-200 p-4 shadow-sm">
         <div className="max-w-md mx-auto flex items-center gap-3">
@@ -80,9 +80,9 @@ const SignUpPage = () => {
       </div> */}
 
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center px-4 py-8">
+      <div className="flex-1 flex items-center justify-center px-4 py-2 md:py-8">
         <div className="w-full max-w-md bg-white rounded-xl p-8 shadow-lg border border-gray-100">
-          <div className="text-center mb-8">
+          <div className="text-center mb-3 md:mb-8">
             <h1 className="text-3xl font-bold text-palette-text mb-2">
               Create Your Account
             </h1>

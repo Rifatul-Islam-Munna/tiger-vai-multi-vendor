@@ -64,19 +64,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-palette-bg flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-palette-bg flex flex-col items-start justify-start p-2 md:p-4">
       {/* Logo Section */}
 
       <Card className="w-full max-w-md border-0 shadow-lg">
         <CardContent className="p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-palette-text mb-2">
+            <h1 className="text-3xl font-bold text-palette-text mb-1 md:mb-2">
               Welcome Back
             </h1>
             <p className="text-gray-600 text-sm">Log in to your account</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className=" space-y-2.5 md:space-y-5">
             {/* Email */}
             <div>
               <label className="block text-palette-text font-semibold mb-2">
@@ -189,8 +189,10 @@ export default function LoginPage() {
               </Link>
             </p>
           </form>
-          <Separator className=" my-6" />
-          <LoginWithGoogle />
+          <Separator className=" my-2 md:my-6" />
+          <div className=" w-full flex justify-center-safe items-center-safe">
+            <LoginWithGoogle />
+          </div>
         </CardContent>
       </Card>
 
