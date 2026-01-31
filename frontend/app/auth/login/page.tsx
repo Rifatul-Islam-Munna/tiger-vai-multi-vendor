@@ -64,7 +64,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-palette-bg flex flex-col items-start justify-start sm:items-center sm:justify-center p-2 md:p-4">
+    <div className="min-h-screen bg-palette-bg flex flex-col items-center  justify-start sm:items-center sm:justify-center p-2 md:p-4">
       {/* Logo Section */}
 
       <Card className="w-full max-w-md border-0 shadow-lg">
