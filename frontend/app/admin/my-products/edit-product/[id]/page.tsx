@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import type { Route } from "next";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
@@ -117,10 +118,17 @@ export default function EditProductPage() {
     mutate({ id: productDetails._id, payload: formData });
   };
 
-  const returnQuery = searchParams.get("main")
-    ? `?main=${encodeURIComponent(searchParams.get("main") || "")}`
+  const returnParams = new URLSearchParams();
+  const returnMain = searchParams.get("main");
+  const returnSubMain = searchParams.get("subMain");
+  const returnCategory = searchParams.get("category");
+  if (returnMain) returnParams.set("main", returnMain);
+  if (returnSubMain) returnParams.set("subMain", returnSubMain);
+  if (returnCategory) returnParams.set("category", returnCategory);
+  const returnQuery = returnParams.toString()
+    ? `?${returnParams.toString()}`
     : "";
-  const returnHref = `/admin/my-products${returnQuery}`;
+  const returnHref = `/admin/my-products${returnQuery}` as Route;
 
   const handleDeleteProduct = async () => {
     if (!productDetails?._id) return;

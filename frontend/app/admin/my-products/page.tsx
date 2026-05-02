@@ -52,6 +52,12 @@ export default function ProductManagementPage() {
   const [selectedMain, setSelectedMain] = useState(
     searchParams.get("main") || ""
   );
+  const [selectedSubMain, setSelectedSubMain] = useState(
+    searchParams.get("subMain") || ""
+  );
+  const [selectedCategory, setSelectedCategory] = useState(
+    searchParams.get("category") || ""
+  );
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const query = new URLSearchParams();
@@ -60,9 +66,20 @@ export default function ProductManagementPage() {
   query.set("sortBy", sortBy);
   query.set("sortOrder", sortOrder);
   if (selectedMain) query.set("main", selectedMain);
+  if (selectedSubMain) query.set("subMain", selectedSubMain);
+  if (selectedCategory) query.set("category", selectedCategory);
 
   const { data } = useQueryWrapper<ProductApiResponse>(
-    ["products", page, limit, sortBy, sortOrder, selectedMain],
+    [
+      "products",
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+      selectedMain,
+      selectedSubMain,
+      selectedCategory,
+    ],
     `/product/getProductVendorAdmin?${query.toString()}`,
     { enabled: !!selectedMain }
   );
@@ -78,15 +95,55 @@ export default function ProductManagementPage() {
 
   const total = data?.total || 0;
   const totalPages = data?.totalPages || 1;
-  const categoryQuery = selectedMain
-    ? `?main=${encodeURIComponent(selectedMain)}`
-    : "";
+  const selectedMainCategory = categoriesData?.data?.find(
+    (category) => category.name === selectedMain
+  );
+  const selectedSubGroup = selectedMainCategory?.sub?.find(
+    (item) => item.SubMain === selectedSubMain
+  );
+  const visibleCategories = selectedMainCategory
+    ? [selectedMainCategory]
+    : categoriesData?.data || [];
+  const selectedLabel = [selectedMain, selectedSubMain, selectedCategory]
+    .filter(Boolean)
+    .join(" > ");
+  const selectedQuery: Record<string, string> = {};
+  if (selectedMain) selectedQuery.main = selectedMain;
+  if (selectedSubMain) selectedQuery.subMain = selectedSubMain;
+  if (selectedCategory) selectedQuery.category = selectedCategory;
+  const selectedQueryString = new URLSearchParams(selectedQuery).toString();
+  const categoryQuery = selectedQueryString ? `?${selectedQueryString}` : "";
   const addProductHref = selectedMain
     ? {
         pathname: "/admin/my-products/add-product",
-        query: { main: selectedMain },
+        query: selectedQuery,
       }
     : "/admin/my-products/add-product";
+
+  const clearCategorySelection = () => {
+    setSelectedMain("");
+    setSelectedSubMain("");
+    setSelectedCategory("");
+    setPage(1);
+  };
+
+  const selectMainCategory = (value: string) => {
+    setSelectedMain(value);
+    setSelectedSubMain("");
+    setSelectedCategory("");
+    setPage(1);
+  };
+
+  const selectSubMain = (value: string) => {
+    setSelectedSubMain(value);
+    setSelectedCategory("");
+    setPage(1);
+  };
+
+  const selectCategory = (value: string) => {
+    setSelectedCategory(value);
+    setPage(1);
+  };
 
   const handleCategoryChangeSuccess = (
     category?: CategoryItem,
@@ -103,8 +160,7 @@ export default function ProductManagementPage() {
     }
 
     if (action === "delete" && selectedMain === previousName) {
-      setSelectedMain("");
-      setPage(1);
+      clearCategorySelection();
     }
   };
 
@@ -140,17 +196,14 @@ export default function ProductManagementPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => {
-                  setSelectedMain("");
-                  setPage(1);
-                }}
+                onClick={clearCategorySelection}
               >
                 Clear
               </Button>
             )}
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {categoriesData?.data?.map((category) => {
+            {visibleCategories.map((category) => {
               const isActive = selectedMain === category.name;
 
               return (
@@ -165,10 +218,7 @@ export default function ProductManagementPage() {
                   <div className="flex items-start justify-between gap-2">
                     <button
                       type="button"
-                      onClick={() => {
-                        setSelectedMain(category.name);
-                        setPage(1);
-                      }}
+                      onClick={() => selectMainCategory(category.name)}
                       className="min-w-0 flex-1 text-left"
                     >
                       <span className="block truncate text-base font-semibold">
@@ -194,13 +244,105 @@ export default function ProductManagementPage() {
               );
             })}
           </div>
+
+          {selectedMainCategory && (
+            <div className="mt-4 space-y-4">
+              {(selectedMainCategory.sub?.length || 0) > 0 && (
+                <div>
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <h3 className="text-sm font-semibold">Sub Groups</h3>
+                    {selectedSubMain && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedSubMain("");
+                          setSelectedCategory("");
+                          setPage(1);
+                        }}
+                      >
+                        All {selectedMain}
+                      </Button>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedMainCategory.sub.map((sub) => {
+                      const isActive = selectedSubMain === sub.SubMain;
+
+                      return (
+                        <Button
+                          key={sub.SubMain}
+                          type="button"
+                          variant={isActive ? "default" : "outline"}
+                          onClick={() => selectSubMain(sub.SubMain)}
+                          className={isActive ? "text-white" : ""}
+                          style={
+                            isActive
+                              ? { backgroundColor: "var(--palette-btn)" }
+                              : undefined
+                          }
+                        >
+                          {sub.SubMain}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {selectedSubGroup &&
+                (selectedSubGroup.subCategory?.length || 0) > 0 && (
+                  <div>
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <h3 className="text-sm font-semibold">Sub Categories</h3>
+                      {selectedCategory && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedCategory("");
+                            setPage(1);
+                          }}
+                        >
+                          All {selectedSubMain}
+                        </Button>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedSubGroup.subCategory.map((subCategory) => {
+                        const isActive = selectedCategory === subCategory;
+
+                        return (
+                          <Button
+                            key={subCategory}
+                            type="button"
+                            variant={isActive ? "default" : "outline"}
+                            onClick={() => selectCategory(subCategory)}
+                            className={isActive ? "text-white" : ""}
+                            style={
+                              isActive
+                                ? { backgroundColor: "var(--palette-btn)" }
+                                : undefined
+                            }
+                          >
+                            {subCategory}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+            </div>
+          )}
         </div>
 
         {selectedMain ? (
           <>
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-xl font-semibold">
-                {selectedMain} Products
+                {selectedLabel} Products
               </h2>
               <Link href={addProductHref}>
                 <Button

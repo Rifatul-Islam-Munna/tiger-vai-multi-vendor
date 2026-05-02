@@ -95,7 +95,7 @@ export interface CreateProduct {
   slug?: string;
   company_details?: string;
 
-  productType?: "tyre" | "clothing" | "electronics" | "accessories";
+  productType?: "tyre" | "clothing" | "electronics" | "accessories" | "general";
 }
 
 export interface Product extends CreateProduct {

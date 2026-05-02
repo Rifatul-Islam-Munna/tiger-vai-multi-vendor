@@ -420,6 +420,7 @@ export class ProductService {
     const {
       search,
       main,
+      subMain,
       category,
       brandName,
       hasOffer,
@@ -441,6 +442,7 @@ export class ProductService {
     }
 
     if (main) filter.main = main;
+    if (subMain) filter.subMain = subMain;
     if (category) filter.category = category;
     if (brandName) filter.brandName = brandName;
     if (hasOffer !== undefined) filter.hasOffer = hasOffer;
@@ -471,6 +473,7 @@ export class ProductService {
     const {
       search,
       main,
+      subMain,
       category,
       brandName,
       hasOffer,
@@ -493,6 +496,7 @@ export class ProductService {
     }
 
     if (main) filter.main = main;
+    if (subMain) filter.subMain = subMain;
     if (category) filter.category = category;
     if (brandName) filter.brandName = brandName;
     if (hasOffer !== undefined) filter.hasOffer = hasOffer;
@@ -523,6 +527,7 @@ export class ProductService {
     const {
       search,
       main,
+      subMain,
       category,
       brandName,
       hasOffer,
@@ -544,6 +549,7 @@ export class ProductService {
     }
 
     if (main) filter.main = main;
+    if (subMain) filter.subMain = subMain;
     if (category) filter.category = category;
     if (brandName) filter.brandName = brandName;
     if (hasOffer !== undefined) filter.hasOffer = hasOffer;

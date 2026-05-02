@@ -17,6 +17,11 @@ export class SearchProductDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
+  subMain?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
   category?: string;
 
   @ApiProperty({ required: false })

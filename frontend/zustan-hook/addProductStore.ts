@@ -65,7 +65,7 @@ const initialFormData: Partial<CreateProduct> = {
   shortDescription: "",
   special_offer:"",
   company_details: "",
-  productType: "clothing",
+  productType: "general",
 
 };
 

@@ -227,8 +227,8 @@ export class Product {
 
   @Prop({
     type: String,
-    enum: ['tyre', 'clothing', 'electronics', 'accessories'],
-    default: 'clothing',
+    enum: ['tyre', 'clothing', 'electronics', 'accessories', 'general'],
+    default: 'general',
   })
   productType: string;
 }

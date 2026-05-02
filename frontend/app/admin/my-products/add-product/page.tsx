@@ -2,9 +2,9 @@
 "use client";
 
 import React, { useState } from "react";
+import type { Route } from "next";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Check, ChevronDown, ChevronUp } from "lucide-react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAddProductStore } from "@/zustan-hook/addProductStore";
 import StepBasicInfo from "@/components/ui/custom/admin/create-edit-product/create-product/StepBasicInfo";
@@ -108,25 +108,49 @@ const FORM_SECTIONS = {
   ],
 };
 
+const PRODUCT_TYPE_KEYWORDS: { type: ProductTypeId; keywords: string[] }[] = [
+  { type: "tyre", keywords: ["tyre", "tire", "wheel", "rim"] },
+  {
+    type: "clothing",
+    keywords: ["cloth", "apparel", "fashion", "shirt", "pant", "dress", "shoe"],
+  },
+  {
+    type: "electronics",
+    keywords: ["electronic", "phone", "laptop", "computer", "camera", "audio"],
+  },
+  {
+    type: "accessories",
+    keywords: ["accessory", "accessories", "watch", "bag", "jewelry"],
+  },
+];
+
+const inferProductType = (...values: string[]): ProductTypeId => {
+  const text = values.filter(Boolean).join(" ").toLowerCase();
+  const match = PRODUCT_TYPE_KEYWORDS.find(({ keywords }) =>
+    keywords.some((keyword) => text.includes(keyword))
+  );
+
+  return match?.type || "general";
+};
+
 export default function AddProductPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const { resetForm, calculateAndFinalize, updateField } = useAddProductStore();
-  const [selectedProductType, setSelectedProductType] = useState<string | null>(
-    null
+  const { formData, resetForm, calculateAndFinalize, updateField } =
+    useAddProductStore();
+  const [selectedProductType, setSelectedProductType] = useState<ProductTypeId>(
+    () =>
+      inferProductType(
+        searchParams.get("main") || "",
+        searchParams.get("subMain") || "",
+        searchParams.get("category") || ""
+      )
   );
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(["basic"])
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Update productType in store when selected
-  React.useEffect(() => {
-    if (selectedProductType) {
-      updateField("productType", selectedProductType);
-    }
-  }, [selectedProductType, updateField]);
 
   React.useEffect(() => {
     const main = searchParams.get("main") || "";
@@ -137,6 +161,22 @@ export default function AddProductPage() {
       updateField("category", { main, subMain, category });
     }
   }, [searchParams, updateField]);
+
+  React.useEffect(() => {
+    const nextProductType = inferProductType(
+      formData.category?.main || "",
+      formData.category?.subMain || "",
+      formData.category?.category || ""
+    );
+
+    setSelectedProductType(nextProductType);
+    updateField("productType", nextProductType);
+  }, [
+    formData.category?.main,
+    formData.category?.subMain,
+    formData.category?.category,
+    updateField,
+  ]);
 
   const { mutate, isPending } = useApiMutation(
     postNewProduct,
@@ -175,6 +215,7 @@ export default function AddProductPage() {
         onSuccess: (data) => {
           console.log("Product created successfully:", data);
           setIsSubmitting(false);
+          const returnHref = getProductsReturnHref();
           // Invalidate the products query cache to refresh the list
           queryClient.invalidateQueries({
             queryKey: ["products"],
@@ -182,7 +223,7 @@ export default function AddProductPage() {
           });
           // Reset form and navigate to products list
           resetForm();
-          router.push("/admin/my-products");
+          router.push(returnHref as Route);
         },
         onError: (error) => {
           console.error("Error creating product:", error);
@@ -211,91 +252,16 @@ export default function AddProductPage() {
     });
   };
 
-  // Step 1: Product Type Selection
-  if (!selectedProductType) {
-    return (
-      <div
-        className="min-h-screen p-3 sm:p-6"
-        style={{
-          backgroundColor: "var(--palette-bg)",
-        }}
-      >
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-6 sm:mb-8">
-            <Link href="/admin/my-products">
-              <button
-                className="p-2 hover:opacity-70 rounded transition inline-flex items-center gap-2 mb-4"
-                style={{ color: "var(--palette-text)" }}
-              >
-                <ArrowLeft size={20} />
-                Back
-              </button>
-            </Link>
-            <h1
-              className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3"
-              style={{ color: "var(--palette-text)" }}
-            >
-              Add New Product
-            </h1>
-            <p
-              className="text-sm sm:text-lg"
-              style={{ color: "var(--palette-accent-3)" }}
-            >
-              What type of product are you adding?
-            </p>
-          </div>
+  const getProductsReturnHref = (category = formData.category) => {
+    const params = new URLSearchParams();
+    if (category?.main) params.set("main", category.main);
+    if (category?.subMain) params.set("subMain", category.subMain);
+    if (category?.category) params.set("category", category.category);
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {PRODUCT_TYPES.map((type) => {
-              const Icon = type.icon;
-              return (
-                <button
-                  key={type.id}
-                  onClick={() => setSelectedProductType(type.id)}
-                  className="p-4 sm:p-6 rounded-xl border-2 hover:shadow-xl transition-all text-left group"
-                  style={{
-                    backgroundColor: "var(--palette-bg)",
-                    borderColor: "var(--palette-accent-3)",
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.borderColor = "var(--palette-btn)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.borderColor = "var(--palette-accent-3)")
-                  }
-                >
-                  <div className="flex items-start gap-3 sm:gap-4">
-                    <div
-                      className="p-3 sm:p-4 rounded-xl group-hover:scale-110 transition-transform"
-                      style={{ backgroundColor: type.iconBg }}
-                    >
-                      <Icon className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <h3
-                        className="font-bold text-base sm:text-xl mb-1 sm:mb-2"
-                        style={{ color: "var(--palette-text)" }}
-                      >
-                        {type.name}
-                      </h3>
-                      <p
-                        className="text-xs sm:text-sm"
-                        style={{ color: "var(--palette-accent-3)" }}
-                      >
-                        {type.description}
-                      </p>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    );
-  }
+    return `/admin/my-products${params.toString() ? `?${params}` : ""}`;
+  };
 
-  const sections = FORM_SECTIONS[selectedProductType as keyof typeof FORM_SECTIONS] || FORM_SECTIONS.general;
+  const sections = FORM_SECTIONS[selectedProductType] || FORM_SECTIONS.general;
   const selectedType = PRODUCT_TYPES.find((t) => t.id === selectedProductType);
   const TypeIcon = selectedType?.icon || Package;
 
@@ -322,7 +288,7 @@ export default function AddProductPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setSelectedProductType(null)}
+                onClick={() => router.back()}
                 className="shrink-0"
               >
                 <ArrowLeft size={18} />
@@ -338,7 +304,7 @@ export default function AddProductPage() {
                   className="text-base sm:text-xl font-bold truncate"
                   style={{ color: "var(--palette-text)" }}
                 >
-                  Add {selectedType?.name}
+                  Add Product
                 </h1>
                 <p
                   className="text-[10px] sm:text-xs hidden sm:block"
@@ -483,7 +449,7 @@ export default function AddProductPage() {
                     {section.id === "basic" && <StepBasicInfo />}
                     {section.id === "variants" && (
                       <StepVariants
-                        productType={selectedProductType as ProductTypeId}
+                        productType={selectedProductType}
                       />
                     )}
                     {section.id === "media" && <StepMedia />}
@@ -495,7 +461,7 @@ export default function AddProductPage() {
           })}
         </div>
 
-        {/* Review Section */}
+        {selectedProductType !== "general" && (
         <div
           className="mt-6 sm:mt-8 p-4 sm:p-6 rounded-xl border"
           style={{
@@ -543,6 +509,7 @@ export default function AddProductPage() {
             </div>
           </div>
         </div>
+        )}
       </div>
     </div>
   );

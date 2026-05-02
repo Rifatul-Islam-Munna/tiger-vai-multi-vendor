@@ -341,12 +341,12 @@ export class CreateProductDto {
   isAdminCreated: boolean;
 
   @ApiProperty({
-    enum: ['tyre', 'clothing', 'electronics', 'accessories'],
-    default: 'clothing',
+    enum: ['tyre', 'clothing', 'electronics', 'accessories', 'general'],
+    default: 'general',
     description: 'Product type for variant selection behavior',
   })
   @IsString()
-  productType: string = 'clothing';
+  productType: string = 'general';
 }
 
 export class GetProductDTo {
