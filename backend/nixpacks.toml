@@ -1,0 +1,9 @@
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "node dist/main"
+
+[static]
+# Nixpacks will use Node.js 22
+# This config tells EasyPanel how to build and start your NestJS backend
