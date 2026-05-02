@@ -6,6 +6,11 @@ import { SearchClient } from "@/components/ui/custom/product-details/SearchResul
 import { GetRequestNormal } from "@/api-hook/api-hook";
 import { ProductItem, ProductResponse } from "@/@types/seach-product-type";
 import { CategoryResponse } from "@/@types/category-brand";
+import {
+  BoneyardPageCapture,
+  BoneyardPageLoading,
+  SearchPageBoneyardFixture,
+} from "@/components/ui/custom/boneyard/PageSkeletons";
 
 type ParsedSearchParams = Awaited<ReturnType<typeof searchParamsCache.parse>>;
 
@@ -192,6 +197,10 @@ export default async function SearchPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
+      <BoneyardPageCapture
+        name="search-page"
+        fixture={<SearchPageBoneyardFixture />}
+      >
       <div className="min-h-screen bg-palette-bg">
         <div className="container mx-auto px-4 py-8">
           {/* ✅ Add H1 for SEO */}
@@ -203,15 +212,17 @@ export default async function SearchPage({
 
           <Suspense
             fallback={
-              <div className="flex justify-center items-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-palette-btn"></div>
-              </div>
+              <BoneyardPageLoading
+                name="search-page"
+                fixture={<SearchPageBoneyardFixture />}
+              />
             }
           >
             <SearchClient data={data} categories={categoriesData?.data || []} />
           </Suspense>
         </div>
       </div>
+      </BoneyardPageCapture>
     </>
   );
 }

@@ -16,6 +16,10 @@ import TodayBestSell from "@/components/ui/custom/home/TodayBestSell";
 import TopBrand from "@/components/ui/custom/home/TopBrand";
 import CategoryShop from "@/components/ui/custom/home/CategoryShop";
 import HeroSection from "@/components/ui/custom/home/HeroSection";
+import {
+  BoneyardPageCapture,
+  HomePageBoneyardFixture,
+} from "@/components/ui/custom/boneyard/PageSkeletons";
 
 const Page = () => {
   const categories = [
@@ -113,6 +117,10 @@ const Page = () => {
   ];
 
   return (
+    <BoneyardPageCapture
+      name="home-page"
+      fixture={<HomePageBoneyardFixture />}
+    >
     <div className=" bg-palette-bg h-full">
       {/* ============ HERO SECTION ============ */}
       <HeroSection />
@@ -266,6 +274,7 @@ const Page = () => {
 
       {/* ============ FOOTER ============ */}
     </div>
+    </BoneyardPageCapture>
   );
 };
 

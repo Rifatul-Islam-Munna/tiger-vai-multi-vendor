@@ -1,4 +1,13 @@
+import {
+  BoneyardPageLoading,
+  HomePageBoneyardFixture,
+} from "@/components/ui/custom/boneyard/PageSkeletons";
+
 export default function Loading() {
-  // Or a custom loading skeleton component
-  return <p>Loading...</p>;
+  return (
+    <BoneyardPageLoading
+      name="home-page"
+      fixture={<HomePageBoneyardFixture />}
+    />
+  );
 }
