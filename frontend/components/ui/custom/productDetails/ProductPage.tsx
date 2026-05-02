@@ -1271,13 +1271,13 @@ const ProductPage = ({ params }: { params: Product }) => {
             <Dialog open={isImageZoomOpen} onOpenChange={setIsImageZoomOpen}>
               <DialogContent
                 showCloseButton={false}
-                className="h-[100dvh] w-screen max-w-none border-0 bg-black p-0 shadow-none sm:max-w-none"
+                className="fixed inset-0 h-dvh w-dvw max-w-none translate-x-0 translate-y-0 rounded-none border-0 bg-black p-0 shadow-none sm:max-w-none"
               >
                 <DialogTitle className="sr-only">Product image</DialogTitle>
                 <button
                   type="button"
                   onClick={() => setIsImageZoomOpen(false)}
-                  className="flex h-full w-full items-center justify-center bg-black"
+                  className="flex h-full w-full items-center justify-center bg-black p-4 sm:p-6 md:p-8"
                   aria-label="Close product image"
                 >
                   <img
@@ -1287,7 +1287,7 @@ const ProductPage = ({ params }: { params: Product }) => {
                       ""
                     }
                     alt={params?.name ?? "Product image"}
-                    className="max-h-full max-w-full object-contain"
+                    className="block max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] object-contain sm:max-h-[calc(100dvh-3rem)] sm:max-w-[calc(100vw-3rem)] md:max-h-[calc(100dvh-4rem)] md:max-w-[calc(100vw-4rem)]"
                   />
                 </button>
               </DialogContent>
