@@ -14,8 +14,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import Image from "next/image";
 import { Loader2, X, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { useMutation } from "@tanstack/react-query";
-import { updateCategory, uploadCategory } from "@/actions/brand-category";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  DeleteCategory,
+  updateCategory,
+  uploadCategory,
+} from "@/actions/brand-category";
+import { invalidateCategoryQueries } from "@/lib/invalidateCategoryQueries";
 
 interface SubDto {
   SubMain: string;
@@ -30,11 +35,18 @@ interface Category {
   isTop?: boolean;
 }
 
+interface CategoryPayload {
+  name: string;
+  sub: SubDto[];
+  logoUrl: string | null;
+  isTop: boolean;
+}
+
 interface EditCategoryModalProps {
   category: Category;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
+  onSuccess?: (category?: Category, action?: "update" | "delete") => void;
 }
 
 export function EditCategoryModal({
@@ -43,6 +55,7 @@ export function EditCategoryModal({
   onOpenChange,
   onSuccess,
 }: EditCategoryModalProps) {
+  const queryClient = useQueryClient();
   const [imagePreview, setImagePreview] = useState<string | null>(
     category.logoUrl || null
   );
@@ -74,13 +87,15 @@ export function EditCategoryModal({
 
   const { mutate, isPending: isLoading } = useMutation({
     mutationKey: ["update-category"],
-    mutationFn: (payload: any) => updateCategory(category._id, payload),
-    onSuccess: (data) => {
+    mutationFn: (payload: CategoryPayload) =>
+      updateCategory(category._id, payload),
+    onSuccess: async (data) => {
       if (data?.error) {
         toast.error(data.error.message);
       } else {
+        await invalidateCategoryQueries(queryClient);
         toast.success("Category updated successfully");
-        onSuccess?.();
+        onSuccess?.(data.data as Category, "update");
         onOpenChange(false);
       }
     },
@@ -88,6 +103,36 @@ export function EditCategoryModal({
       toast.error(error.message || "unknown error");
     },
   });
+
+  const { mutate: deleteCategoryMutate, isPending: isDeleting } = useMutation({
+    mutationKey: ["delete-category", category._id],
+    mutationFn: () => DeleteCategory(category._id),
+    onSuccess: async (data) => {
+      if (data?.error) {
+        toast.error(data.error.message);
+      } else {
+        await invalidateCategoryQueries(queryClient);
+        toast.success("Category deleted successfully");
+        onSuccess?.(category, "delete");
+        onOpenChange(false);
+      }
+    },
+    onError: (error) => {
+      toast.error(error.message || "unknown error");
+    },
+  });
+
+  const handleDeleteCategory = () => {
+    if (
+      !window.confirm(
+        "Delete this category? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    deleteCategoryMutate();
+  };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -188,8 +233,15 @@ export function EditCategoryModal({
     }
 
     mutate({
-      name: formData.name,
-      sub: formData.sub,
+      name: formData.name.trim(),
+      sub: formData.sub
+        .map((subMain) => ({
+          SubMain: subMain.SubMain.trim(),
+          subCategory: subMain.subCategory
+            .map((item) => item.trim())
+            .filter(Boolean),
+        }))
+        .filter((subMain) => subMain.SubMain),
       logoUrl: imagePreview,
       isTop: formData.isTop,
     });
@@ -199,7 +251,9 @@ export function EditCategoryModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-palette-bg border-palette-accent-3">
         <DialogHeader>
-          <DialogTitle className="text-palette-text">Edit Category</DialogTitle>
+          <DialogTitle className="text-palette-text">
+            Update Category
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -375,22 +429,35 @@ export function EditCategoryModal({
           </div>
 
           {/* Actions */}
-          <div className="flex gap-2 justify-end pt-4">
+          <div className="flex flex-col gap-2 pt-4 sm:flex-row sm:items-center sm:justify-between">
             <Button
               type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="border-palette-accent-3 text-palette-text hover:bg-palette-accent-3/10"
+              variant="destructive"
+              onClick={handleDeleteCategory}
+              disabled={isDeleting}
+              className="gap-2"
             >
-              Cancel
+              <Trash2 size={16} />
+              {isDeleting ? "Deleting..." : "Delete Category"}
             </Button>
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="bg-palette-btn text-white hover:opacity-90"
-            >
-              {isLoading ? "Updating..." : "Update Category"}
-            </Button>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="border-palette-accent-3 text-palette-text hover:bg-palette-accent-3/10"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="bg-palette-btn text-white hover:opacity-90"
+              >
+                {isLoading ? "Updating..." : "Update Category"}
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

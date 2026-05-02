@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { CreateCategoryModal } from "@/components/ui/custom/admin/category/CreateCategoryModal";
 import { CategoryTable } from "@/components/ui/custom/admin/category/CategoryTable";
 import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
+import { CategoryResponse } from "@/@types/category-brand";
 
 export default function CategoryPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -16,8 +17,8 @@ export default function CategoryPage() {
     data: categoriesData,
     isLoading,
     refetch,
-  } = useQueryWrapper(
-    ["categories", pagination],
+  } = useQueryWrapper<CategoryResponse>(
+    ["categories", pagination.page, pagination.limit],
     `/category?page=${pagination.page}&limit=${pagination.limit}`
   );
 

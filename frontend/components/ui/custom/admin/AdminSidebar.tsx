@@ -59,12 +59,12 @@ const managementMenuItems = [
   {
     title: "Category Management",
     url: "/admin/category-page",
-    icon: Layers,
+    icon: Tag,
   },
   {
     title: "Product Management",
     url: "/admin/products",
-    icon: ShoppingBag,
+    icon: Layers,
   },
 ];
 
@@ -75,7 +75,7 @@ const personalMenuItems = [
     icon: Package,
   },
   {
-    title: "My Products",
+    title: "My Category and Products",
     url: "/admin/my-products",
     icon: ShoppingBag,
   },
@@ -139,7 +139,7 @@ export function AdminSidebar({
                         "flex items-center gap-3 px-4 py-2 text-palette-text/70 hover:text-palette-text hover:bg-palette-bg transition",
                         {
                           "bg-palette-btn/10 text-palette-btn": isActive,
-                        }
+                        },
                       )}
                     >
                       <Icon className="w-5 h-5" />
@@ -174,7 +174,7 @@ export function AdminSidebar({
                         "flex items-center gap-3 px-4 py-2 text-palette-text/70 hover:text-palette-text hover:bg-palette-bg transition",
                         {
                           "bg-palette-btn/10 text-palette-btn": isActive,
-                        }
+                        },
                       )}
                     >
                       <Icon className="w-5 h-5" />

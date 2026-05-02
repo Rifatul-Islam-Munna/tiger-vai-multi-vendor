@@ -4,15 +4,30 @@ import { searchParamsCache, toBackendParams } from "@/lib/searchParams";
 import { SearchParams } from "nuqs/server";
 import { SearchClient } from "@/components/ui/custom/product-details/SearchResults";
 import { GetRequestNormal } from "@/api-hook/api-hook";
-import { ProductResponse } from "@/@types/seach-product-type";
+import { ProductItem, ProductResponse } from "@/@types/seach-product-type";
+import { CategoryResponse } from "@/@types/category-brand";
 
-async function fetchProducts(params: any) {
+type ParsedSearchParams = Awaited<ReturnType<typeof searchParamsCache.parse>>;
+
+async function fetchProducts(params: ParsedSearchParams) {
   const data = await GetRequestNormal<ProductResponse>(
     `/meilisearch/get-all-product?${toBackendParams(params)}`,
-    60, // Revalidate every 60 seconds
+    300,
     "products" // Cache tag for selective revalidation
   );
   return data;
+}
+
+async function fetchCategories() {
+  try {
+    return await GetRequestNormal<CategoryResponse>(
+      "/category?page=1&limit=100",
+      300,
+      "categories"
+    );
+  } catch {
+    return null;
+  }
 }
 
 // ✅ Generate dynamic metadata for SEO
@@ -135,7 +150,10 @@ export default async function SearchPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = searchParamsCache.parse(await searchParams);
-  const data = await fetchProducts(params);
+  const [data, categoriesData] = await Promise.all([
+    fetchProducts(params),
+    fetchCategories(),
+  ]);
 
   // ✅ Add JSON-LD structured data for rich snippets
   const jsonLd = {
@@ -146,7 +164,7 @@ export default async function SearchPage({
     numberOfItems: data?.total,
     itemListElement: data?.items
       .slice(0, 10)
-      .map((product: any, index: number) => ({
+      .map((product: ProductItem, index: number) => ({
         "@type": "ListItem",
         position: index + 1,
         item: {
@@ -190,7 +208,7 @@ export default async function SearchPage({
               </div>
             }
           >
-            <SearchClient data={data} />
+            <SearchClient data={data} categories={categoriesData?.data || []} />
           </Suspense>
         </div>
       </div>

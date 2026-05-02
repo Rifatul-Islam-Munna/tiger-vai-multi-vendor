@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Check, ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAddProductStore } from "@/zustan-hook/addProductStore";
 import StepBasicInfo from "@/components/ui/custom/admin/create-edit-product/create-product/StepBasicInfo";
 import StepVariants from "@/components/ui/custom/admin/create-edit-product/create-product/StepVariantsImproved";
@@ -22,6 +22,13 @@ import {
   Package,
   Info,
 } from "lucide-react";
+
+type ProductTypeId =
+  | "clothing"
+  | "tyre"
+  | "electronics"
+  | "accessories"
+  | "general";
 
 // Product type configurations - using palette colors
 const PRODUCT_TYPES = [
@@ -103,6 +110,7 @@ const FORM_SECTIONS = {
 
 export default function AddProductPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { resetForm, calculateAndFinalize, updateField } = useAddProductStore();
   const [selectedProductType, setSelectedProductType] = useState<string | null>(
@@ -119,6 +127,16 @@ export default function AddProductPage() {
       updateField("productType", selectedProductType);
     }
   }, [selectedProductType, updateField]);
+
+  React.useEffect(() => {
+    const main = searchParams.get("main") || "";
+    const subMain = searchParams.get("subMain") || "";
+    const category = searchParams.get("category") || "";
+
+    if (main || subMain || category) {
+      updateField("category", { main, subMain, category });
+    }
+  }, [searchParams, updateField]);
 
   const { mutate, isPending } = useApiMutation(
     postNewProduct,
@@ -175,7 +193,7 @@ export default function AddProductPage() {
           setIsSubmitting(false);
         },
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error:", error);
       setIsSubmitting(false);
     }
@@ -463,7 +481,11 @@ export default function AddProductPage() {
                     style={{ borderColor: "var(--palette-accent-3)" }}
                   >
                     {section.id === "basic" && <StepBasicInfo />}
-                    {section.id === "variants" && <StepVariants productType={selectedProductType as any} />}
+                    {section.id === "variants" && (
+                      <StepVariants
+                        productType={selectedProductType as ProductTypeId}
+                      />
+                    )}
                     {section.id === "media" && <StepMedia />}
                     {section.id === "shipping" && <StepShipping />}
                   </div>

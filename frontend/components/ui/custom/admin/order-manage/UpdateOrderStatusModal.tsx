@@ -19,6 +19,7 @@ import {
   XCircle,
   ArrowRight,
   AlertCircle,
+  Trash2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useCommonMutationApi } from "@/api-hook/mutation-common";
@@ -26,7 +27,7 @@ import { Order } from "@/@types/order";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface UpdateOrderStatusModalProps {
-  order: Order;
+  order: Order | null;
   isOpen: boolean;
   onClose: () => void;
   onStatusUpdate: (newStatus: string) => void;
@@ -132,6 +133,17 @@ const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
       setSelectedStatus(null);
     },
   });
+  const { mutate: deleteOrderMutate, isPending: isDeleting } =
+    useCommonMutationApi({
+      url: `/sell-product-item/delete-sell`,
+      method: "DELETE",
+      successMessage: "Order deleted successfully",
+      onSuccess: () => {
+        onClose();
+        query.refetchQueries({ queryKey: ["orders"], exact: false });
+        query.refetchQueries({ queryKey: ["orders-admin"], exact: false });
+      },
+    });
 
   if (!order) return null;
 
@@ -144,6 +156,16 @@ const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
     mutate({ newStatus: selectedStatus });
 
     // Simulate API call
+  };
+
+  const handleDeleteOrder = () => {
+    if (
+      !window.confirm("Delete this order? This action cannot be undone.")
+    ) {
+      return;
+    }
+
+    deleteOrderMutate(order._id);
   };
 
   return (
@@ -345,32 +367,44 @@ const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
+        <div className="flex flex-col gap-3 mt-6 pt-6 border-t border-gray-200 sm:flex-row sm:items-center sm:justify-between">
           <Button
-            onClick={onClose}
-            variant="outline"
-            className="border-gray-300 hover:bg-gray-50"
-            disabled={isUpdating}
+            type="button"
+            variant="destructive"
+            onClick={handleDeleteOrder}
+            disabled={isDeleting}
+            className="gap-2"
           >
-            Cancel
+            <Trash2 className="h-4 w-4" />
+            {isDeleting ? "Deleting..." : "Delete Order"}
           </Button>
-          <Button
-            onClick={handleStatusUpdate}
-            disabled={isPending}
-            className="bg-[var(--palette-btn)] hover:bg-[var(--palette-accent-3)] text-white px-6"
-          >
-            {isPending ? (
-              <>
-                <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                Updating...
-              </>
-            ) : (
-              <>
-                <CheckCircle className="mr-2 h-4 w-4" />
-                Update Status
-              </>
-            )}
-          </Button>
+          <div className="flex justify-end gap-3">
+            <Button
+              onClick={onClose}
+              variant="outline"
+              className="border-gray-300 hover:bg-gray-50"
+              disabled={isUpdating}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleStatusUpdate}
+              disabled={isPending}
+              className="bg-[var(--palette-btn)] hover:bg-[var(--palette-accent-3)] text-white px-6"
+            >
+              {isPending ? (
+                <>
+                  <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                  Updating...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Update Status
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

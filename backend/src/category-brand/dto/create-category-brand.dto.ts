@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsUrl, IsArray, ArrayNotEmpty, isBoolean, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsArray, IsBoolean } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
 
@@ -11,7 +11,6 @@ export class SubDto {
 
   @ApiProperty({ type: [String] })
   @IsArray()
-  @ArrayNotEmpty()
   @IsString({ each: true })
   subCategory: string[];
 }

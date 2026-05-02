@@ -1,6 +1,22 @@
 "use server"
 
 import { DeleteRequestAxios, PatchRequestAxios, PostRequestAxios } from "@/api-hook/api-hook"
+import { revalidatePath, updateTag } from "next/cache";
+
+const CATEGORY_TAGS = ["categories", "top-categories"];
+const BRAND_TAGS = ["brands", "top-brands"];
+type MutationPayload = object;
+
+function revalidateCategoryCaches() {
+  CATEGORY_TAGS.forEach((tag) => updateTag(tag));
+  revalidatePath("/admin/category-page");
+  revalidatePath("/admin/my-products");
+}
+
+function revalidateBrandCaches() {
+  BRAND_TAGS.forEach((tag) => updateTag(tag));
+  revalidatePath("/admin/brand-page");
+}
 
 export const uploadCategory = async (formData: FormData) => {
   // ✅ Get the file from FormData
@@ -59,30 +75,36 @@ export const DeleteImage = async (key: string) => {
 
 
 
-export const createCategory = async (payload: any) => {
+export const createCategory = async (payload: MutationPayload) => {
   const [data, error] = await PostRequestAxios("/category", payload);
+  if (!error) revalidateCategoryCaches();
   return { data, error }
 };
-export const updateCategory = async (id:string,payload: any) => {
+export const updateCategory = async (id:string,payload: MutationPayload) => {
   const [data, error] = await PatchRequestAxios(`/category/${id}`, payload);
+  if (!error) revalidateCategoryCaches();
   return { data, error }
 };
 
 export const DeleteCategory = async (id:string) => {
   const [data, error] = await DeleteRequestAxios(`/category/${id}`);
+  if (!error) revalidateCategoryCaches();
   return { data, error }
 };
 
 
-export const postBrand = async (payload: any) => {
+export const postBrand = async (payload: MutationPayload) => {
   const [data, error] = await PostRequestAxios("/brand", payload);
+  if (!error) revalidateBrandCaches();
   return { data, error }
 };
-export const UpdateBrand = async (id:string,payload: any) => {
+export const UpdateBrand = async (id:string,payload: MutationPayload) => {
   const [data, error] = await PatchRequestAxios(`/brand/${id}`, payload);
+  if (!error) revalidateBrandCaches();
   return { data, error }
 };
 export const DeleteBrand = async (id:string) => {
   const [data, error] = await DeleteRequestAxios(`/brand/${id}`);
+  if (!error) revalidateBrandCaches();
   return { data, error }
 };

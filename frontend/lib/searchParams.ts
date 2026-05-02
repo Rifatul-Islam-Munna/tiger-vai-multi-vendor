@@ -25,7 +25,7 @@ export const searchParamsCache = createSearchParamsCache({
   
 });
 
-export type SearchParams = ReturnType<typeof searchParamsCache.parse>;
+export type SearchParams = Awaited<ReturnType<typeof searchParamsCache.parse>>;
 
 // Convert to URLSearchParams for backend
 export function toBackendParams(params: SearchParams): URLSearchParams {

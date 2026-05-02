@@ -1,7 +1,7 @@
 // app/dashboard/products/page.tsx
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -18,221 +18,95 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Eye, Edit2, Trash2, Plus } from "lucide-react";
+import { Eye, Edit2, Plus } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ViewProductModal } from "@/components/ui/custom/admin/create-edit-product/ViewProductModal";
 import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
 import { Product, ProductApiResponse } from "@/@types/short-product";
-import { useQueryClient } from "@tanstack/react-query";
-import { deleteProduct } from "@/actions/product";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { toast } from "sonner";
+import { CategoryResponse } from "@/@types/category-brand";
+import { CreateCategoryModal } from "@/components/ui/custom/admin/category/CreateCategoryModal";
+import { EditCategoryModal } from "@/components/ui/custom/admin/category/EditCategoryModal";
 
-// Static product data
-const STATIC_PRODUCTS = [
-  {
-    _id: "1",
-    name: "Premium Cotton T-Shirt",
-    price: 1200,
-    offerPrice: 999,
-    stock: 45,
-    category: { main: "MEN", category: "T-Shirts" },
-    brand: { id: "brand1", name: "Nike" },
-    isActive: true,
-    createdAt: "2025-11-01T10:00:00Z",
-    thumbnail: { url: "/placeholder-product.jpg", key: "thumb1", id: "t1" },
-    variants: [
-      { size: "M", color: "Red", price: 1200, discountPrice: 999, stock: 15 },
-      { size: "L", color: "Red", price: 1200, discountPrice: 999, stock: 20 },
-      { size: "M", color: "Blue", price: 1200, stock: 10 },
-    ],
-    description: "High-quality cotton t-shirt perfect for everyday wear",
-  },
-  {
-    _id: "2",
-    name: "Running Shoes Pro",
-    price: 5500,
-    offerPrice: 4800,
-    stock: 30,
-    category: { main: "MEN", category: "Shoes" },
-    brand: { id: "brand2", name: "Adidas" },
-    isActive: true,
-    createdAt: "2025-11-02T10:00:00Z",
-    thumbnail: { url: "/placeholder-product.jpg", key: "thumb2", id: "t2" },
-    variants: [
-      {
-        size: "42",
-        color: "Black",
-        price: 5500,
-        discountPrice: 4800,
-        stock: 10,
-      },
-      {
-        size: "43",
-        color: "Black",
-        price: 5500,
-        discountPrice: 4800,
-        stock: 12,
-      },
-      { size: "42", color: "White", price: 5500, stock: 8 },
-    ],
-    description: "Professional running shoes with advanced cushioning",
-  },
-  {
-    _id: "3",
-    name: "Denim Jeans Slim Fit",
-    price: 2500,
-    stock: 60,
-    category: { main: "MEN", category: "Jeans" },
-    brand: { id: "brand3", name: "Levi's" },
-    isActive: true,
-    createdAt: "2025-11-03T10:00:00Z",
-    thumbnail: { url: "/placeholder-product.jpg", key: "thumb3", id: "t3" },
-    variants: [
-      { size: "32", color: "Dark Blue", price: 2500, stock: 20 },
-      { size: "34", color: "Dark Blue", price: 2500, stock: 25 },
-      { size: "32", color: "Light Blue", price: 2500, stock: 15 },
-    ],
-    description: "Classic slim-fit denim jeans",
-  },
-  {
-    _id: "4",
-    name: "Summer Floral Dress",
-    price: 3200,
-    offerPrice: 2800,
-    stock: 25,
-    category: { main: "WOMEN", category: "Dresses" },
-    brand: { id: "brand4", name: "Zara" },
-    isActive: true,
-    createdAt: "2025-11-04T10:00:00Z",
-    thumbnail: { url: "/placeholder-product.jpg", key: "thumb4", id: "t4" },
-    variants: [
-      {
-        size: "S",
-        color: "Floral Pink",
-        price: 3200,
-        discountPrice: 2800,
-        stock: 10,
-      },
-      {
-        size: "M",
-        color: "Floral Pink",
-        price: 3200,
-        discountPrice: 2800,
-        stock: 15,
-      },
-    ],
-    description: "Beautiful summer dress with floral patterns",
-  },
-  {
-    _id: "5",
-    name: "Leather Wallet",
-    price: 800,
-    stock: 100,
-    category: { main: "MEN", category: "Accessories" },
-    brand: { id: "brand5", name: "Fossil" },
-    isActive: false,
-    createdAt: "2025-11-05T10:00:00Z",
-    thumbnail: { url: "/placeholder-product.jpg", key: "thumb5", id: "t5" },
-    variants: [
-      { size: "Standard", color: "Brown", price: 800, stock: 50 },
-      { size: "Standard", color: "Black", price: 800, stock: 50 },
-    ],
-    description: "Premium leather wallet with multiple card slots",
-  },
-];
+interface CategoryItem {
+  _id: string;
+  name: string;
+  logoUrl?: string;
+  sub: {
+    SubMain: string;
+    subCategory: string[];
+  }[];
+  isTop?: boolean;
+}
 
 export default function ProductManagementPage() {
-  const [products, setProducts] = useState(STATIC_PRODUCTS);
+  const searchParams = useSearchParams();
+  const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(
+    null
+  );
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [selectedMain, setSelectedMain] = useState(
+    searchParams.get("main") || ""
+  );
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const query = new URLSearchParams();
   query.set("page", page.toString());
   query.set("limit", limit.toString());
   query.set("sortBy", sortBy);
   query.set("sortOrder", sortOrder);
+  if (selectedMain) query.set("main", selectedMain);
 
-  const { data, isLoading } = useQueryWrapper<ProductApiResponse>(
-    ["products", page, limit, sortBy, sortOrder],
-    `/product/getProductVendorAdmin?${query.toString()}`
+  const { data } = useQueryWrapper<ProductApiResponse>(
+    ["products", page, limit, sortBy, sortOrder, selectedMain],
+    `/product/getProductVendorAdmin?${query.toString()}`,
+    { enabled: !!selectedMain }
+  );
+  const { data: categoriesData, refetch: refetchCategories } =
+    useQueryWrapper<CategoryResponse>(
+    ["product-categories"],
+    "/category?page=1&limit=100"
   );
   const handleViewProduct = (product: Product) => {
     setSelectedProduct(product);
     setIsViewModalOpen(true);
   };
-  const queryClient = useQueryClient();
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const confirmDelete = async () => {
-    if (productToDelete) {
-      setIsDeleting(true);
-      try {
-        // Optimistically update the cache
-        queryClient.setQueryData(
-          ["products", page, limit, sortBy, sortOrder],
-          (old: ProductApiResponse | undefined) => {
-            if (!old) return old;
-            return {
-              ...old,
-              data: old.data.filter((product) => product._id !== productToDelete),
-              total: old.total - 1,
-              totalPages: Math.ceil((old.total - 1) / limit),
-            };
-          }
-        );
-
-        const result = await deleteProduct(productToDelete);
-        if (result.error) {
-          // Revert optimistic update on error
-          queryClient.invalidateQueries({
-            queryKey: ["products", page, limit, sortBy, sortOrder],
-          });
-          toast.error(result.error.message || "Failed to delete product");
-        } else {
-          toast.success("Product deleted successfully");
-          // Invalidate and refetch to ensure fresh data
-          await queryClient.invalidateQueries({
-            queryKey: ["products"],
-          });
-          setIsDeleteModalOpen(false);
-        }
-      } catch (error) {
-        // Revert optimistic update on error
-        queryClient.invalidateQueries({
-          queryKey: ["products", page, limit, sortBy, sortOrder],
-        });
-        toast.error("An error occurred while deleting");
-        console.error('Delete failed:', error);
-      } finally {
-        setIsDeleting(false);
-        setProductToDelete(null);
-      }
-    }
-  };
-
-  const openDeleteDialog = (productId: string) => {
-    setProductToDelete(productId);
-    setIsDeleteModalOpen(true);
-  };
 
   const total = data?.total || 0;
   const totalPages = data?.totalPages || 1;
-  const paginatedProducts = products.slice((page - 1) * limit, page * limit);
+  const categoryQuery = selectedMain
+    ? `?main=${encodeURIComponent(selectedMain)}`
+    : "";
+  const addProductHref = selectedMain
+    ? {
+        pathname: "/admin/my-products/add-product",
+        query: { main: selectedMain },
+      }
+    : "/admin/my-products/add-product";
+
+  const handleCategoryChangeSuccess = (
+    category?: CategoryItem,
+    action?: "update" | "delete"
+  ) => {
+    const previousName = editingCategory?.name;
+
+    setEditingCategory(null);
+    refetchCategories();
+
+    if (action === "update" && category && selectedMain === previousName) {
+      setSelectedMain(category.name);
+      setPage(1);
+    }
+
+    if (action === "delete" && selectedMain === previousName) {
+      setSelectedMain("");
+      setPage(1);
+    }
+  };
 
   return (
     <div
@@ -242,121 +116,205 @@ export default function ProductManagementPage() {
       }}
     >
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Product Management</h1>
-          <Link href="/admin/my-products/add-product">
-            <Button
-              className="flex items-center gap-2 text-white"
-              style={{ backgroundColor: "var(--palette-btn)" }}
-            >
-              <Plus size={20} />
-              Add New Product
-            </Button>
-          </Link>
+        <div className="flex items-center justify-between gap-3 mb-6">
+          <h1 className="text-3xl font-bold">Product & Category</h1>
+          <Button
+            onClick={() => setIsCreateCategoryOpen(true)}
+            className="text-white"
+            style={{ backgroundColor: "var(--palette-btn)" }}
+          >
+            Create Category
+          </Button>
         </div>
 
-        {/* Filters - Fixed positioning */}
-        <div className="flex gap-4 mb-6 items-center">
-          <div className="flex-1">
-            <label
-              className="text-sm mb-1 block"
-              style={{ color: "var(--palette-accent-3)" }}
-            >
-              Sort By
-            </label>
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger
-                className="w-full"
-                style={{
-                  borderColor: "var(--palette-accent-3)",
-                  backgroundColor: "var(--palette-bg)",
-                  color: "var(--palette-text)",
+        <div
+          className="mb-6 rounded-lg border p-4"
+          style={{
+            backgroundColor: "var(--palette-bg)",
+            borderColor: "var(--palette-accent-3)",
+          }}
+        >
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold">Categories</h2>
+            {selectedMain && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSelectedMain("");
+                  setPage(1);
                 }}
               >
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent
-                style={{
-                  backgroundColor: "var(--palette-bg)",
-                  color: "var(--palette-text)",
-                }}
-              >
-                <SelectItem value="createdAt">Created Date</SelectItem>
-                <SelectItem value="name">Product Name</SelectItem>
-                <SelectItem value="price">Price</SelectItem>
-                <SelectItem value="stock">Stock</SelectItem>
-              </SelectContent>
-            </Select>
+                Clear
+              </Button>
+            )}
           </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {categoriesData?.data?.map((category) => {
+              const isActive = selectedMain === category.name;
 
-          <div className="flex-1">
-            <label
-              className="text-sm mb-1 block"
-              style={{ color: "var(--palette-accent-3)" }}
-            >
-              Order
-            </label>
-            <Select
-              value={sortOrder}
-              onValueChange={(value: any) => setSortOrder(value)}
-            >
-              <SelectTrigger
-                className="w-full"
-                style={{
-                  borderColor: "var(--palette-accent-3)",
-                  backgroundColor: "var(--palette-bg)",
-                  color: "var(--palette-text)",
-                }}
-              >
-                <SelectValue placeholder="Order" />
-              </SelectTrigger>
-              <SelectContent
-                style={{
-                  backgroundColor: "var(--palette-bg)",
-                  color: "var(--palette-text)",
-                }}
-              >
-                <SelectItem value="asc">Ascending</SelectItem>
-                <SelectItem value="desc">Descending</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex-1">
-            <label
-              className="text-sm mb-1 block"
-              style={{ color: "var(--palette-accent-3)" }}
-            >
-              Per Page
-            </label>
-            <Select
-              value={limit.toString()}
-              onValueChange={(value) => setLimit(parseInt(value))}
-            >
-              <SelectTrigger
-                className="w-full"
-                style={{
-                  borderColor: "var(--palette-accent-3)",
-                  backgroundColor: "var(--palette-bg)",
-                  color: "var(--palette-text)",
-                }}
-              >
-                <SelectValue placeholder="Limit" />
-              </SelectTrigger>
-              <SelectContent
-                style={{
-                  backgroundColor: "var(--palette-bg)",
-                  color: "var(--palette-text)",
-                }}
-              >
-                <SelectItem value="10">10 per page</SelectItem>
-                <SelectItem value="20">20 per page</SelectItem>
-                <SelectItem value="50">50 per page</SelectItem>
-              </SelectContent>
-            </Select>
+              return (
+                <div
+                  key={category._id}
+                  className={`rounded-lg border p-3 text-left transition ${
+                    isActive
+                      ? "border-palette-btn bg-palette-btn text-white"
+                      : "border-gray-200 bg-white text-palette-text hover:border-palette-btn hover:bg-palette-btn/5"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedMain(category.name);
+                        setPage(1);
+                      }}
+                      className="min-w-0 flex-1 text-left"
+                    >
+                      <span className="block truncate text-base font-semibold">
+                        {category.name}
+                      </span>
+                      <span className="mt-1 block text-xs opacity-75">
+                        {category.sub?.length || 0} group
+                        {category.sub?.length === 1 ? "" : "s"}
+                      </span>
+                    </button>
+                    <Button
+                      type="button"
+                      variant={isActive ? "secondary" : "outline"}
+                      size="sm"
+                      onClick={() => setEditingCategory(category)}
+                      className="h-8 w-8 shrink-0 p-0"
+                      title="Update Category"
+                    >
+                      <Edit2 size={14} />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
+
+        {selectedMain ? (
+          <>
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="text-xl font-semibold">
+                {selectedMain} Products
+              </h2>
+              <Link href={addProductHref}>
+                <Button
+                  className="flex items-center gap-2 text-white"
+                  style={{ backgroundColor: "var(--palette-btn)" }}
+                >
+                  <Plus size={20} />
+                  Add Product
+                </Button>
+              </Link>
+            </div>
+
+            <div className="flex gap-4 mb-6 items-center">
+              <div className="flex-1">
+                <label
+                  className="text-sm mb-1 block"
+                  style={{ color: "var(--palette-accent-3)" }}
+                >
+                  Sort By
+                </label>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger
+                    className="w-full"
+                    style={{
+                      borderColor: "var(--palette-accent-3)",
+                      backgroundColor: "var(--palette-bg)",
+                      color: "var(--palette-text)",
+                    }}
+                  >
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent
+                    style={{
+                      backgroundColor: "var(--palette-bg)",
+                      color: "var(--palette-text)",
+                    }}
+                  >
+                    <SelectItem value="createdAt">Created Date</SelectItem>
+                    <SelectItem value="name">Product Name</SelectItem>
+                    <SelectItem value="price">Price</SelectItem>
+                    <SelectItem value="stock">Stock</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex-1">
+                <label
+                  className="text-sm mb-1 block"
+                  style={{ color: "var(--palette-accent-3)" }}
+                >
+                  Order
+                </label>
+                <Select
+                  value={sortOrder}
+                  onValueChange={(value) =>
+                    setSortOrder(value as "asc" | "desc")
+                  }
+                >
+                  <SelectTrigger
+                    className="w-full"
+                    style={{
+                      borderColor: "var(--palette-accent-3)",
+                      backgroundColor: "var(--palette-bg)",
+                      color: "var(--palette-text)",
+                    }}
+                  >
+                    <SelectValue placeholder="Order" />
+                  </SelectTrigger>
+                  <SelectContent
+                    style={{
+                      backgroundColor: "var(--palette-bg)",
+                      color: "var(--palette-text)",
+                    }}
+                  >
+                    <SelectItem value="asc">Ascending</SelectItem>
+                    <SelectItem value="desc">Descending</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex-1">
+                <label
+                  className="text-sm mb-1 block"
+                  style={{ color: "var(--palette-accent-3)" }}
+                >
+                  Per Page
+                </label>
+                <Select
+                  value={limit.toString()}
+                  onValueChange={(value) => setLimit(parseInt(value))}
+                >
+                  <SelectTrigger
+                    className="w-full"
+                    style={{
+                      borderColor: "var(--palette-accent-3)",
+                      backgroundColor: "var(--palette-bg)",
+                      color: "var(--palette-text)",
+                    }}
+                  >
+                    <SelectValue placeholder="Limit" />
+                  </SelectTrigger>
+                  <SelectContent
+                    style={{
+                      backgroundColor: "var(--palette-bg)",
+                      color: "var(--palette-text)",
+                    }}
+                  >
+                    <SelectItem value="10">10 per page</SelectItem>
+                    <SelectItem value="20">20 per page</SelectItem>
+                    <SelectItem value="50">50 per page</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
         {/* Table */}
         <div
@@ -459,7 +417,7 @@ export default function ProductManagementPage() {
                         />
                       </button>
                       <Link
-                        href={`/admin/my-products/edit-product/${product.slug}`}
+                        href={`/admin/my-products/edit-product/${product.slug}${categoryQuery}`}
                       >
                         <button
                           className="p-2 hover:bg-yellow-500/20 rounded transition"
@@ -471,13 +429,6 @@ export default function ProductManagementPage() {
                           />
                         </button>
                       </Link>
-                      <button
-                        onClick={() => openDeleteDialog(product._id)}
-                        className="p-2 hover:bg-red-500/20 rounded transition"
-                        title="Delete Product"
-                      >
-                        <Trash2 size={18} className="text-red-400" />
-                      </button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -532,6 +483,12 @@ export default function ProductManagementPage() {
             </Button>
           </div>
         </div>
+          </>
+        ) : (
+          <div className="rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-palette-accent-3">
+            Select a category to view and add products.
+          </div>
+        )}
       </div>
 
       {/* View Product Modal */}
@@ -544,37 +501,23 @@ export default function ProductManagementPage() {
         }}
       />
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={isDeleteModalOpen}
-        onOpenChange={(open) => {
-          setIsDeleteModalOpen(open);
-          if (!open) setProductToDelete(null);
+      <CreateCategoryModal
+        open={isCreateCategoryOpen}
+        onOpenChange={setIsCreateCategoryOpen}
+        onSuccess={() => {
+          setIsCreateCategoryOpen(false);
+          refetchCategories();
         }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Are you absolutely sure?</DialogTitle>
-            <DialogDescription>
-              This action cannot be undone. This will permanently delete the product.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="sm:justify-start">
-            <DialogClose asChild>
-              <Button type="button" variant="secondary">
-                Cancel
-              </Button>
-            </DialogClose>
-            <Button
-              onClick={confirmDelete}
-              disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      />
+
+      {editingCategory && (
+        <EditCategoryModal
+          category={editingCategory}
+          open={!!editingCategory}
+          onOpenChange={() => setEditingCategory(null)}
+          onSuccess={handleCategoryChangeSuccess}
+        />
+      )}
     </div>
   );
 }

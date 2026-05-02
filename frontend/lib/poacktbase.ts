@@ -30,8 +30,8 @@ const callAuthFnFromNestjsBackend = async (url: string, options: RequestInit): P
     const authData = await queryClientInstance.fetchQuery({
       queryKey: ['get-auth-data'],
       queryFn: ()=>AmIAuthenticated(), // calling it from nextjs server action so that backend url doesn't expose 
-      staleTime: 4200000, // 70 minutes
-      gcTime: 4200000,    // 70 minutes (formerly cacheTime)
+      staleTime: 5 * 60 * 1000,
+      gcTime: 5 * 60 * 1000,
     });
 
     if (!authData?.data) {

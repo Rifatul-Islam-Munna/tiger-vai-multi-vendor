@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import {
   Table,
   TableBody,
@@ -23,10 +23,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DeleteCategory } from "@/actions/brand-category";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { invalidateCategoryQueries } from "@/lib/invalidateCategoryQueries";
 
 interface SubDto {
   SubMain: string;
@@ -61,6 +61,7 @@ export function CategoryTable({
   isLoading,
   onRefresh,
 }: CategoryTableProps) {
+  const queryClient = useQueryClient();
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
@@ -80,12 +81,14 @@ export function CategoryTable({
   const { mutate, isPending: isDeleting } = useMutation({
     mutationKey: ["delete-category"],
     mutationFn: (id: string) => DeleteCategory(id),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       if (data?.error) {
         toast.error(data.error.message);
         return;
       }
+      await invalidateCategoryQueries(queryClient);
       toast.success("Category deleted successfully");
+      setDeleteConfirm(null);
       onRefresh();
     },
     onError: (error) => {
@@ -145,10 +148,9 @@ export function CategoryTable({
                 const totalSubcategories = getTotalSubcategories(category);
 
                 return (
-                  <>
+                  <Fragment key={category._id}>
                     {/* Main Row */}
                     <TableRow
-                      key={category._id}
                       className="hover:bg-palette-accent-3/5 border-palette-accent-3/20"
                     >
                       <TableCell>
@@ -269,7 +271,7 @@ export function CategoryTable({
                         </TableCell>
                       </TableRow>
                     )}
-                  </>
+                  </Fragment>
                 );
               })
             )}

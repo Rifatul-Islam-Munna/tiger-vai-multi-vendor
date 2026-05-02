@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -23,6 +23,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { useEditProductStore } from "@/zustan-hook/editProductStore";
@@ -35,67 +44,18 @@ import { BrandResponse, CategoryResponse } from "@/@types/category-brand";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { ImageUploadFieldUpdate } from "@/components/ui/custom/admin/create-edit-product/create-product/UpdateImageField";
-import { updateProductAdmin } from "@/actions/product";
+import { deleteProduct, updateProductAdmin } from "@/actions/product";
 import RichTextEditor from "@/components/ui/custom/addProduct/Description";
 import { ReactSortable } from "react-sortablejs";
 import StepVariantsImproved from "@/components/ui/custom/admin/create-edit-product/create-product/StepVariantsImproved";
 import { DeleteImage } from "@/actions/brand-category";
-// Static product data for demo
-const STATIC_PRODUCTS: Record<string, any> = {
-  "1": {
-    _id: "1",
-    name: "Premium Cotton T-Shirt",
-    price: 1200,
-    offerPrice: 999,
-    stock: 45,
-    description: "High-quality cotton t-shirt perfect for everyday wear",
-    category: { main: "MEN", category: "T-Shirts" },
-    brand: { id: "brand1", name: "Nike" },
-    isActive: true,
-    hasOffer: true,
-    variants: [
-      { size: "M", color: "Red", price: 1200, discountPrice: 999, stock: 15 },
-      { size: "L", color: "Red", price: 1200, discountPrice: 999, stock: 20 },
-      { size: "M", color: "Blue", price: 1200, stock: 10 },
-    ],
-    thumbnail: { url: "/placeholder.jpg", key: "thumb1", id: "t1" },
-    images: [
-      { url: "/placeholder.jpg", key: "img1", id: "i1" },
-      { url: "/placeholder.jpg", key: "img2", id: "i2" },
-    ],
-    specifications: { Material: "100% Cotton", Care: "Machine Wash 30°C" },
-    shippingCost: 100,
-    freeShipping: false,
-    shippingTime: "2-3 business days",
-    height: 70,
-    width: 50,
-    weight: "0.2kg",
-    size: "M",
-    warrantyPeriod: "12 months",
-    returnPolicy: "30 days",
-    certifications: ["ISO 9001", "CE Certified"],
-  },
-};
-
-const CATEGORIES = [
-  { main: "MEN", subcategories: ["T-Shirts", "Shoes", "Jeans", "Accessories"] },
-  { main: "WOMEN", subcategories: ["Dresses", "Tops", "Shoes", "Accessories"] },
-  { main: "KIDS", subcategories: ["T-Shirts", "Shoes", "Pants"] },
-];
-
-const BRANDS = [
-  { id: "brand1", name: "Nike" },
-  { id: "brand2", name: "Adidas" },
-  { id: "brand3", name: "Levi's" },
-  { id: "brand4", name: "Zara" },
-  { id: "brand5", name: "Fossil" },
-];
-
+import { toast } from "sonner";
 export default function EditProductPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const params = useParams();
   const productId = params.id as string;
-  const { formData, loadProduct, updateField, getChangedFields } =
+  const { formData, loadProduct, updateField } =
     useEditProductStore();
   const [isBrandInputMode, setIsBrandInputMode] = useState(false);
 
@@ -106,16 +66,18 @@ export default function EditProductPage() {
     shipping: false,
     additional: false,
   });
-  const { data: productDetails, isPending, refetch: refetchProduct } = useQueryWrapper<Product>(
-    [productId],
-    `/product/get-product?slug=${productId}`
-  );
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeletingProduct, setIsDeletingProduct] = useState(false);
+  const { data: productDetails, refetch: refetchProduct } =
+    useQueryWrapper<Product>(
+      [productId],
+      `/product/get-product?slug=${productId}`
+    );
 
-  const {
-    data: brandsData,
-    isLoading,
-    refetch,
-  } = useQueryWrapper<BrandResponse>(["brands"], `/brand?page=1&limit=20`);
+  const { data: brandsData } = useQueryWrapper<BrandResponse>(
+    ["brands"],
+    `/brand?page=1&limit=20`
+  );
 
   const { data: categoriesData } = useQueryWrapper<CategoryResponse>(
     ["categories"],
@@ -147,7 +109,33 @@ export default function EditProductPage() {
   );
 
   const handleSave = async () => {
-    mutate({ id: productDetails?._id!, payload: formData });
+    if (!productDetails?._id) {
+      toast.error("Product is still loading");
+      return;
+    }
+
+    mutate({ id: productDetails._id, payload: formData });
+  };
+
+  const returnQuery = searchParams.get("main")
+    ? `?main=${encodeURIComponent(searchParams.get("main") || "")}`
+    : "";
+  const returnHref = `/admin/my-products${returnQuery}`;
+
+  const handleDeleteProduct = async () => {
+    if (!productDetails?._id) return;
+
+    setIsDeletingProduct(true);
+    const result = await deleteProduct(productDetails._id);
+    setIsDeletingProduct(false);
+
+    if (result.error) {
+      toast.error(result.error.message || "Failed to delete product");
+      return;
+    }
+
+    toast.success("Product deleted successfully");
+    router.push(returnHref);
   };
 
   // Handle image removal
@@ -161,7 +149,7 @@ export default function EditProductPage() {
         const updatedImages = images.filter((img) => img.id !== imageId);
         updateField("images", updatedImages);
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         console.error("Failed to delete image:", error);
         // Still remove from local state even if API fails
         const updatedImages = images.filter((img) => img.id !== imageId);
@@ -201,9 +189,6 @@ export default function EditProductPage() {
     updateField("specifications", newSpecs);
   };
 
-  // Calculate auto values
-  const variants = (formData?.variants as any[]) || [];
-
   if (!formData) {
     return (
       <div
@@ -237,7 +222,7 @@ export default function EditProductPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <Link href="/admin/my-products">
+            <Link href={returnHref}>
               <button className="p-2 hover:bg-white/10 rounded transition">
                 <ArrowLeft size={24} />
               </button>
@@ -405,6 +390,7 @@ export default function EditProductPage() {
                         onValueChange={(value) =>
                           updateField("category", {
                             main: value,
+                            subMain: "",
                             category: "",
                           })
                         }
@@ -446,6 +432,7 @@ export default function EditProductPage() {
                             updateField("category", {
                               ...formData.category,
                               subMain: value,
+                              category: "",
                             })
                           }
                         >
@@ -1306,28 +1293,67 @@ export default function EditProductPage() {
 
         {/* Save Button */}
         <div
-          className="flex justify-end gap-3 mt-8 pt-6 border-t"
+          className="flex flex-col gap-3 mt-8 pt-6 border-t sm:flex-row sm:items-center sm:justify-between"
           style={{ borderColor: "var(--palette-accent-3)" }}
         >
-          <Link href="/admin/my-products">
-            <Button
-              variant="outline"
-              style={{ borderColor: "var(--palette-accent-3)" }}
-            >
-              Cancel
-            </Button>
-          </Link>
           <Button
-            onClick={handleSave}
-            disabled={isSubmitting}
-            className="flex items-center gap-2 text-white"
-            style={{ backgroundColor: "var(--palette-btn)" }}
+            type="button"
+            variant="destructive"
+            onClick={() => setIsDeleteDialogOpen(true)}
+            className="flex items-center gap-2"
           >
-            <Save size={20} />
-            {isSubmitting ? "Saving..." : "Save All Changes"}
+            <Trash2 size={18} />
+            Delete Product
           </Button>
+
+          <div className="flex justify-end gap-3">
+            <Link href={returnHref}>
+              <Button
+                variant="outline"
+                style={{ borderColor: "var(--palette-accent-3)" }}
+              >
+                Cancel
+              </Button>
+            </Link>
+            <Button
+              onClick={handleSave}
+              disabled={isSubmitting}
+              className="flex items-center gap-2 text-white"
+              style={{ backgroundColor: "var(--palette-btn)" }}
+            >
+              <Save size={20} />
+              {isSubmitting ? "Saving..." : "Save All Changes"}
+            </Button>
+          </div>
         </div>
       </div>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Product</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. This product will be removed from
+              storefront listings.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button
+              type="button"
+              onClick={handleDeleteProduct}
+              disabled={isDeletingProduct}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              {isDeletingProduct ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

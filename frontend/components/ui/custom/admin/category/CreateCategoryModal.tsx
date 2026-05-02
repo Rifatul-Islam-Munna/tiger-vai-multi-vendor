@@ -12,11 +12,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import Image from "next/image";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { X, Plus, Loader2, Trash2 } from "lucide-react";
 import { useUploadSingleImage } from "@/lib/useHandelImageUpload";
 import { toast } from "sonner";
 import { createCategory } from "@/actions/brand-category";
+import { invalidateCategoryQueries } from "@/lib/invalidateCategoryQueries";
 
 interface SubCategory {
   SubMain: string;
@@ -34,6 +35,7 @@ export function CreateCategoryModal({
   onOpenChange,
   onSuccess,
 }: CreateCategoryModalProps) {
+  const queryClient = useQueryClient();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
@@ -140,10 +142,11 @@ export function CreateCategoryModal({
   const { mutate: postCategoryMutation, isPending: isLoading } = useMutation({
     mutationKey: ["categories"],
     mutationFn: (data: Record<string, unknown>) => createCategory(data),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       if (data?.error) {
         toast.error(data.error.message);
       } else {
+        await invalidateCategoryQueries(queryClient);
         toast.success("Category created successfully");
         onOpenChange(false);
         onSuccess?.();
@@ -166,9 +169,16 @@ export function CreateCategoryModal({
     }
 
     const payload = {
-      name: formData.name,
+      name: formData.name.trim(),
       logoUrl: imagePreview,
-      sub: formData.sub,
+      sub: formData.sub
+        .map((subMain) => ({
+          SubMain: subMain.SubMain.trim(),
+          subCategory: subMain.subCategory
+            .map((item) => item.trim())
+            .filter(Boolean),
+        }))
+        .filter((subMain) => subMain.SubMain),
       isTop: formData.isTop,
     };
 

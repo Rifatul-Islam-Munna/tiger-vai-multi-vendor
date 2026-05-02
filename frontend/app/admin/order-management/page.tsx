@@ -20,7 +20,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import {
   Eye,
-  Trash2,
   Clock,
   ChevronDown,
   Package,
@@ -30,10 +29,7 @@ import {
 import { ViewOrderModal } from "@/components/ui/custom/admin/order-manage/ViewOrderModal";
 import UpdateOrderStatusModal from "@/components/ui/custom/admin/order-manage/UpdateOrderStatusModal";
 import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
-import { OrdersResponse } from "@/@types/order";
-import { useQueryClient } from "@tanstack/react-query";
-import { useCommonMutationApi } from "@/api-hook/mutation-common";
-import { Spinner } from "@/components/ui/spinner";
+import { Order, OrdersResponse } from "@/@types/order";
 
 // Order Status Colors
 const STATUS_COLORS: Record<
@@ -98,9 +94,11 @@ export default function OrderManagementPage() {
   const [selectedSortBy, setSelectedSortBy] = useState<string>("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [selectedStatus, setSelectedStatus] = useState<string>(""); // Changed to single string
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [statusUpdateOrder, setStatusUpdateOrder] = useState<any>(null);
+  const [statusUpdateOrder, setStatusUpdateOrder] = useState<Order | null>(
+    null
+  );
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
 
   const query = new URLSearchParams();
@@ -114,15 +112,6 @@ export default function OrderManagementPage() {
     ["orders", page, limit, sortOrder, selectedSortBy, selectedStatus],
     `/sell-product-item/get-all-order?${query.toString()}`
   );
-  const queryClient = useQueryClient();
-  const { mutate, isPending: IsDeleting } = useCommonMutationApi({
-    url: `/sell-product-item/delete-sell`,
-    method: "DELETE",
-    successMessage: "Deleted successfully",
-    onSuccess: () => {
-      queryClient.refetchQueries({ queryKey: ["orders"] });
-    },
-  });
 
   // Filter orders by selected status
   const filteredOrders = selectedStatus
@@ -131,12 +120,12 @@ export default function OrderManagementPage() {
 
   const totalPages = orders?.totalPages;
 
-  const handleViewOrder = (order: any) => {
+  const handleViewOrder = (order: Order) => {
     setSelectedOrder(order);
     setIsViewModalOpen(true);
   };
 
-  const handleOpenStatusUpdate = (order: any) => {
+  const handleOpenStatusUpdate = (order: Order) => {
     setStatusUpdateOrder(order);
     setIsStatusModalOpen(true);
   };
@@ -145,11 +134,6 @@ export default function OrderManagementPage() {
     // Update logic here
     setIsStatusModalOpen(false);
     setStatusUpdateOrder(null);
-  };
-
-  const handleDeleteOrder = (orderId: string) => {
-    mutate(orderId);
-    // Delete logic here
   };
 
   const formatDate = (dateString: string) => {
@@ -477,14 +461,6 @@ export default function OrderManagementPage() {
                         title="Update Status"
                       >
                         <Clock size={18} className="text-yellow-600" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteOrder(order._id)}
-                        className="p-2 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete Order"
-                        disabled={IsDeleting}
-                      >
-                        <Trash2 size={18} className="text-red-500" />
                       </button>
                     </div>
                   </TableCell>

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Command,
   CommandDialog,
   CommandEmpty,
   CommandGroup,
@@ -11,8 +10,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { Search, Clock, X, ArrowLeft } from "lucide-react";
+import { Search, Clock, X } from "lucide-react";
 import { Kbd } from "@/components/ui/kbd";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -56,7 +54,7 @@ const SearchContentList = ({
               size="sm"
               className="bg-[var(--palette-btn)] hover:opacity-90"
             >
-              Search for "{searchQuery}"
+              Search for {searchQuery}
             </Button>
           )}
         </div>
@@ -126,14 +124,16 @@ export function SearchModal() {
   // Load recent searches
   useEffect(() => {
     if (open) {
-      const recent = localStorage.getItem("recentSearches");
-      if (recent) {
-        try {
-          setRecentSearches(JSON.parse(recent));
-        } catch {
-          setRecentSearches([]);
+      queueMicrotask(() => {
+        const recent = localStorage.getItem("recentSearches");
+        if (recent) {
+          try {
+            setRecentSearches(JSON.parse(recent));
+          } catch {
+            setRecentSearches([]);
+          }
         }
-      }
+      });
     }
   }, [open]);
 
@@ -234,45 +234,23 @@ export function SearchModal() {
           </div>
         </CommandDialog>
       ) : (
-        /* --- MOBILE: Sheet with Command --- */
-        <Sheet open={open} onOpenChange={setOpen}>
-          <SheetContent
-            side="bottom"
-            className="w-full h-[100dvh] p-0 bg-white border-0"
-          >
-            <Command className="h-full border-none shadow-none">
-              {/* Custom Mobile Header with Input */}
-              <div className="flex items-center gap-2 p-2 border-b">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setOpen(false)}
-                  className="shrink-0"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </Button>
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    className="w-full pl-9 pr-4 py-2.5 bg-gray-100 rounded-full text-sm outline-none focus:ring-2 focus:ring-[var(--palette-btn)]/20 transition-all"
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) =>
-                      e.key === "Enter" && handleSearch(searchQuery)
-                    }
-                    autoFocus
-                  />
-                </div>
-              </div>
-
-              {/* Search Results List */}
-              <div className="px-2 py-2 h-full overflow-y-auto">
-                <SearchContentList {...listProps} />
-              </div>
-            </Command>
-          </SheetContent>
-        </Sheet>
+        /* --- MOBILE: centered dialog avoids iOS bottom-sheet blank render --- */
+        <CommandDialog
+          open={open}
+          onOpenChange={setOpen}
+          title="Search products"
+          description="Search products, brands, categories"
+          className="max-w-[calc(100%-1rem)] rounded-2xl p-0 sm:max-w-lg"
+        >
+          <CommandInput
+            placeholder="Search products, brands, categories..."
+            value={searchQuery}
+            onValueChange={setSearchQuery}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch(searchQuery)}
+            autoFocus
+          />
+          <SearchContentList {...listProps} />
+        </CommandDialog>
       )}
     </>
   );

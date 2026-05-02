@@ -12,14 +12,18 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { FilterSidebar } from "./FilterSidebar";
 import { SortBar } from "./SortBar";
 import { ProductCard } from "../navbar/common/CommonCard";
-import { useDebounce, useDebouncedCallback } from "use-debounce";
-import { useEffect, useState } from "react";
+import { useDebouncedCallback } from "use-debounce";
+import { useEffect, useMemo, useState } from "react";
+import { Category } from "@/@types/category-brand";
+import { ProductItem, ProductResponse } from "@/@types/seach-product-type";
+import { Product as ShortProduct } from "@/@types/short-product";
 
 interface SearchClientProps {
-  data: any;
+  data: ProductResponse;
+  categories?: Category[];
 }
 
-export function SearchClient({ data }: SearchClientProps) {
+export function SearchClient({ data, categories = [] }: SearchClientProps) {
   const [filters, setFilters] = useQueryStates(
     {
       q: parseAsString,
@@ -80,6 +84,95 @@ export function SearchClient({ data }: SearchClientProps) {
     debouncedUpdateFilters();
   }, [localChanges, debouncedUpdateFilters]);
 
+  const activeCategoryGroup = useMemo(() => {
+    if (!categories.length) return null;
+
+    return (
+      categories.find((category) => category.name === filters.main) ||
+      categories.find((category) =>
+        category.sub?.some(
+          (sub) =>
+            sub.SubMain === filters.subMain ||
+            sub.subCategory?.includes(filters.category || "")
+        )
+      ) ||
+      null
+    );
+  }, [categories, filters.category, filters.main, filters.subMain]);
+
+  const categoryFacetCounts = data.facets?.category;
+  const relatedSubcategories = useMemo(() => {
+    if (!activeCategoryGroup) return [];
+
+    const seen = new Set<string>();
+    return activeCategoryGroup.sub.flatMap((sub) =>
+      sub.subCategory
+        .filter((category) => {
+          if (seen.has(category)) return false;
+          seen.add(category);
+          return true;
+        })
+        .map((category) => ({
+          name: category,
+          subMain: sub.SubMain,
+          count: categoryFacetCounts?.[category],
+        }))
+    );
+  }, [activeCategoryGroup, categoryFacetCounts]);
+
+  const subCategoryBadges =
+    activeCategoryGroup && relatedSubcategories.length > 0 ? (
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+        <button
+          type="button"
+          onClick={() =>
+            setFilters({
+              main: activeCategoryGroup.name,
+              subMain: null,
+              category: null,
+              page: 1,
+            })
+          }
+          className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+            !filters.category
+              ? "border-palette-btn bg-palette-btn text-white"
+              : "border-gray-200 bg-white text-palette-text hover:border-palette-btn"
+          }`}
+        >
+          All {activeCategoryGroup.name}
+        </button>
+        {relatedSubcategories.map((item) => {
+          const isActive = filters.category === item.name;
+
+          return (
+            <button
+              key={item.name}
+              type="button"
+              aria-pressed={isActive}
+              onClick={() =>
+                setFilters({
+                  main: activeCategoryGroup.name,
+                  subMain: item.subMain,
+                  category: item.name,
+                  page: 1,
+                })
+              }
+              className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                isActive
+                  ? "border-palette-btn bg-palette-btn text-white"
+                  : "border-gray-200 bg-white text-palette-text hover:border-palette-btn"
+              }`}
+            >
+              {item.name}
+              {typeof item.count === "number" && item.count > 0 && (
+                <span className="ml-1 opacity-80">({item.count})</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    ) : null;
+
   const filterProps = {
     facets: data.facets,
     selectedBrand: filters.brandName,
@@ -131,19 +224,19 @@ export function SearchClient({ data }: SearchClientProps) {
       {/* Main Content */}
       <div className="flex-1">
         <SortBar
-          sortBy={filters.sortBy}
-          sortOrder={filters.sortOrder}
+          sortBy={filters.sortBy || "createdAt"}
+          sortOrder={filters.sortOrder || "desc"}
           onSortChange={(sortBy, sortOrder) => {
-            console.log("onSortChange", sortBy, sortOrder);
             setFilters({ sortBy, sortOrder });
           }}
           totalProducts={data.total}
           mobileFilterProps={filterProps}
+          subCategoryBadges={subCategoryBadges}
         />
 
         {/* Products Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
-          {data.items.map((product: any) => (
+          {data.items.map((product: ProductItem) => (
             <ProductCard
               key={product.id}
               product={{
@@ -152,19 +245,30 @@ export function SearchClient({ data }: SearchClientProps) {
                 thumbnail: product.thumbnail,
                 main: product.main,
                 category: product.category,
+                subMain: product.subMain,
                 price: product.price,
                 offerPrice: product.offerPrice,
                 hasOffer: product.hasOffer,
+                isDigital: product.isDigital,
+                brandId: product.brandId,
                 brandName: product.brandName,
                 slug: product.slug,
+                isAdminCreated: product.isAdminCreated,
                 stock: product.stock,
-                rating: product.rating,
+                hotDeals: false,
+                hotOffer: false,
+                productOfTheDay: false,
+                vendorId: "",
+                variants: [],
+                createdAt: product.createdAt,
+                updatedAt: product.createdAt,
+                __v: 0,
                 // ✅ Add price range fields
                 minPrice: product.minPrice ?? product.offerPrice ?? product.price ?? 0,
                 maxPrice: product.maxPrice ?? product.offerPrice ?? product.price ?? 0,
                 minOriginalPrice: product.minOriginalPrice ?? product.price ?? 0,
                 maxOriginalPrice: product.maxOriginalPrice ?? product.price ?? 0,
-              }}
+              } satisfies ShortProduct}
             />
           ))}
         </div>

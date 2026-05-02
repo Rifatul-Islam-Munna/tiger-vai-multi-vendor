@@ -19,38 +19,31 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import RichTextEditor from "../../../addProduct/Description";
 
-// Static categories and brands
-const CATEGORIES = [
-  { main: "MEN", subcategories: ["T-Shirts", "Shoes", "Jeans", "Accessories"] },
-  { main: "WOMEN", subcategories: ["Dresses", "Tops", "Shoes", "Accessories"] },
-  { main: "KIDS", subcategories: ["T-Shirts", "Shoes", "Pants"] },
-];
-
 export default function StepBasicInfo() {
   const { formData, updateField } = useAddProductStore();
   const [selectedMainCategory, setSelectedMainCategory] = React.useState(
     formData.category?.main || ""
   );
   const [isBrandInputMode, setIsBrandInputMode] = useState(false);
-  const {
-    data: brandsData,
-    isLoading,
-    refetch,
-  } = useQueryWrapper<BrandResponse>(["brands"], `/brand?page=1&limit=20`);
+  const { data: brandsData } = useQueryWrapper<BrandResponse>(
+    ["brands"],
+    `/brand?page=1&limit=20`
+  );
 
   const { data: categoriesData } = useQueryWrapper<CategoryResponse>(
     ["categories"],
     `/category?page=1&limit=30`
   );
 
-  const subcategories =
-    CATEGORIES.find((cat) => cat.main === selectedMainCategory)
-      ?.subcategories || [];
+  React.useEffect(() => {
+    setSelectedMainCategory(formData.category?.main || "");
+  }, [formData.category?.main]);
 
   const handleMainCategoryChange = (value: string) => {
     setSelectedMainCategory(value);
     updateField("category", {
       main: value,
+      subMain: "",
       category: "",
     });
   };
@@ -65,6 +58,7 @@ export default function StepBasicInfo() {
     updateField("category", {
       ...formData.category,
       subMain: value,
+      category: "",
     });
   };
 
@@ -138,7 +132,7 @@ export default function StepBasicInfo() {
           Product Details
         </label>
         <RichTextEditor
-          description={formData.description}
+          description={formData.description || ""}
           updateField={updateField}
         />
       </div>

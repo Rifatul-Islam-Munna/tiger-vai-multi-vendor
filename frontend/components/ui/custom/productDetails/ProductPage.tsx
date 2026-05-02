@@ -43,6 +43,7 @@ import { BasicUser } from "@/@types/userType";
 import DescriptionComponent from "./RenderDesription";
 import ProductTabs from "./ProductTabs";
 import { Separator } from "../../separator";
+import { Dialog, DialogContent, DialogTitle } from "../../dialog";
 import ShortDescription from "./ShortDiscription";
 import pb from "@/lib/poacktbase";
 import { Spinner } from "../../spinner";
@@ -717,6 +718,7 @@ const ProductPage = ({ params }: { params: Product }) => {
     );
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [isImageZoomOpen, setIsImageZoomOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Details");
   const [page, setPage] = useState(1);
   const [getUser, setGetUser] = useState<BasicUser | null>(null);
@@ -1208,7 +1210,19 @@ const ProductPage = ({ params }: { params: Product }) => {
               )}
 
               {/* Main Image */}
-              <div className="relative flex-1 bg-gray-50 rounded-lg overflow-hidden order-1 lg:order-2 aspect-square">
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => setIsImageZoomOpen(true)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setIsImageZoomOpen(true);
+                  }
+                }}
+                className="relative flex-1 bg-gray-50 rounded-lg overflow-hidden order-1 lg:order-2 aspect-square cursor-zoom-in"
+                aria-label="Open product image"
+              >
                 <img
                   src={
                     getAllImages()[selectedImageIndex]?.url ||
@@ -1230,14 +1244,20 @@ const ProductPage = ({ params }: { params: Product }) => {
                 {getAllImages().length > 1 && (
                   <>
                     <button
-                      onClick={() => handleImageNavigation("prev")}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleImageNavigation("prev");
+                      }}
                       className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors text-palette-text border border-gray-200 shadow-md"
                       aria-label="Previous image"
                     >
                       <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
                     </button>
                     <button
-                      onClick={() => handleImageNavigation("next")}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleImageNavigation("next");
+                      }}
                       className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors text-palette-text border border-gray-200 shadow-md"
                       aria-label="Next image"
                     >
@@ -1247,6 +1267,31 @@ const ProductPage = ({ params }: { params: Product }) => {
                 )}
               </div>
             </div>
+
+            <Dialog open={isImageZoomOpen} onOpenChange={setIsImageZoomOpen}>
+              <DialogContent
+                showCloseButton={false}
+                className="h-[100dvh] w-screen max-w-none border-0 bg-black p-0 shadow-none sm:max-w-none"
+              >
+                <DialogTitle className="sr-only">Product image</DialogTitle>
+                <button
+                  type="button"
+                  onClick={() => setIsImageZoomOpen(false)}
+                  className="flex h-full w-full items-center justify-center bg-black"
+                  aria-label="Close product image"
+                >
+                  <img
+                    src={
+                      getAllImages()[selectedImageIndex]?.url ||
+                      params?.thumbnail?.url ||
+                      ""
+                    }
+                    alt={params?.name ?? "Product image"}
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </button>
+              </DialogContent>
+            </Dialog>
 
             {/* Desktop Description - Under Image - Full Width */}
             <div className="hidden lg:block pt-3 w-full">
