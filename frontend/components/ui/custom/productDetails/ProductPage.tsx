@@ -49,6 +49,7 @@ import pb from "@/lib/poacktbase";
 import { Spinner } from "../../spinner";
 import VariantSelector from "./VariantSelector";
 import TyreVariantSelector from "./TyreVariantSelector";
+import { createPortal } from "react-dom";
 
 interface ProductVariantCardsProps {
   product: Product;
@@ -1191,7 +1192,11 @@ const ProductPage = ({ params }: { params: Product }) => {
                 <div className="flex flex-row lg:flex-col gap-2 order-2 lg:order-1 w-full lg:w-16 xl:w-20 shrink-0 overflow-x-auto lg:overflow-x-visible">
                   {getAllImages().map((image, index) => (
                     <button
-                      key={image?.isVariant ? "variant-image" : `main-${image?.id ?? index}`}
+                      key={
+                        image?.isVariant
+                          ? "variant-image"
+                          : `main-${image?.id ?? index}`
+                      }
                       onClick={() => setSelectedImageIndex(index)}
                       className={`w-16 sm:w-20 lg:w-full aspect-square shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
                         selectedImageIndex === index
@@ -1201,7 +1206,11 @@ const ProductPage = ({ params }: { params: Product }) => {
                     >
                       <img
                         src={image?.url ?? ""}
-                        alt={image?.isVariant ? `Variant: ${image?.variantLabel || ""}` : `Thumbnail ${index + 1}`}
+                        alt={
+                          image?.isVariant
+                            ? `Variant: ${image?.variantLabel || ""}`
+                            : `Thumbnail ${index + 1}`
+                        }
                         className="w-full h-full object-cover"
                       />
                     </button>
@@ -1269,28 +1278,39 @@ const ProductPage = ({ params }: { params: Product }) => {
             </div>
 
             <Dialog open={isImageZoomOpen} onOpenChange={setIsImageZoomOpen}>
-              <DialogContent
-                showCloseButton={false}
-                className="fixed inset-0 h-dvh w-dvw max-w-none translate-x-0 translate-y-0 rounded-none border-0 bg-black p-0 shadow-none sm:max-w-none"
-              >
-                <DialogTitle className="sr-only">Product image</DialogTitle>
-                <button
-                  type="button"
-                  onClick={() => setIsImageZoomOpen(false)}
-                  className="flex h-full w-full items-center justify-center bg-black p-4 sm:p-6 md:p-8"
-                  aria-label="Close product image"
-                >
-                  <img
-                    src={
-                      getAllImages()[selectedImageIndex]?.url ||
-                      params?.thumbnail?.url ||
-                      ""
-                    }
-                    alt={params?.name ?? "Product image"}
-                    className="block max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] object-contain sm:max-h-[calc(100dvh-3rem)] sm:max-w-[calc(100vw-3rem)] md:max-h-[calc(100dvh-4rem)] md:max-w-[calc(100vw-4rem)]"
-                  />
-                </button>
-              </DialogContent>
+              {isImageZoomOpen &&
+                createPortal(
+                  <div
+                    style={{
+                      position: "fixed",
+                      top: 0,
+                      left: 0,
+                      width: "100vw",
+                      height: "100vh",
+                      background: "rgba(0,0,0,0.9)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      zIndex: 9999,
+                    }}
+                    onClick={() => setIsImageZoomOpen(false)}
+                  >
+                    <img
+                      src={
+                        getAllImages()[selectedImageIndex]?.url ||
+                        params?.thumbnail?.url ||
+                        ""
+                      }
+                      alt={params?.name ?? "Product image"}
+                      style={{
+                        maxWidth: "90vw",
+                        maxHeight: "90vh",
+                        objectFit: "contain",
+                      }}
+                    />
+                  </div>,
+                  document.body,
+                )}
             </Dialog>
 
             {/* Desktop Description - Under Image - Full Width */}
