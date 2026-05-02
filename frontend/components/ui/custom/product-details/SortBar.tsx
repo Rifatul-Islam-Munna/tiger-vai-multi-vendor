@@ -32,7 +32,7 @@ export function SortBar({
   return (
     <div className="mb-6 bg-white p-4 rounded-lg border border-gray-200">
       <div className="flex items-center justify-between gap-4">
-        <p className="text-sm text-gray-600 shrink-0">
+        <p className="hidden md:block text-sm text-gray-600 shrink-0">
           <span className="font-medium text-palette-text">{totalProducts}</span>{" "}
           products found
         </p>
