@@ -78,14 +78,14 @@ const ClientNavbar = () => {
     ["get-mytop-category"],
     "/get-top-category",
     {},
-    500
+    500,
   );
 
   const { data: allCategory } = useQueryWrapper<CategoryResponse>(
     ["get-category"],
     "/category",
     {},
-    500
+    500,
   );
 
   const allCategories = allCategory?.data ?? [];
@@ -229,7 +229,7 @@ const ClientNavbar = () => {
                         className={cn(
                           "flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all",
                           hoveredCategory === category.name &&
-                            "bg-white shadow-sm"
+                            "bg-white shadow-sm",
                         )}
                         style={{
                           color:
@@ -313,7 +313,7 @@ const ClientNavbar = () => {
                   <NavigationMenuContent>
                     <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
                       {category.sub
-                        ?.slice(0, 1)
+                        ?.slice(0, 8)
                         .flatMap((sub) => sub.subCategory?.slice(0, 6) ?? [])
                         .map((item) => (
                           <li key={item}>
@@ -402,7 +402,7 @@ const ClientNavbar = () => {
                           <button
                             onClick={() =>
                               document.dispatchEvent(
-                                new KeyboardEvent("keydown", { key: "Escape" })
+                                new KeyboardEvent("keydown", { key: "Escape" }),
                               )
                             }
                             className="mr-2 lg:hidden"
