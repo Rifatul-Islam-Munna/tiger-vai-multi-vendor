@@ -18,6 +18,19 @@ import { BrandResponse, CategoryResponse } from "@/@types/category-brand";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import RichTextEditor from "../../../addProduct/Description";
+import { Button } from "@/components/ui/button";
+import { Plus, Pencil } from "lucide-react";
+import { CreateCategoryModal } from "@/components/ui/custom/admin/category/CreateCategoryModal";
+import { EditCategoryModal } from "@/components/ui/custom/admin/category/EditCategoryModal";
+import { CreateBrandModal } from "./CreateBrandModal";
+
+interface CategoryItem {
+  _id: string;
+  name: string;
+  logoUrl?: string;
+  sub: { SubMain: string; subCategory: string[] }[];
+  isTop?: boolean;
+}
 
 export default function StepBasicInfo() {
   const { formData, updateField } = useAddProductStore();
@@ -25,14 +38,17 @@ export default function StepBasicInfo() {
     formData.category?.main || ""
   );
   const [isBrandInputMode, setIsBrandInputMode] = useState(false);
-  const { data: brandsData } = useQueryWrapper<BrandResponse>(
+  const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
+  const [isCreateBrandOpen, setIsCreateBrandOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
+  const { data: brandsData, refetch: refetchBrands } = useQueryWrapper<BrandResponse>(
     ["brands"],
-    `/brand?page=1&limit=20`
+    `/brand?page=1&limit=50`
   );
 
-  const { data: categoriesData } = useQueryWrapper<CategoryResponse>(
+  const { data: categoriesData, refetch: refetchCategories } = useQueryWrapper<CategoryResponse>(
     ["categories"],
-    `/category?page=1&limit=30`
+    `/category?page=1&limit=50`
   );
 
   React.useEffect(() => {
@@ -68,6 +84,18 @@ export default function StepBasicInfo() {
   const findOneSubCategory = findOneSub?.sub?.find(
     (item) => item?.SubMain === formData.category?.subMain
   );
+
+  const handleCategorySuccess = () => {
+    refetchCategories();
+    setEditingCategory(null);
+    setIsCreateCategoryOpen(false);
+  };
+
+  const handleBrandSuccess = () => {
+    refetchBrands();
+    setIsCreateBrandOpen(false);
+  };
+
   return (
     <div className="space-y-6">
       {/* Product Name */}
@@ -157,12 +185,39 @@ export default function StepBasicInfo() {
 
       {/* Main Category */}
       <div>
-        <label
-          className="block text-sm font-semibold mb-2"
-          style={{ color: "var(--palette-accent-1)" }}
-        >
-          Main Category *
-        </label>
+        <div className="flex items-center justify-between mb-2">
+          <label
+            className="block text-sm font-semibold"
+            style={{ color: "var(--palette-accent-1)" }}
+          >
+            Main Category *
+          </label>
+          <div className="flex gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-6 text-xs px-2"
+              onClick={() => setIsCreateCategoryOpen(true)}
+            >
+              <Plus size={12} className="mr-1" /> Add
+            </Button>
+            {selectedMainCategory && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 text-xs px-2"
+                onClick={() => {
+                  const cat = categoriesData?.data?.find(c => c.name === selectedMainCategory);
+                  if (cat) setEditingCategory(cat as CategoryItem);
+                }}
+              >
+                <Pencil size={12} className="mr-1" /> Edit
+              </Button>
+            )}
+          </div>
+        </div>
         <Select
           value={selectedMainCategory}
           onValueChange={handleMainCategoryChange}
@@ -270,19 +325,32 @@ export default function StepBasicInfo() {
       {/* Brand */}
       <div>
         {/* Toggle Switch */}
-        <div className="flex items-center gap-2 mb-3">
-          <Switch
-            id="brand-mode"
-            checked={isBrandInputMode}
-            onCheckedChange={setIsBrandInputMode}
-          />
-          <Label
-            htmlFor="brand-mode"
-            className="text-sm"
-            style={{ color: "var(--palette-text)" }}
-          >
-            {isBrandInputMode ? "Custom Brand Name" : "Select from Existing"}
-          </Label>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Switch
+              id="brand-mode"
+              checked={isBrandInputMode}
+              onCheckedChange={setIsBrandInputMode}
+            />
+            <Label
+              htmlFor="brand-mode"
+              className="text-sm"
+              style={{ color: "var(--palette-text)" }}
+            >
+              {isBrandInputMode ? "Custom Brand Name" : "Select from Existing"}
+            </Label>
+          </div>
+          {!isBrandInputMode && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-6 text-xs px-2"
+              onClick={() => setIsCreateBrandOpen(true)}
+            >
+              <Plus size={12} className="mr-1" /> Add Brand
+            </Button>
+          )}
         </div>
 
         {/* Brand Field Label */}
@@ -343,6 +411,30 @@ export default function StepBasicInfo() {
           />
         )}
       </div>
+
+      {/* Create Category Modal */}
+      <CreateCategoryModal
+        open={isCreateCategoryOpen}
+        onOpenChange={setIsCreateCategoryOpen}
+        onSuccess={handleCategorySuccess}
+      />
+
+      {/* Edit Category Modal */}
+      {editingCategory && (
+        <EditCategoryModal
+          category={editingCategory}
+          open={!!editingCategory}
+          onOpenChange={() => setEditingCategory(null)}
+          onSuccess={handleCategorySuccess}
+        />
+      )}
+
+      {/* Create Brand Modal */}
+      <CreateBrandModal
+        open={isCreateBrandOpen}
+        onOpenChange={setIsCreateBrandOpen}
+        onSuccess={handleBrandSuccess}
+      />
     </div>
   );
 }
