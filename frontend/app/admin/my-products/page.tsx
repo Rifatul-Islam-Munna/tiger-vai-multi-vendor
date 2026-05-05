@@ -426,61 +426,102 @@ export default function ProductManagementPage() {
             <div className="mb-6 space-y-5">
               <div>
                 <div className="mb-3 flex items-center justify-between gap-3">
-                  <h2 className="text-lg font-semibold">Main Categories</h2>
-                  {(selectedMain || selectedSubMain || selectedCategory) && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={clearCategorySelection}
-                    >
-                      Clear Filters
-                    </Button>
-                  )}
+                  <h2 className="text-lg font-semibold">
+                    {!selectedMain && "Main Categories"}
+                    {selectedMain &&
+                      !selectedSubMain &&
+                      `Sub Groups - ${selectedMain}`}
+                    {selectedSubMain &&
+                      !selectedCategory &&
+                      `Categories - ${selectedSubMain}`}
+                    {selectedCategory && `Products - ${selectedCategory}`}
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    {(selectedMain || selectedSubMain || selectedCategory) && (
+                      <>
+                        {selectedCategory && (
+                          <button
+                            onClick={() => {
+                              setSelectedCategory("");
+                              setPage(1);
+                            }}
+                            className="flex items-center gap-1 text-sm text-palette-btn hover:underline"
+                          >
+                            <ArrowLeft className="h-4 w-4" />
+                            Back to Categories
+                          </button>
+                        )}
+                        {selectedSubMain && !selectedCategory && (
+                          <button
+                            onClick={() => {
+                              setSelectedSubMain("");
+                              setSelectedCategory("");
+                              setPage(1);
+                            }}
+                            className="flex items-center gap-1 text-sm text-palette-btn hover:underline"
+                          >
+                            <ArrowLeft className="h-4 w-4" />
+                            Back to Sub Groups
+                          </button>
+                        )}
+                        {selectedMain && !selectedSubMain && (
+                          <button
+                            onClick={() => {
+                              setSelectedMain("");
+                              setSelectedSubMain("");
+                              setSelectedCategory("");
+                              setPage(1);
+                            }}
+                            className="flex items-center gap-1 text-sm text-palette-btn hover:underline"
+                          >
+                            <ArrowLeft className="h-4 w-4" />
+                            Back to Main Categories
+                          </button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={clearCategorySelection}
+                        >
+                          Clear Filters
+                        </Button>
+                      </>
+                    )}
+                    {selectedMainCategory && !selectedSubMain && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setEditingCategory(selectedMainCategory)}
+                      >
+                        Add Category
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                  {(categoriesData?.data || []).map((category) => {
-                    const itemCount = getCategoryItemCount(category);
+                  {!selectedMain &&
+                    (categoriesData?.data || []).map((category) => {
+                      const itemCount = getCategoryItemCount(category);
 
-                    return (
-                      <CategorySelectionCard
-                        key={category._id}
-                        name={category.name}
-                        logoUrl={category.logoUrl}
-                        description={getCategoryDescription(category)}
-                        meta={`${category.sub?.length || 0} sub group${
-                          (category.sub?.length || 0) !== 1 ? "s" : ""
-                        } - ${itemCount} item${itemCount !== 1 ? "s" : ""}`}
-                        selected={selectedMain === category.name}
-                        onSelect={() => selectMainCategory(category.name)}
-                        onEdit={() => setEditingCategory(category)}
-                        editLabel={`Update ${category.name}`}
-                      />
-                    );
-                  })}
-                </div>
-                {categoriesData?.data?.length === 0 && (
-                  <div className="mt-4 rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-palette-accent-3">
-                    No categories found.
-                  </div>
-                )}
-              </div>
-
-              {selectedMainCategory && (
-                <div>
-                  <div className="mb-3 flex items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold">
-                      Sub Groups - {selectedMain}
-                    </h2>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setEditingCategory(selectedMainCategory)}
-                    >
-                      Add Category
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                    {selectedMainCategory.sub.map((sub, index) => (
+                      return (
+                        <CategorySelectionCard
+                          key={category._id}
+                          name={category.name}
+                          logoUrl={category.logoUrl}
+                          description={getCategoryDescription(category)}
+                          meta={`${category.sub?.length || 0} sub group${
+                            (category.sub?.length || 0) !== 1 ? "s" : ""
+                          } - ${itemCount} item${itemCount !== 1 ? "s" : ""}`}
+                          selected={selectedMain === category.name}
+                          onSelect={() => selectMainCategory(category.name)}
+                          onEdit={() => setEditingCategory(category)}
+                          editLabel={`Update ${category.name}`}
+                        />
+                      );
+                    })}
+                  {selectedMain &&
+                    !selectedSubMain &&
+                    selectedMainCategory?.sub.map((sub, index) => (
                       <CategorySelectionCard
                         key={index}
                         name={sub.SubMain}
@@ -491,17 +532,9 @@ export default function ProductManagementPage() {
                         onSelect={() => selectSubMain(sub.SubMain)}
                       />
                     ))}
-                  </div>
-                </div>
-              )}
-
-              {selectedSubGroup && (
-                <div>
-                  <h2 className="mb-3 text-lg font-semibold">
-                    Categories - {selectedSubMain}
-                  </h2>
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                    {selectedSubGroup.subCategory.map((subCategory, index) => (
+                  {selectedSubMain &&
+                    selectedSubGroup &&
+                    selectedSubGroup.subCategory.map((subCategory, index) => (
                       <CategorySelectionCard
                         key={index}
                         name={subCategory}
@@ -509,19 +542,26 @@ export default function ProductManagementPage() {
                         onSelect={() => selectCategory(subCategory)}
                       />
                     ))}
-                  </div>
                 </div>
-              )}
-
-              <Link href={addProductHref} className="block sm:hidden">
-                <Button
-                  className="flex w-full items-center justify-center gap-2 text-white"
-                  style={{ backgroundColor: "var(--palette-btn)" }}
-                >
-                  <Plus size={20} />
-                  Add Product
-                </Button>
-              </Link>
+                {categoriesData?.data?.length === 0 && !selectedMain && (
+                  <div className="mt-4 rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-palette-accent-3">
+                    No categories found.
+                  </div>
+                )}
+                {selectedMain &&
+                  !selectedSubMain &&
+                  selectedMainCategory?.sub?.length === 0 && (
+                    <div className="mt-4 rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-palette-accent-3">
+                      No sub groups found.
+                    </div>
+                  )}
+                {selectedSubMain &&
+                  selectedSubGroup?.subCategory?.length === 0 && (
+                    <div className="mt-4 rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-palette-accent-3">
+                      No categories found.
+                    </div>
+                  )}
+              </div>
             </div>
 
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -639,7 +679,17 @@ export default function ProductManagementPage() {
                 </Select>
               </div>
             </div>
-
+            <div className="block sm:hidden mb-4">
+              <Link href={addProductHref}>
+                <Button
+                  className="flex w-full items-center justify-center gap-2 text-white"
+                  style={{ backgroundColor: "var(--palette-btn)" }}
+                >
+                  <Plus size={20} />
+                  Add Product
+                </Button>
+              </Link>
+            </div>
             {/* Table */}
             <div
               className="overflow-x-auto rounded-lg border"
@@ -679,7 +729,7 @@ export default function ProductManagementPage() {
                     <TableRow
                       key={product._id}
                       style={{ borderColor: "var(--palette-accent-3)" }}
-                      className="hover:bg-white/5 transition"
+                      className="hover:bg-white/5 transition py-2"
                     >
                       <TableCell>
                         <img
@@ -688,7 +738,7 @@ export default function ProductManagementPage() {
                           className="w-10 h-10 object-cover rounded"
                         />
                       </TableCell>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium py-8">
                         {product.name}
                       </TableCell>
                       <TableCell>
