@@ -85,7 +85,63 @@ function CategoryPreviewBox({
   );
 }
 
-type CategoryViewLevel = "main" | "subGroup" | "subCategory";
+function CategorySelectionCard({
+  name,
+  logoUrl,
+  description,
+  meta,
+  selected,
+  onSelect,
+  onEdit,
+  editLabel,
+}: {
+  name: string;
+  logoUrl?: string;
+  description?: string;
+  meta?: string;
+  selected?: boolean;
+  onSelect: () => void;
+  onEdit?: () => void;
+  editLabel?: string;
+}) {
+  return (
+    <div
+      className={`group relative rounded-lg bg-white p-3 text-center shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+        selected ? "bg-palette-btn/5 ring-1 ring-palette-btn/30" : ""
+      }`}
+    >
+      <button onClick={onSelect} className="w-full">
+        <CategoryPreviewBox name={name} logoUrl={logoUrl} />
+        <p className="mt-3 truncate text-sm font-semibold text-gray-800 sm:text-base">
+          {name}
+        </p>
+        {description && (
+          <p
+            className="mt-1 truncate text-xs"
+            style={{ color: "var(--palette-btn)" }}
+          >
+            {description}
+          </p>
+        )}
+        {meta && <p className="mt-1 text-xs text-gray-500">{meta}</p>}
+      </button>
+
+      {onEdit && (
+        <button
+          onClick={(event) => {
+            event.stopPropagation();
+            onEdit();
+          }}
+          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-black/80 text-white opacity-100 transition hover:bg-black sm:opacity-0 sm:group-hover:opacity-100"
+          title={editLabel}
+          aria-label={editLabel}
+        >
+          <Edit2 size={17} />
+        </button>
+      )}
+    </div>
+  );
+}
 
 export default function ProductManagementPage() {
   const searchParams = useSearchParams();
@@ -124,15 +180,6 @@ export default function ProductManagementPage() {
   );
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [viewLevel, setViewLevel] = useState<CategoryViewLevel>(() => {
-    if (searchParams.get("category") || searchParams.get("subMain")) {
-      return "subCategory";
-    }
-
-    if (searchParams.get("main")) return "subGroup";
-
-    return "main";
-  });
   const query = new URLSearchParams();
   query.set("page", page.toString());
   query.set("limit", limit.toString());
@@ -149,12 +196,13 @@ export default function ProductManagementPage() {
       limit,
       sortBy,
       sortOrder,
+      selectedProductType,
       selectedMain,
       selectedSubMain,
       selectedCategory,
     ],
     `/product/getProductVendorAdmin?${query.toString()}`,
-    { enabled: !!selectedMain },
+    { enabled: !!selectedProductType },
   );
   const { data: categoriesData, refetch: refetchCategories } =
     useQueryWrapper<CategoryResponse>(
@@ -184,27 +232,24 @@ export default function ProductManagementPage() {
   if (selectedCategory) selectedQuery.category = selectedCategory;
   const selectedQueryString = new URLSearchParams(selectedQuery).toString();
   const categoryQuery = selectedQueryString ? `?${selectedQueryString}` : "";
-  const addProductHref = selectedMain
-    ? {
-        pathname: "/admin/my-products/add-product",
-        query: selectedQuery,
-      }
-    : {
-        pathname: "/admin/my-products/add-product",
-        query: selectedQuery,
-      };
+  const addProductHref = {
+    pathname: "/admin/my-products/add-product",
+    query: selectedQuery,
+  };
 
   const selectedProductTypeConfig = PRODUCT_TYPES.find(
     (type) => type.id === selectedProductType,
   );
   const SelectedProductTypeIcon = selectedProductTypeConfig?.icon;
+  const productHeading = selectedLabel
+    ? `${selectedLabel} Products`
+    : `${selectedProductTypeConfig?.name || "All"} Products`;
 
   const selectProductType = (value: ProductTypeId) => {
     setSelectedProductType(value);
     setSelectedMain("");
     setSelectedSubMain("");
     setSelectedCategory("");
-    setViewLevel("main");
     setPage(1);
   };
 
@@ -213,7 +258,6 @@ export default function ProductManagementPage() {
     setSelectedMain("");
     setSelectedSubMain("");
     setSelectedCategory("");
-    setViewLevel("main");
     setPage(1);
   };
 
@@ -221,7 +265,6 @@ export default function ProductManagementPage() {
     setSelectedMain("");
     setSelectedSubMain("");
     setSelectedCategory("");
-    setViewLevel("main");
     setPage(1);
   };
 
@@ -229,36 +272,17 @@ export default function ProductManagementPage() {
     setSelectedMain(value);
     setSelectedSubMain("");
     setSelectedCategory("");
-    setViewLevel("subGroup");
     setPage(1);
   };
 
   const selectSubMain = (value: string) => {
     setSelectedSubMain(value);
     setSelectedCategory("");
-    setViewLevel("subCategory");
     setPage(1);
   };
 
   const selectCategory = (value: string) => {
     setSelectedCategory(value);
-    setViewLevel("subCategory");
-    setPage(1);
-  };
-
-  const handleBack = () => {
-    if (viewLevel === "subCategory") {
-      if (selectedCategory) {
-        setSelectedCategory("");
-      } else {
-        setSelectedSubMain("");
-        setViewLevel("subGroup");
-      }
-    } else if (viewLevel === "subGroup") {
-      setSelectedSubMain("");
-      setSelectedMain("");
-      setViewLevel("main");
-    }
     setPage(1);
   };
 
@@ -295,157 +319,13 @@ export default function ProductManagementPage() {
           </h1>
           <Button
             onClick={() => setIsCreateCategoryOpen(true)}
-            className="w-full gap-2 text-white sm:w-auto"
+            className="hidden gap-2 text-white sm:flex sm:w-auto"
             style={{ backgroundColor: "var(--palette-btn)" }}
           >
             <Plus size={18} />
             Add Category
           </Button>
         </div>
-
-        {selectedMain && (
-          <div className="mb-6">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                {viewLevel !== "main" && (
-                  <button
-                    onClick={handleBack}
-                    className="flex items-center gap-1 text-sm text-palette-btn hover:underline"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    Back
-                  </button>
-                )}
-                <h2 className="text-lg font-semibold">
-                  {viewLevel === "main" && "Categories"}
-                  {viewLevel === "subGroup" && `Sub Groups - ${selectedMain}`}
-                  {viewLevel === "subCategory" &&
-                    `Categories - ${selectedSubMain}`}
-                </h2>
-              </div>
-              {(viewLevel !== "main" || selectedMain) && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearCategorySelection}
-                >
-                  Clear
-                </Button>
-              )}
-            </div>
-
-            {viewLevel === "main" && (
-              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10">
-                {(categoriesData?.data || []).map((category) => (
-                  <div
-                    key={category._id}
-                    className="group relative flex flex-col items-center rounded-lg border border-gray-200 bg-white overflow-hidden hover:border-palette-btn hover:shadow-sm transition-all duration-200"
-                  >
-                    <button
-                      onClick={() => selectMainCategory(category.name)}
-                      className="w-full flex flex-col items-center"
-                    >
-                      <div className="relative w-full aspect-square bg-gray-50 overflow-hidden">
-                        {category.logoUrl ? (
-                          <img
-                            src={category.logoUrl}
-                            alt={category.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-300">
-                            {category.name.charAt(0)}
-                          </div>
-                        )}
-                      </div>
-                      <div className="w-full px-1 py-1.5 text-center">
-                        <p className="text-[10px] font-medium text-gray-700 truncate group-hover:text-palette-btn">
-                          {category.name}
-                        </p>
-                      </div>
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingCategory(category);
-                      }}
-                      className="absolute top-1 right-1 h-7 w-7 rounded-full bg-black text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center shadow-lg"
-                      title="Update Category"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {viewLevel === "subGroup" && selectedMainCategory && (
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                {selectedMainCategory.sub.map((sub, index) => (
-                  <button
-                    key={index}
-                    onClick={() => selectSubMain(sub.SubMain)}
-                    className={`group rounded-lg bg-white p-3 text-center shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
-                      selectedSubMain === sub.SubMain ? "bg-palette-btn/5" : ""
-                    }`}
-                  >
-                    <CategoryPreviewBox name={sub.SubMain} />
-                    <p className="mt-3 truncate text-sm font-semibold text-gray-800 sm:text-base">
-                      {sub.SubMain}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-500">
-                      {sub.subCategory?.length || 0} item
-                      {(sub.subCategory?.length || 0) !== 1 && "s"}
-                    </p>
-                  </button>
-                ))}
-                <button
-                  onClick={() => setEditingCategory(selectedMainCategory)}
-                  className="group flex min-h-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-white p-4 text-center text-palette-btn transition-all duration-200 hover:border-palette-btn hover:bg-palette-btn/5"
-                >
-                  <div className="flex aspect-square w-full max-w-24 items-center justify-center rounded-lg border border-palette-btn/30 text-4xl leading-none">
-                    +
-                  </div>
-                  <p className="mt-3 text-sm font-semibold sm:text-base">
-                    Add Category
-                  </p>
-                </button>
-              </div>
-            )}
-
-            {viewLevel === "subCategory" && selectedSubGroup && (
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                {selectedSubGroup.subCategory.map((subCategory, index) => (
-                  <button
-                    key={index}
-                    onClick={() => selectCategory(subCategory)}
-                    className={`group rounded-lg bg-white p-3 text-center shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
-                      selectedCategory === subCategory ? "bg-palette-btn/5" : ""
-                    }`}
-                  >
-                    <CategoryPreviewBox name={subCategory} />
-                    <p className="mt-3 truncate text-sm font-semibold text-gray-800 sm:text-base">
-                      {subCategory}
-                    </p>
-                  </button>
-                ))}
-                {selectedMainCategory && (
-                  <button
-                    onClick={() => setEditingCategory(selectedMainCategory)}
-                    className="group flex min-h-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-white p-4 text-center text-palette-btn transition-all duration-200 hover:border-palette-btn hover:bg-palette-btn/5"
-                  >
-                    <div className="flex aspect-square w-full max-w-24 items-center justify-center rounded-lg border border-palette-btn/30 text-4xl leading-none">
-                      +
-                    </div>
-                    <p className="mt-3 text-sm font-semibold sm:text-base">
-                      Add Category
-                    </p>
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        )}
 
         {!selectedProductType ? (
           <div className="mx-auto max-w-5xl">
@@ -490,16 +370,165 @@ export default function ProductManagementPage() {
                 );
               })}
             </div>
+
+            <Button
+              onClick={() => setIsCreateCategoryOpen(true)}
+              className="mt-4 flex w-full items-center justify-center gap-2 text-white sm:hidden"
+              style={{ backgroundColor: "var(--palette-btn)" }}
+            >
+              <Plus size={18} />
+              Add Category
+            </Button>
           </div>
-        ) : selectedMain ? (
+        ) : (
           <>
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="text-xl font-semibold">
-                {selectedLabel} Products
-              </h2>
-              <Link href={addProductHref} className="w-full sm:w-auto">
+            {selectedProductTypeConfig && SelectedProductTypeIcon && (
+              <div
+                className="mb-6 rounded-lg border-2 bg-white p-4 sm:p-5"
+                style={{
+                  borderColor: selectedProductTypeConfig.iconBg,
+                  backgroundColor: selectedProductTypeConfig.bgColor,
+                }}
+              >
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 items-center gap-4">
+                    <div
+                      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg sm:h-16 sm:w-16"
+                      style={{
+                        backgroundColor: selectedProductTypeConfig.iconBg,
+                      }}
+                    >
+                      <SelectedProductTypeIcon className="h-7 w-7 text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-bold leading-tight text-palette-text sm:text-xl">
+                        {selectedProductTypeConfig.name}
+                      </h3>
+                      <p
+                        className="mt-1 text-sm"
+                        style={{ color: "var(--palette-btn)" }}
+                      >
+                        {selectedProductTypeConfig.description}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={clearProductTypeSelection}
+                    className="flex w-fit items-center gap-1 text-sm text-palette-btn hover:underline"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Product Types
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="mb-6 space-y-5">
+              <div>
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <h2 className="text-lg font-semibold">Main Categories</h2>
+                  {(selectedMain || selectedSubMain || selectedCategory) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearCategorySelection}
+                    >
+                      Clear Filters
+                    </Button>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                  {(categoriesData?.data || []).map((category) => {
+                    const itemCount = getCategoryItemCount(category);
+
+                    return (
+                      <CategorySelectionCard
+                        key={category._id}
+                        name={category.name}
+                        logoUrl={category.logoUrl}
+                        description={getCategoryDescription(category)}
+                        meta={`${category.sub?.length || 0} sub group${
+                          (category.sub?.length || 0) !== 1 ? "s" : ""
+                        } - ${itemCount} item${itemCount !== 1 ? "s" : ""}`}
+                        selected={selectedMain === category.name}
+                        onSelect={() => selectMainCategory(category.name)}
+                        onEdit={() => setEditingCategory(category)}
+                        editLabel={`Update ${category.name}`}
+                      />
+                    );
+                  })}
+                </div>
+                {categoriesData?.data?.length === 0 && (
+                  <div className="mt-4 rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-palette-accent-3">
+                    No categories found.
+                  </div>
+                )}
+              </div>
+
+              {selectedMainCategory && (
+                <div>
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <h2 className="text-lg font-semibold">
+                      Sub Groups - {selectedMain}
+                    </h2>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditingCategory(selectedMainCategory)}
+                    >
+                      Add Category
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                    {selectedMainCategory.sub.map((sub, index) => (
+                      <CategorySelectionCard
+                        key={index}
+                        name={sub.SubMain}
+                        meta={`${sub.subCategory?.length || 0} item${
+                          (sub.subCategory?.length || 0) !== 1 ? "s" : ""
+                        }`}
+                        selected={selectedSubMain === sub.SubMain}
+                        onSelect={() => selectSubMain(sub.SubMain)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedSubGroup && (
+                <div>
+                  <h2 className="mb-3 text-lg font-semibold">
+                    Categories - {selectedSubMain}
+                  </h2>
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                    {selectedSubGroup.subCategory.map((subCategory, index) => (
+                      <CategorySelectionCard
+                        key={index}
+                        name={subCategory}
+                        selected={selectedCategory === subCategory}
+                        onSelect={() => selectCategory(subCategory)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <Link href={addProductHref} className="block sm:hidden">
                 <Button
-                  className="flex w-full items-center justify-center gap-2 text-white sm:w-auto"
+                  className="flex w-full items-center justify-center gap-2 text-white"
+                  style={{ backgroundColor: "var(--palette-btn)" }}
+                >
+                  <Plus size={20} />
+                  Add Product
+                </Button>
+              </Link>
+            </div>
+
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="text-xl font-semibold">{productHeading}</h2>
+              <Link href={addProductHref} className="hidden sm:block">
+                <Button
+                  className="flex items-center justify-center gap-2 text-white"
                   style={{ backgroundColor: "var(--palette-btn)" }}
                 >
                   <Plus size={20} />
@@ -793,133 +822,6 @@ export default function ProductManagementPage() {
               </div>
             </div>
           </>
-        ) : (
-          <div className="mx-auto max-w-5xl">
-            {selectedProductTypeConfig && SelectedProductTypeIcon && (
-              <div
-                className="mb-6 rounded-lg border-2 bg-white p-4 sm:p-5"
-                style={{
-                  borderColor: selectedProductTypeConfig.iconBg,
-                  backgroundColor: selectedProductTypeConfig.bgColor,
-                }}
-              >
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex min-w-0 items-center gap-4">
-                    <div
-                      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg sm:h-16 sm:w-16"
-                      style={{
-                        backgroundColor: selectedProductTypeConfig.iconBg,
-                      }}
-                    >
-                      <SelectedProductTypeIcon className="h-7 w-7 text-white" />
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-lg font-bold leading-tight text-palette-text sm:text-xl">
-                        {selectedProductTypeConfig.name}
-                      </h3>
-                      <p
-                        className="mt-1 text-sm"
-                        style={{ color: "var(--palette-btn)" }}
-                      >
-                        {selectedProductTypeConfig.description}
-                      </p>
-                      <p className="mt-3 text-base font-semibold text-palette-text">
-                        Select main category
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={clearProductTypeSelection}
-                    className="flex w-fit items-center gap-1 text-sm text-palette-btn hover:underline"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    Product Types
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {!selectedProductTypeConfig && (
-              <div className="mb-6">
-                <p className="text-lg" style={{ color: "var(--palette-btn)" }}>
-                  Select main category
-                </p>
-              </div>
-            )}
-
-            <div className="space-y-4">
-              {(categoriesData?.data || []).map((category) => {
-                const itemCount = getCategoryItemCount(category);
-
-                return (
-                  <div
-                    key={category._id}
-                    className="group relative rounded-lg border-2 bg-white transition-all duration-200 hover:shadow-md"
-                    style={{ borderColor: "var(--palette-btn)" }}
-                  >
-                    <button
-                      onClick={() => selectMainCategory(category.name)}
-                      className="flex w-full items-center gap-4 p-4 text-left sm:gap-5 sm:p-5"
-                    >
-                      <div
-                        className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg sm:h-20 sm:w-20"
-                        style={{
-                          backgroundColor: category.logoUrl
-                            ? "rgba(238, 74, 35, 0.08)"
-                            : "var(--palette-btn)",
-                        }}
-                      >
-                        {category.logoUrl ? (
-                          <img
-                            src={category.logoUrl}
-                            alt={category.name}
-                            className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-                          />
-                        ) : (
-                          <span className="text-2xl font-bold text-white sm:text-3xl">
-                            {category.name.charAt(0).toUpperCase()}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="min-w-0 flex-1 pr-10">
-                        <h3 className="text-xl font-bold leading-tight text-palette-text sm:text-2xl">
-                          {category.name}
-                        </h3>
-                        <p
-                          className="mt-2 line-clamp-2 text-sm sm:text-base"
-                          style={{ color: "var(--palette-btn)" }}
-                        >
-                          {getCategoryDescription(category)}
-                        </p>
-                        <p className="mt-1 text-xs text-gray-500 sm:text-sm">
-                          {category.sub?.length || 0} sub group
-                          {(category.sub?.length || 0) !== 1 && "s"}
-                          {" - "}
-                          {itemCount} item{itemCount !== 1 && "s"}
-                        </p>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => setEditingCategory(category)}
-                      className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/80 text-white opacity-100 transition hover:bg-black sm:opacity-0 sm:group-hover:opacity-100"
-                      title="Update Category"
-                      aria-label={`Update ${category.name}`}
-                    >
-                      <Edit2 size={17} />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-
-            {categoriesData?.data?.length === 0 && (
-              <div className="rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-palette-accent-3">
-                No categories found.
-              </div>
-            )}
-          </div>
         )}
       </div>
 
