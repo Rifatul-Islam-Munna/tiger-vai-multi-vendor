@@ -27,6 +27,12 @@ import { Product, ProductApiResponse } from "@/@types/short-product";
 import { CategoryResponse } from "@/@types/category-brand";
 import { CreateCategoryModal } from "@/components/ui/custom/admin/category/CreateCategoryModal";
 import { EditCategoryModal } from "@/components/ui/custom/admin/category/EditCategoryModal";
+import {
+  inferProductType,
+  isProductTypeId,
+  PRODUCT_TYPES,
+  type ProductTypeId,
+} from "@/lib/productTypes";
 
 const getCategoryDescription = (category: CategoryItem) => {
   const groups =
@@ -91,6 +97,22 @@ export default function ProductManagementPage() {
   const [limit, setLimit] = useState(10);
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [selectedProductType, setSelectedProductType] = useState<
+    ProductTypeId | ""
+  >(() => {
+    const queryProductType = searchParams.get("productType");
+    if (isProductTypeId(queryProductType)) return queryProductType;
+
+    const main = searchParams.get("main") || "";
+    const subMain = searchParams.get("subMain") || "";
+    const category = searchParams.get("category") || "";
+
+    if (main || subMain || category) {
+      return inferProductType(main, subMain, category);
+    }
+
+    return "";
+  });
   const [selectedMain, setSelectedMain] = useState(
     searchParams.get("main") || "",
   );
@@ -156,6 +178,7 @@ export default function ProductManagementPage() {
     .filter(Boolean)
     .join(" > ");
   const selectedQuery: Record<string, string> = {};
+  if (selectedProductType) selectedQuery.productType = selectedProductType;
   if (selectedMain) selectedQuery.main = selectedMain;
   if (selectedSubMain) selectedQuery.subMain = selectedSubMain;
   if (selectedCategory) selectedQuery.category = selectedCategory;
@@ -166,7 +189,33 @@ export default function ProductManagementPage() {
         pathname: "/admin/my-products/add-product",
         query: selectedQuery,
       }
-    : "/admin/my-products/add-product";
+    : {
+        pathname: "/admin/my-products/add-product",
+        query: selectedQuery,
+      };
+
+  const selectedProductTypeConfig = PRODUCT_TYPES.find(
+    (type) => type.id === selectedProductType,
+  );
+  const SelectedProductTypeIcon = selectedProductTypeConfig?.icon;
+
+  const selectProductType = (value: ProductTypeId) => {
+    setSelectedProductType(value);
+    setSelectedMain("");
+    setSelectedSubMain("");
+    setSelectedCategory("");
+    setViewLevel("main");
+    setPage(1);
+  };
+
+  const clearProductTypeSelection = () => {
+    setSelectedProductType("");
+    setSelectedMain("");
+    setSelectedSubMain("");
+    setSelectedCategory("");
+    setViewLevel("main");
+    setPage(1);
+  };
 
   const clearCategorySelection = () => {
     setSelectedMain("");
@@ -199,8 +248,12 @@ export default function ProductManagementPage() {
 
   const handleBack = () => {
     if (viewLevel === "subCategory") {
-      setSelectedCategory("");
-      setViewLevel("subGroup");
+      if (selectedCategory) {
+        setSelectedCategory("");
+      } else {
+        setSelectedSubMain("");
+        setViewLevel("subGroup");
+      }
     } else if (viewLevel === "subGroup") {
       setSelectedSubMain("");
       setSelectedMain("");
@@ -394,7 +447,51 @@ export default function ProductManagementPage() {
           </div>
         )}
 
-        {selectedMain ? (
+        {!selectedProductType ? (
+          <div className="mx-auto max-w-5xl">
+            <div className="mb-6">
+              <p
+                className="mt-3 text-lg"
+                style={{ color: "var(--palette-btn)" }}
+              >
+                What type of product are you managing?
+              </p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {PRODUCT_TYPES.map((type) => {
+                const TypeIcon = type.icon;
+
+                return (
+                  <button
+                    key={type.id}
+                    onClick={() => selectProductType(type.id)}
+                    className="group flex items-center gap-4 rounded-lg border-2 bg-white p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md sm:p-5"
+                    style={{ borderColor: "var(--palette-btn)" }}
+                  >
+                    <div
+                      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg sm:h-16 sm:w-16"
+                      style={{ backgroundColor: type.iconBg }}
+                    >
+                      <TypeIcon className="h-7 w-7 text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-bold leading-tight text-palette-text">
+                        {type.name}
+                      </h3>
+                      <p
+                        className="mt-1 text-sm"
+                        style={{ color: "var(--palette-btn)" }}
+                      >
+                        {type.description}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : selectedMain ? (
           <>
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-xl font-semibold">
@@ -698,15 +795,57 @@ export default function ProductManagementPage() {
           </>
         ) : (
           <div className="mx-auto max-w-5xl">
-            <div className="mb-6">
-              {/* <h2 className="text-3xl font-bold">My Products</h2> */}
-              <p
-                className="mt-3 text-lg"
-                style={{ color: "var(--palette-btn)" }}
+            {selectedProductTypeConfig && SelectedProductTypeIcon && (
+              <div
+                className="mb-6 rounded-lg border-2 bg-white p-4 sm:p-5"
+                style={{
+                  borderColor: selectedProductTypeConfig.iconBg,
+                  backgroundColor: selectedProductTypeConfig.bgColor,
+                }}
               >
-                What type of product are you managing?
-              </p>
-            </div>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 items-center gap-4">
+                    <div
+                      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg sm:h-16 sm:w-16"
+                      style={{
+                        backgroundColor: selectedProductTypeConfig.iconBg,
+                      }}
+                    >
+                      <SelectedProductTypeIcon className="h-7 w-7 text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-bold leading-tight text-palette-text sm:text-xl">
+                        {selectedProductTypeConfig.name}
+                      </h3>
+                      <p
+                        className="mt-1 text-sm"
+                        style={{ color: "var(--palette-btn)" }}
+                      >
+                        {selectedProductTypeConfig.description}
+                      </p>
+                      <p className="mt-3 text-base font-semibold text-palette-text">
+                        Select main category
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={clearProductTypeSelection}
+                    className="flex w-fit items-center gap-1 text-sm text-palette-btn hover:underline"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Product Types
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {!selectedProductTypeConfig && (
+              <div className="mb-6">
+                <p className="text-lg" style={{ color: "var(--palette-btn)" }}>
+                  Select main category
+                </p>
+              </div>
+            )}
 
             <div className="space-y-4">
               {(categoriesData?.data || []).map((category) => {

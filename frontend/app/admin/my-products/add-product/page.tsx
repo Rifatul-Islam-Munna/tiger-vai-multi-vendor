@@ -14,65 +14,13 @@ import StepShipping from "@/components/ui/custom/admin/create-edit-product/creat
 import { useApiMutation } from "@/api-hook/react-query-wrapper";
 import { postNewProduct } from "@/actions/product";
 import { useQueryClient } from "@tanstack/react-query";
+import { Info, Package } from "lucide-react";
 import {
-  Shirt,
-  Car,
-  Zap,
-  Watch,
-  Package,
-  Info,
-} from "lucide-react";
-
-type ProductTypeId =
-  | "clothing"
-  | "tyre"
-  | "electronics"
-  | "accessories"
-  | "general";
-
-// Product type configurations - using palette colors
-const PRODUCT_TYPES = [
-  {
-    id: "clothing",
-    name: "Clothing & Apparel",
-    icon: Shirt,
-    description: "T-shirts, pants, dresses, etc.",
-    bgColor: "rgba(238, 74, 35, 0.1)",
-    iconBg: "#ee4a23",
-  },
-  {
-    id: "tyre",
-    name: "Tyres & Wheels",
-    icon: Car,
-    description: "Car tyres, bike tyres, wheels",
-    bgColor: "rgba(43, 39, 44, 0.1)",
-    iconBg: "#342f2c",
-  },
-  {
-    id: "electronics",
-    name: "Electronics",
-    icon: Zap,
-    description: "Phones, laptops, accessories",
-    bgColor: "rgba(196, 61, 29, 0.1)",
-    iconBg: "#c43d1d",
-  },
-  {
-    id: "accessories",
-    name: "Accessories",
-    icon: Watch,
-    description: "Jewelry, bags, watches",
-    bgColor: "rgba(255, 133, 102, 0.15)",
-    iconBg: "#ff8566",
-  },
-  {
-    id: "general",
-    name: "Other Products",
-    icon: Package,
-    description: "Products not listed above",
-    bgColor: "rgba(134, 146, 156, 0.1)",
-    iconBg: "#86929c",
-  },
-];
+  inferProductType,
+  isProductTypeId,
+  PRODUCT_TYPES,
+  type ProductTypeId,
+} from "@/lib/productTypes";
 
 // Form sections for each product type
 const FORM_SECTIONS = {
@@ -108,44 +56,23 @@ const FORM_SECTIONS = {
   ],
 };
 
-const PRODUCT_TYPE_KEYWORDS: { type: ProductTypeId; keywords: string[] }[] = [
-  { type: "tyre", keywords: ["tyre", "tire", "wheel", "rim"] },
-  {
-    type: "clothing",
-    keywords: ["cloth", "apparel", "fashion", "shirt", "pant", "dress", "shoe"],
-  },
-  {
-    type: "electronics",
-    keywords: ["electronic", "phone", "laptop", "computer", "camera", "audio"],
-  },
-  {
-    type: "accessories",
-    keywords: ["accessory", "accessories", "watch", "bag", "jewelry"],
-  },
-];
-
-const inferProductType = (...values: string[]): ProductTypeId => {
-  const text = values.filter(Boolean).join(" ").toLowerCase();
-  const match = PRODUCT_TYPE_KEYWORDS.find(({ keywords }) =>
-    keywords.some((keyword) => text.includes(keyword))
-  );
-
-  return match?.type || "general";
-};
-
 export default function AddProductPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { formData, resetForm, calculateAndFinalize, updateField } =
     useAddProductStore();
+  const queryProductType = searchParams.get("productType");
   const [selectedProductType, setSelectedProductType] = useState<ProductTypeId>(
-    () =>
-      inferProductType(
+    () => {
+      if (isProductTypeId(queryProductType)) return queryProductType;
+
+      return inferProductType(
         searchParams.get("main") || "",
         searchParams.get("subMain") || "",
-        searchParams.get("category") || ""
-      )
+        searchParams.get("category") || "",
+      );
+    },
   );
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(["basic"])
@@ -163,15 +90,18 @@ export default function AddProductPage() {
   }, [searchParams, updateField]);
 
   React.useEffect(() => {
-    const nextProductType = inferProductType(
-      formData.category?.main || "",
-      formData.category?.subMain || "",
-      formData.category?.category || ""
-    );
+    const nextProductType = isProductTypeId(queryProductType)
+      ? queryProductType
+      : inferProductType(
+          formData.category?.main || "",
+          formData.category?.subMain || "",
+          formData.category?.category || "",
+        );
 
     setSelectedProductType(nextProductType);
     updateField("productType", nextProductType);
   }, [
+    queryProductType,
     formData.category?.main,
     formData.category?.subMain,
     formData.category?.category,
@@ -254,6 +184,7 @@ export default function AddProductPage() {
 
   const getProductsReturnHref = (category = formData.category) => {
     const params = new URLSearchParams();
+    if (selectedProductType) params.set("productType", selectedProductType);
     if (category?.main) params.set("main", category.main);
     if (category?.subMain) params.set("subMain", category.subMain);
     if (category?.category) params.set("category", category.category);
