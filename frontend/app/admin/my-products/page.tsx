@@ -29,7 +29,8 @@ import { CreateCategoryModal } from "@/components/ui/custom/admin/category/Creat
 import { EditCategoryModal } from "@/components/ui/custom/admin/category/EditCategoryModal";
 
 const getCategoryDescription = (category: CategoryItem) => {
-  const groups = category.sub?.map((item) => item.SubMain).filter(Boolean) || [];
+  const groups =
+    category.sub?.map((item) => item.SubMain).filter(Boolean) || [];
 
   if (groups.length === 0) return "Products inside this category";
 
@@ -40,7 +41,7 @@ const getCategoryDescription = (category: CategoryItem) => {
 const getCategoryItemCount = (category: CategoryItem) =>
   category.sub?.reduce(
     (total, group) => total + (group.subCategory?.length || 0),
-    0
+    0,
   ) || 0;
 
 interface CategoryItem {
@@ -62,7 +63,7 @@ function CategoryPreviewBox({
   logoUrl?: string;
 }) {
   return (
-    <div className="aspect-square w-full overflow-hidden rounded-lg bg-gray-50">
+    <div className=" aspect-video w-full overflow-hidden rounded-lg bg-gray-50">
       {logoUrl ? (
         <img
           src={logoUrl}
@@ -70,7 +71,7 @@ function CategoryPreviewBox({
           className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
         />
       ) : (
-        <div className="flex h-full w-full items-center justify-center bg-palette-btn/10 text-3xl font-bold text-palette-btn">
+        <div className="flex h-full w-full items-center justify-center bg-palette-btn/10 text-xl font-bold text-palette-btn">
           {name.charAt(0).toUpperCase()}
         </div>
       )}
@@ -84,20 +85,20 @@ export default function ProductManagementPage() {
   const searchParams = useSearchParams();
   const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(
-    null
+    null,
   );
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [selectedMain, setSelectedMain] = useState(
-    searchParams.get("main") || ""
+    searchParams.get("main") || "",
   );
   const [selectedSubMain, setSelectedSubMain] = useState(
-    searchParams.get("subMain") || ""
+    searchParams.get("subMain") || "",
   );
   const [selectedCategory, setSelectedCategory] = useState(
-    searchParams.get("category") || ""
+    searchParams.get("category") || "",
   );
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -131,13 +132,13 @@ export default function ProductManagementPage() {
       selectedCategory,
     ],
     `/product/getProductVendorAdmin?${query.toString()}`,
-    { enabled: !!selectedMain }
+    { enabled: !!selectedMain },
   );
   const { data: categoriesData, refetch: refetchCategories } =
     useQueryWrapper<CategoryResponse>(
-    ["product-categories"],
-    "/category?page=1&limit=100"
-  );
+      ["product-categories"],
+      "/category?page=1&limit=100",
+    );
   const handleViewProduct = (product: Product) => {
     setSelectedProduct(product);
     setIsViewModalOpen(true);
@@ -146,10 +147,10 @@ export default function ProductManagementPage() {
   const total = data?.total || 0;
   const totalPages = data?.totalPages || 1;
   const selectedMainCategory = categoriesData?.data?.find(
-    (category) => category.name === selectedMain
+    (category) => category.name === selectedMain,
   );
   const selectedSubGroup = selectedMainCategory?.sub?.find(
-    (item) => item.SubMain === selectedSubMain
+    (item) => item.SubMain === selectedSubMain,
   );
   const selectedLabel = [selectedMain, selectedSubMain, selectedCategory]
     .filter(Boolean)
@@ -210,7 +211,7 @@ export default function ProductManagementPage() {
 
   const handleCategoryChangeSuccess = (
     category?: CategoryItem,
-    action?: "update" | "delete"
+    action?: "update" | "delete",
   ) => {
     const previousName = editingCategory?.name;
 
@@ -250,136 +251,101 @@ export default function ProductManagementPage() {
         </div>
 
         {selectedMain && (
-        <div
-          className="mb-6"
-          style={{
-            backgroundColor: "var(--palette-bg)",
-          }}
-        >
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              {viewLevel !== "main" && (
-                <button
-                  onClick={handleBack}
-                  className="flex items-center gap-1 text-sm text-palette-btn hover:underline"
+          <div className="mb-6">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                {viewLevel !== "main" && (
+                  <button
+                    onClick={handleBack}
+                    className="flex items-center gap-1 text-sm text-palette-btn hover:underline"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Back
+                  </button>
+                )}
+                <h2 className="text-lg font-semibold">
+                  {viewLevel === "main" && "Categories"}
+                  {viewLevel === "subGroup" && `Sub Groups - ${selectedMain}`}
+                  {viewLevel === "subCategory" &&
+                    `Categories - ${selectedSubMain}`}
+                </h2>
+              </div>
+              {(viewLevel !== "main" || selectedMain) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearCategorySelection}
                 >
-                  <ArrowLeft className="h-4 w-4" />
-                  Back
-                </button>
+                  Clear
+                </Button>
               )}
-              <h2 className="text-lg font-semibold">
-                {viewLevel === "main" && "Categories"}
-                {viewLevel === "subGroup" && `Sub Groups - ${selectedMain}`}
-                {viewLevel === "subCategory" && `Categories - ${selectedSubMain}`}
-              </h2>
             </div>
-            {(viewLevel !== "main" || selectedMain) && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearCategorySelection}
-              >
-                Clear
-              </Button>
+
+            {viewLevel === "main" && (
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10">
+                {(categoriesData?.data || []).map((category) => (
+                  <div
+                    key={category._id}
+                    className="group relative flex flex-col items-center rounded-lg border border-gray-200 bg-white overflow-hidden hover:border-palette-btn hover:shadow-sm transition-all duration-200"
+                  >
+                    <button
+                      onClick={() => selectMainCategory(category.name)}
+                      className="w-full flex flex-col items-center"
+                    >
+                      <div className="relative w-full aspect-square bg-gray-50 overflow-hidden">
+                        {category.logoUrl ? (
+                          <img
+                            src={category.logoUrl}
+                            alt={category.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-300">
+                            {category.name.charAt(0)}
+                          </div>
+                        )}
+                      </div>
+                      <div className="w-full px-1 py-1.5 text-center">
+                        <p className="text-[10px] font-medium text-gray-700 truncate group-hover:text-palette-btn">
+                          {category.name}
+                        </p>
+                      </div>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingCategory(category);
+                      }}
+                      className="absolute top-1 right-1 h-7 w-7 rounded-full bg-black text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center shadow-lg"
+                      title="Update Category"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
             )}
-          </div>
 
-          {viewLevel === "main" && (
-            <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10">
-              {(categoriesData?.data || []).map((category) => (
-                <div
-                  key={category._id}
-                  className="group relative flex flex-col items-center rounded-lg border border-gray-200 bg-white overflow-hidden hover:border-palette-btn hover:shadow-sm transition-all duration-200"
-                >
+            {viewLevel === "subGroup" && selectedMainCategory && (
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                {selectedMainCategory.sub.map((sub, index) => (
                   <button
-                    onClick={() => selectMainCategory(category.name)}
-                    className="w-full flex flex-col items-center"
+                    key={index}
+                    onClick={() => selectSubMain(sub.SubMain)}
+                    className={`group rounded-lg bg-white p-3 text-center shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+                      selectedSubMain === sub.SubMain ? "bg-palette-btn/5" : ""
+                    }`}
                   >
-                    <div className="relative w-full aspect-square bg-gray-50 overflow-hidden">
-                      {category.logoUrl ? (
-                        <img
-                          src={category.logoUrl}
-                          alt={category.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-300">
-                          {category.name.charAt(0)}
-                        </div>
-                      )}
-                    </div>
-                    <div className="w-full px-1 py-1.5 text-center">
-                      <p className="text-[10px] font-medium text-gray-700 truncate group-hover:text-palette-btn">
-                        {category.name}
-                      </p>
-                    </div>
+                    <CategoryPreviewBox name={sub.SubMain} />
+                    <p className="mt-3 truncate text-sm font-semibold text-gray-800 sm:text-base">
+                      {sub.SubMain}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {sub.subCategory?.length || 0} item
+                      {(sub.subCategory?.length || 0) !== 1 && "s"}
+                    </p>
                   </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEditingCategory(category);
-                    }}
-                    className="absolute top-1 right-1 h-7 w-7 rounded-full bg-black text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center shadow-lg"
-                    title="Update Category"
-                  >
-                    <Edit2 size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {viewLevel === "subGroup" && selectedMainCategory && (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-              {selectedMainCategory.sub.map((sub, index) => (
-                <button
-                  key={index}
-                  onClick={() => selectSubMain(sub.SubMain)}
-                  className={`group rounded-lg bg-white p-3 text-center shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
-                    selectedSubMain === sub.SubMain ? "bg-palette-btn/5" : ""
-                  }`}
-                >
-                  <CategoryPreviewBox name={sub.SubMain} />
-                  <p className="mt-3 truncate text-sm font-semibold text-gray-800 sm:text-base">
-                    {sub.SubMain}
-                  </p>
-                  <p className="mt-1 text-xs text-gray-500">
-                    {sub.subCategory?.length || 0} item
-                    {(sub.subCategory?.length || 0) !== 1 && "s"}
-                  </p>
-                </button>
-              ))}
-              <button
-                onClick={() => setEditingCategory(selectedMainCategory)}
-                className="group flex min-h-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-white p-4 text-center text-palette-btn transition-all duration-200 hover:border-palette-btn hover:bg-palette-btn/5"
-              >
-                <div className="flex aspect-square w-full max-w-24 items-center justify-center rounded-lg border border-palette-btn/30 text-4xl leading-none">
-                  +
-                </div>
-                <p className="mt-3 text-sm font-semibold sm:text-base">
-                  Add Category
-                </p>
-              </button>
-            </div>
-          )}
-
-          {viewLevel === "subCategory" && selectedSubGroup && (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-              {selectedSubGroup.subCategory.map((subCategory, index) => (
-                <button
-                  key={index}
-                  onClick={() => selectCategory(subCategory)}
-                  className={`group rounded-lg bg-white p-3 text-center shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
-                    selectedCategory === subCategory ? "bg-palette-btn/5" : ""
-                  }`}
-                >
-                  <CategoryPreviewBox name={subCategory} />
-                  <p className="mt-3 truncate text-sm font-semibold text-gray-800 sm:text-base">
-                    {subCategory}
-                  </p>
-                </button>
-              ))}
-              {selectedMainCategory && (
+                ))}
                 <button
                   onClick={() => setEditingCategory(selectedMainCategory)}
                   className="group flex min-h-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-white p-4 text-center text-palette-btn transition-all duration-200 hover:border-palette-btn hover:bg-palette-btn/5"
@@ -391,10 +357,41 @@ export default function ProductManagementPage() {
                     Add Category
                   </p>
                 </button>
-              )}
-            </div>
-          )}
-        </div>
+              </div>
+            )}
+
+            {viewLevel === "subCategory" && selectedSubGroup && (
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                {selectedSubGroup.subCategory.map((subCategory, index) => (
+                  <button
+                    key={index}
+                    onClick={() => selectCategory(subCategory)}
+                    className={`group rounded-lg bg-white p-3 text-center shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+                      selectedCategory === subCategory ? "bg-palette-btn/5" : ""
+                    }`}
+                  >
+                    <CategoryPreviewBox name={subCategory} />
+                    <p className="mt-3 truncate text-sm font-semibold text-gray-800 sm:text-base">
+                      {subCategory}
+                    </p>
+                  </button>
+                ))}
+                {selectedMainCategory && (
+                  <button
+                    onClick={() => setEditingCategory(selectedMainCategory)}
+                    className="group flex min-h-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-white p-4 text-center text-palette-btn transition-all duration-200 hover:border-palette-btn hover:bg-palette-btn/5"
+                  >
+                    <div className="flex aspect-square w-full max-w-24 items-center justify-center rounded-lg border border-palette-btn/30 text-4xl leading-none">
+                      +
+                    </div>
+                    <p className="mt-3 text-sm font-semibold sm:text-base">
+                      Add Category
+                    </p>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         )}
 
         {selectedMain ? (
@@ -517,94 +514,98 @@ export default function ProductManagementPage() {
               </div>
             </div>
 
-        {/* Table */}
-        <div
-          className="overflow-x-auto rounded-lg border"
-          style={{ borderColor: "var(--palette-accent-3)" }}
-        >
-          <Table>
-            <TableHeader style={{ backgroundColor: "var(--palette-btn)" }}>
-              <TableRow>
-                <TableHead className="text-white font-semibold">
-                  Image
-                </TableHead>
-                <TableHead className="text-white font-semibold">
-                  Product Name
-                </TableHead>
-                <TableHead className="text-white font-semibold">
-                  Category
-                </TableHead>
-                <TableHead className="text-white font-semibold">
-                  Brand
-                </TableHead>
-                <TableHead className="text-white font-semibold">
-                  Price
-                </TableHead>
-                <TableHead className="text-white font-semibold">
-                  Stock
-                </TableHead>
-                <TableHead className="text-white font-semibold">
-                  Status
-                </TableHead>
-                <TableHead className="text-white font-semibold">
-                  Actions
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data?.data?.map((product) => (
-                <TableRow
-                  key={product._id}
-                  style={{ borderColor: "var(--palette-accent-3)" }}
-                  className="hover:bg-white/5 transition"
-                >
-                  <TableCell>
-                    <img
-                      src={product?.thumbnail}
-                      alt={product?.name}
-                      className="w-10 h-10 object-cover rounded"
-                    />
-                  </TableCell>
-                  <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>
-                    <span style={{ color: "var(--palette-accent-1)" }}>
-                      {product?.main}
-                    </span>{" "}
-                    {" → "}
-                    <span style={{ color: "var(--palette-accent-1)" }}>
-                      {product?.subMain}
-                    </span>
-                    {" → "}
-                    {product?.category}
-                  </TableCell>
-                  <TableCell>{product?.brandName}</TableCell>
-                  <TableCell>
-                    {product?.offerPrice ? (
-                      <div className="flex flex-col">
-                        <span
-                          className="line-through text-sm"
-                          style={{ color: "var(--palette-accent-3)" }}
-                        >
-                          ৳{product?.price}
+            {/* Table */}
+            <div
+              className="overflow-x-auto rounded-lg border"
+              style={{ borderColor: "var(--palette-accent-3)" }}
+            >
+              <Table>
+                <TableHeader style={{ backgroundColor: "var(--palette-btn)" }}>
+                  <TableRow>
+                    <TableHead className="text-white font-semibold">
+                      Image
+                    </TableHead>
+                    <TableHead className="text-white font-semibold">
+                      Product Name
+                    </TableHead>
+                    <TableHead className="text-white font-semibold">
+                      Category
+                    </TableHead>
+                    <TableHead className="text-white font-semibold">
+                      Brand
+                    </TableHead>
+                    <TableHead className="text-white font-semibold">
+                      Price
+                    </TableHead>
+                    <TableHead className="text-white font-semibold">
+                      Stock
+                    </TableHead>
+                    <TableHead className="text-white font-semibold">
+                      Status
+                    </TableHead>
+                    <TableHead className="text-white font-semibold">
+                      Actions
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data?.data?.map((product) => (
+                    <TableRow
+                      key={product._id}
+                      style={{ borderColor: "var(--palette-accent-3)" }}
+                      className="hover:bg-white/5 transition"
+                    >
+                      <TableCell>
+                        <img
+                          src={product?.thumbnail}
+                          alt={product?.name}
+                          className="w-10 h-10 object-cover rounded"
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {product.name}
+                      </TableCell>
+                      <TableCell>
+                        <span style={{ color: "var(--palette-accent-1)" }}>
+                          {product?.main}
+                        </span>{" "}
+                        {" → "}
+                        <span style={{ color: "var(--palette-accent-1)" }}>
+                          {product?.subMain}
                         </span>
+                        {" → "}
+                        {product?.category}
+                      </TableCell>
+                      <TableCell>{product?.brandName}</TableCell>
+                      <TableCell>
+                        {product?.offerPrice ? (
+                          <div className="flex flex-col">
+                            <span
+                              className="line-through text-sm"
+                              style={{ color: "var(--palette-accent-3)" }}
+                            >
+                              ৳{product?.price}
+                            </span>
+                            <span
+                              className="font-semibold"
+                              style={{ color: "var(--palette-btn)" }}
+                            >
+                              ৳{product?.offerPrice}
+                            </span>
+                          </div>
+                        ) : (
+                          <span>৳{product?.price}</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         <span
-                          className="font-semibold"
-                          style={{ color: "var(--palette-btn)" }}
+                          className={product.stock < 20 ? "text-red-400" : ""}
                         >
-                          ৳{product?.offerPrice}
+                          {product?.stock}
                         </span>
-                      </div>
-                    ) : (
-                      <span>৳{product?.price}</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <span className={product.stock < 20 ? "text-red-400" : ""}>
-                      {product?.stock}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    {/*  <span
+                      </TableCell>
+                      <TableCell>
+                        {/*  <span
                       className={`px-3 py-1 rounded-full text-xs font-medium ${
                         product.isActive
                           ? "bg-green-500/20 text-green-400"
@@ -613,92 +614,92 @@ export default function ProductManagementPage() {
                     >
                       {product.isActive ? "Active" : "Inactive"}
                     </span> */}
-                    N/A
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleViewProduct(product)}
-                        className="p-2 hover:bg-blue-500/20 rounded transition"
-                        title="View Product"
-                      >
-                        <Eye
-                          size={18}
-                          style={{ color: "var(--palette-btn)" }}
-                        />
-                      </button>
-                      <Link
-                        href={`/admin/my-products/edit-product/${product.slug}${categoryQuery}`}
-                      >
-                        <button
-                          className="p-2 hover:bg-yellow-500/20 rounded transition"
-                          title="Edit Product"
-                        >
-                          <Edit2
-                            size={18}
-                            style={{ color: "var(--palette-accent-1)" }}
-                          />
-                        </button>
-                      </Link>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-
-        {/* Pagination */}
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div style={{ color: "var(--palette-accent-3)" }}>
-            Showing {(page - 1) * limit + 1} to {Math.min(page * limit, total)}{" "}
-            of {total}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              onClick={() => setPage(Math.max(page - 1, 1))}
-              disabled={page === 1}
-              variant="outline"
-              style={{
-                borderColor: "var(--palette-accent-3)",
-                color:
-                  page === 1
-                    ? "var(--palette-accent-3)"
-                    : "var(--palette-text)",
-              }}
-            >
-              Previous
-            </Button>
-            <div
-              className="px-4 py-2 rounded"
-              style={{
-                backgroundColor: "var(--palette-btn)",
-                color: "white",
-              }}
-            >
-              Page {page} of {totalPages}
+                        N/A
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleViewProduct(product)}
+                            className="p-2 hover:bg-blue-500/20 rounded transition"
+                            title="View Product"
+                          >
+                            <Eye
+                              size={18}
+                              style={{ color: "var(--palette-btn)" }}
+                            />
+                          </button>
+                          <Link
+                            href={`/admin/my-products/edit-product/${product.slug}${categoryQuery}`}
+                          >
+                            <button
+                              className="p-2 hover:bg-yellow-500/20 rounded transition"
+                              title="Edit Product"
+                            >
+                              <Edit2
+                                size={18}
+                                style={{ color: "var(--palette-accent-1)" }}
+                              />
+                            </button>
+                          </Link>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-            <Button
-              onClick={() => setPage(Math.min(page + 1, totalPages))}
-              disabled={page === totalPages}
-              variant="outline"
-              style={{
-                borderColor: "var(--palette-accent-3)",
-                color:
-                  page === totalPages
-                    ? "var(--palette-accent-3)"
-                    : "var(--palette-text)",
-              }}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+
+            {/* Pagination */}
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div style={{ color: "var(--palette-accent-3)" }}>
+                Showing {(page - 1) * limit + 1} to{" "}
+                {Math.min(page * limit, total)} of {total}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  onClick={() => setPage(Math.max(page - 1, 1))}
+                  disabled={page === 1}
+                  variant="outline"
+                  style={{
+                    borderColor: "var(--palette-accent-3)",
+                    color:
+                      page === 1
+                        ? "var(--palette-accent-3)"
+                        : "var(--palette-text)",
+                  }}
+                >
+                  Previous
+                </Button>
+                <div
+                  className="px-4 py-2 rounded"
+                  style={{
+                    backgroundColor: "var(--palette-btn)",
+                    color: "white",
+                  }}
+                >
+                  Page {page} of {totalPages}
+                </div>
+                <Button
+                  onClick={() => setPage(Math.min(page + 1, totalPages))}
+                  disabled={page === totalPages}
+                  variant="outline"
+                  style={{
+                    borderColor: "var(--palette-accent-3)",
+                    color:
+                      page === totalPages
+                        ? "var(--palette-accent-3)"
+                        : "var(--palette-text)",
+                  }}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
           </>
         ) : (
           <div className="mx-auto max-w-5xl">
             <div className="mb-6">
-              <h2 className="text-3xl font-bold">My Products</h2>
+              {/* <h2 className="text-3xl font-bold">My Products</h2> */}
               <p
                 className="mt-3 text-lg"
                 style={{ color: "var(--palette-btn)" }}
@@ -754,7 +755,8 @@ export default function ProductManagementPage() {
                         </p>
                         <p className="mt-1 text-xs text-gray-500 sm:text-sm">
                           {category.sub?.length || 0} sub group
-                          {(category.sub?.length || 0) !== 1 && "s"}{" - "}
+                          {(category.sub?.length || 0) !== 1 && "s"}
+                          {" - "}
                           {itemCount} item{itemCount !== 1 && "s"}
                         </p>
                       </div>

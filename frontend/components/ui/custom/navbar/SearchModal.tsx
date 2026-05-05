@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   CommandDialog,
@@ -109,9 +109,12 @@ const SearchContentList = ({
 export function SearchModal() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"results" | "recent">("results");
   const [searchQuery, setSearchQuery] = useState("");
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [isDesktop, setIsDesktop] = useState(true);
+  const mobileSearchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const checkDesktop = () =>
@@ -123,7 +126,7 @@ export function SearchModal() {
 
   // Load recent searches
   useEffect(() => {
-    if (open) {
+    if (open || mobilePanelOpen) {
       queueMicrotask(() => {
         const recent = localStorage.getItem("recentSearches");
         if (recent) {
@@ -135,7 +138,23 @@ export function SearchModal() {
         }
       });
     }
-  }, [open]);
+  }, [open, mobilePanelOpen]);
+
+  useEffect(() => {
+    if (isDesktop || !mobilePanelOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (
+        mobileSearchRef.current &&
+        !mobileSearchRef.current.contains(event.target as Node)
+      ) {
+        setMobilePanelOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [isDesktop, mobilePanelOpen]);
 
   // Keyboard shortcut
   useEffect(() => {
@@ -161,6 +180,7 @@ export function SearchModal() {
 
     router.push(`/search-product?q=${encodeURIComponent(query)}`);
     setOpen(false);
+    setMobilePanelOpen(false);
     setSearchQuery("");
   };
 
@@ -200,18 +220,152 @@ export function SearchModal() {
           <span className="sr-only">Search</span>
         </Button>
       ) : (
-        // Mobile: Input-like Button
-        <button
-          onClick={() => setOpen(true)}
-          className="flex items-center gap-3 w-full pl-4 border border-gray-200 rounded-full bg-white hover:bg-gray-50 transition-colors text-left group"
-        >
-          <span className="text-sm text-gray-500 flex-1 truncate">
-            Search...
-          </span>
-          <p className=" p-3 rounded-full bg-gray-950">
-            <Search className="h-4 w-4 text-white group-hover:text-[var(--palette-btn)] transition-colors " />
-          </p>
-        </button>
+        <div ref={mobileSearchRef} className="relative w-full lg:hidden">
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              handleSearch(searchQuery);
+            }}
+            className="flex items-center gap-3 w-full pl-4 border border-gray-200 rounded-full bg-white transition-colors text-left group focus-within:border-[var(--palette-btn)] focus-within:shadow-sm"
+          >
+            <input
+              value={searchQuery}
+              onChange={(event) => {
+                setSearchQuery(event.target.value);
+                setMobileTab("results");
+                setMobilePanelOpen(true);
+              }}
+              onFocus={() => setMobilePanelOpen(true)}
+              placeholder="Search..."
+              className="min-w-0 flex-1 bg-transparent py-3 text-sm text-gray-900 outline-none placeholder:text-gray-500"
+            />
+            <button
+              type="submit"
+              className="p-3 rounded-full bg-gray-950 active:scale-95 transition"
+              aria-label="Search"
+            >
+              <Search className="h-4 w-4 text-white transition-colors" />
+            </button>
+          </form>
+
+          {mobilePanelOpen && (
+            <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
+              <div className="grid grid-cols-2 border-b border-gray-100 bg-gray-50 p-1">
+                <button
+                  type="button"
+                  onClick={() => setMobileTab("results")}
+                  className={cn(
+                    "rounded-xl px-3 py-2 text-xs font-semibold transition",
+                    mobileTab === "results"
+                      ? "bg-white text-[var(--palette-btn)] shadow-sm"
+                      : "text-gray-500"
+                  )}
+                >
+                  Search Result
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMobileTab("recent")}
+                  className={cn(
+                    "rounded-xl px-3 py-2 text-xs font-semibold transition",
+                    mobileTab === "recent"
+                      ? "bg-white text-[var(--palette-btn)] shadow-sm"
+                      : "text-gray-500"
+                  )}
+                >
+                  Recent Search
+                </button>
+              </div>
+
+              <div className="max-h-[60vh] overflow-y-auto p-2">
+                {mobileTab === "results" && (
+                  <div>
+                    {searchQuery.trim() ? (
+                      <button
+                        type="button"
+                        onClick={() => handleSearch(searchQuery)}
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm hover:bg-gray-50"
+                      >
+                        <div className="rounded-full bg-[var(--palette-btn)]/10 p-2">
+                          <Search className="h-4 w-4 text-[var(--palette-btn)]" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-gray-900">
+                            Search for {searchQuery}
+                          </p>
+                          <p className="truncate text-xs text-gray-500">
+                            Products, brands, categories
+                          </p>
+                        </div>
+                      </button>
+                    ) : (
+                      <div className="px-4 py-8 text-center">
+                        <Search className="mx-auto mb-3 h-8 w-8 text-gray-300" />
+                        <p className="text-sm font-semibold text-gray-900">
+                          Type to search
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Results will show here
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {mobileTab === "recent" && (
+                  <div>
+                    {recentSearches.length > 0 ? (
+                      <>
+                        {recentSearches.map((search, index) => (
+                          <div
+                            key={`mobile-recent-${index}`}
+                            className="flex items-center gap-2 rounded-xl hover:bg-gray-50"
+                          >
+                            <button
+                              type="button"
+                              onClick={() => handleSearch(search)}
+                              className="flex min-w-0 flex-1 items-center gap-3 px-3 py-3 text-left text-sm"
+                            >
+                              <Clock className="h-4 w-4 shrink-0 text-gray-400" />
+                              <span className="truncate">{search}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(event) =>
+                                removeRecentSearch(search, event)
+                              }
+                              className="mr-2 rounded-full p-1 hover:bg-gray-100"
+                              aria-label={`Remove ${search}`}
+                            >
+                              <X className="h-3 w-3 text-gray-400" />
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={clearRecentSearches}
+                          className="mt-1 w-full rounded-xl px-3 py-2 text-center text-xs font-semibold text-red-500 hover:bg-red-50"
+                        >
+                          Clear all recent searches
+                        </button>
+                      </>
+                    ) : (
+                      <div className="px-4 py-8 text-center">
+                        <Clock className="mx-auto mb-3 h-8 w-8 text-gray-300" />
+                        <p className="text-sm font-semibold text-gray-900">
+                          No recent searches
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Your search history will appear here
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {isDesktop ? (
@@ -233,25 +387,7 @@ export function SearchModal() {
             </div>
           </div>
         </CommandDialog>
-      ) : (
-        /* --- MOBILE: centered dialog avoids iOS bottom-sheet blank render --- */
-        <CommandDialog
-          open={open}
-          onOpenChange={setOpen}
-          title="Search products"
-          description="Search products, brands, categories"
-          className="max-w-[calc(100%-1rem)] rounded-2xl p-0 sm:max-w-lg"
-        >
-          <CommandInput
-            placeholder="Search products, brands, categories..."
-            value={searchQuery}
-            onValueChange={setSearchQuery}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch(searchQuery)}
-            autoFocus
-          />
-          <SearchContentList {...listProps} />
-        </CommandDialog>
-      )}
+      ) : null}
     </>
   );
 }
