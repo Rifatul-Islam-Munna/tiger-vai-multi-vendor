@@ -1283,14 +1283,15 @@ const ProductPage = ({ params }: { params: Product }) => {
                   <div
                     style={{
                       position: "fixed",
-                      top: 0,
-                      left: 0,
-                      width: "100vw",
-                      height: "100vh",
+                      inset: 0,
+                      width: "100dvw",
+                      height: "100dvh",
                       background: "rgba(0,0,0,0.9)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
+                      boxSizing: "border-box",
+                      padding: "16px",
                       zIndex: 9999,
                     }}
                     onClick={() => setIsImageZoomOpen(false)}
@@ -1303,8 +1304,8 @@ const ProductPage = ({ params }: { params: Product }) => {
                       }
                       alt={params?.name ?? "Product image"}
                       style={{
-                        maxWidth: "90vw",
-                        maxHeight: "90vh",
+                        maxWidth: "calc(100dvw - 32px)",
+                        maxHeight: "calc(100dvh - 32px)",
                         objectFit: "contain",
                       }}
                     />
