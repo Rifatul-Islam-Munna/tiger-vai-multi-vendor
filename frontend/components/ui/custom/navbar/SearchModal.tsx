@@ -220,13 +220,16 @@ export function SearchModal() {
           <span className="sr-only">Search</span>
         </Button>
       ) : (
-        <div ref={mobileSearchRef} className="relative w-full lg:hidden">
+        <div
+          ref={mobileSearchRef}
+          className="relative w-full min-w-0 max-w-full lg:hidden"
+        >
           <form
             onSubmit={(event) => {
               event.preventDefault();
               handleSearch(searchQuery);
             }}
-            className="flex items-center gap-3 w-full pl-4 border border-gray-200 rounded-full bg-white transition-colors text-left group focus-within:border-[var(--palette-btn)] focus-within:shadow-sm"
+            className="flex w-full min-w-0 items-center gap-2 rounded-full border border-gray-200 bg-white pl-3 text-left transition-colors group focus-within:border-[var(--palette-btn)] focus-within:shadow-sm sm:gap-3 sm:pl-4"
           >
             <input
               value={searchQuery}
@@ -237,11 +240,11 @@ export function SearchModal() {
               }}
               onFocus={() => setMobilePanelOpen(true)}
               placeholder="Search..."
-              className="min-w-0 flex-1 bg-transparent py-3 text-sm text-gray-900 outline-none placeholder:text-gray-500"
+              className="min-w-0 flex-1 bg-transparent py-3 text-base text-gray-900 outline-none placeholder:text-gray-500 sm:text-sm"
             />
             <button
               type="submit"
-              className="p-3 rounded-full bg-gray-950 active:scale-95 transition"
+              className="shrink-0 rounded-full bg-gray-950 p-3 transition active:scale-95"
               aria-label="Search"
             >
               <Search className="h-4 w-4 text-white transition-colors" />
@@ -249,13 +252,13 @@ export function SearchModal() {
           </form>
 
           {mobilePanelOpen && (
-            <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
+            <div className="absolute left-0 right-0 top-full z-50 mt-2 w-full max-w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
               <div className="grid grid-cols-2 border-b border-gray-100 bg-gray-50 p-1">
                 <button
                   type="button"
                   onClick={() => setMobileTab("results")}
                   className={cn(
-                    "rounded-xl px-3 py-2 text-xs font-semibold transition",
+                    "min-w-0 rounded-xl px-2 py-2 text-xs font-semibold transition sm:px-3",
                     mobileTab === "results"
                       ? "bg-white text-[var(--palette-btn)] shadow-sm"
                       : "text-gray-500",
@@ -267,7 +270,7 @@ export function SearchModal() {
                   type="button"
                   onClick={() => setMobileTab("recent")}
                   className={cn(
-                    "rounded-xl px-3 py-2 text-xs font-semibold transition",
+                    "min-w-0 rounded-xl px-2 py-2 text-xs font-semibold transition sm:px-3",
                     mobileTab === "recent"
                       ? "bg-white text-[var(--palette-btn)] shadow-sm"
                       : "text-gray-500",
@@ -290,7 +293,7 @@ export function SearchModal() {
                           <Search className="h-4 w-4 text-[var(--palette-btn)]" />
                         </div>
                         <div className="min-w-0">
-                          <p className="font-semibold text-gray-900">
+                          <p className="truncate font-semibold text-gray-900">
                             Search for {searchQuery}
                           </p>
                           <p className="truncate text-xs text-gray-500">

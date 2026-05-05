@@ -111,12 +111,12 @@ const ClientNavbar = () => {
 
   return (
     <nav
-      className={cn("sticky top-0 z-50 border-b shadow-sm  bg-white ", {
+      className={cn("sticky top-0 z-50 w-full max-w-full overflow-x-clip border-b bg-white shadow-sm", {
         hidden: pathName.includes("user") || pathName.includes("admin"),
       })}
       style={{ borderColor: "#e5e7eb" }}
     >
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto max-w-full px-3 sm:px-4">
         {/* --- Desktop Header Layout --- */}
         <div className="hidden lg:flex justify-between items-center h-16">
           <div
@@ -149,12 +149,12 @@ const ClientNavbar = () => {
         </div>
 
         {/* --- Mobile Header Layout --- */}
-        <div className="lg:hidden flex flex-col pt-2 pb-1 md:py-3 gap-3">
+        <div className="flex min-w-0 flex-col gap-3 pt-2 pb-1 md:py-3 lg:hidden">
           {/* Row 1: Logo + Actions */}
-          <div className="flex justify-between items-center">
+          <div className="flex min-w-0 items-center justify-between gap-2">
             <div
               onClick={handelToHome}
-              className=" flex flex-col  group justify-center items-center cursor-pointer"
+              className="group flex shrink-0 cursor-pointer flex-col items-center justify-center"
             >
               <House className=" size-7 text-palette-btn group-hover:text-palette-btn" />
               <span className=" text-xs md:text-sm font-semibold  group-hover:text-palette-btn duration-500">
@@ -162,7 +162,7 @@ const ClientNavbar = () => {
               </span>
             </div>
             <Link
-              className=" flex-1 flex justify-end sm:justify-center"
+              className="flex min-w-0 flex-1 justify-center"
               href={"/"}
             >
               <Image
@@ -171,19 +171,19 @@ const ClientNavbar = () => {
                 height={70}
                 alt="logo"
                 priority
-                className=""
+                className="h-auto max-w-full object-contain"
               />
             </Link>
-            <div className="flex items-center gap-3">
+            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
               <CartSheet />
               <UserProfileDropdown user={user} />
             </div>
           </div>
 
           {/* Row 2: Search + Menu Trigger */}
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <button
-              className="p-2.5 rounded-lg active:scale-95 transition-transform border"
+              className="shrink-0 rounded-lg border p-2.5 transition-transform active:scale-95"
               onClick={() => setMobileMenuOpen(true)}
               style={{
                 borderColor: "#e5e7eb",
@@ -192,7 +192,7 @@ const ClientNavbar = () => {
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <SearchModal />
             </div>
           </div>

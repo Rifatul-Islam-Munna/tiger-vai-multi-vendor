@@ -236,5 +236,14 @@
 html,
 body {
   width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
   font-family: var(--font-kumbh-sans), sans-serif;
+}
+
+@supports not (overflow: clip) {
+  html,
+  body {
+    overflow-x: hidden;
+  }
 }
