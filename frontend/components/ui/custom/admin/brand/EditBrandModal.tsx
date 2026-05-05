@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/command";
 import { Checkbox } from "@/components/ui/checkbox";
 import Image from "next/image";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { Loader2, X } from "lucide-react";
 import { useQueryWrapper } from "@/api-hook/react-query-wrapper";
 import { toast } from "sonner";
@@ -46,6 +46,18 @@ interface EditBrandModalProps {
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
 }
+interface CategoryOption {
+  _id: string;
+  name: string;
+}
+interface CategoryListResponse {
+  data?: CategoryOption[];
+}
+interface BrandUpdatePayload {
+  name: string;
+  logoUrl: string | null;
+  categories: string[];
+}
 
 export function EditBrandModal({
   brand,
@@ -62,10 +74,9 @@ export function EditBrandModal({
     categories: brand.categories || [],
   });
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [openCombobox, setOpenCombobox] = useState(false);
 
-  const { data: categoriesData } = useQueryWrapper(
+  const { data: categoriesData } = useQueryWrapper<CategoryListResponse>(
     ["categories"],
     `/category?page=${1}&limit=${50}`
   );
@@ -78,7 +89,15 @@ export function EditBrandModal({
 
     const fromData = new FormData();
     fromData.append("file", file!);
-    uploadImage(fromData);
+    uploadImage(fromData, {
+      onSuccess: (data) => {
+        if (data?.error) {
+          toast.error(data.error.message);
+        } else {
+          setImagePreview(data?.data?.url as string);
+        }
+      },
+    });
   };
 
   const handleCategoryToggle = (categoryId: string) => {
@@ -91,7 +110,7 @@ export function EditBrandModal({
   };
   const { mutate: UpdateBrandFN, isPending: isLoading } = useMutation({
     mutationKey: ["updated-brand"],
-    mutationFn: (payload: any) => UpdateBrand(brand._id, payload),
+    mutationFn: (payload: BrandUpdatePayload) => UpdateBrand(brand._id, payload),
     onSuccess: (data) => {
       if (data?.error) {
         toast.success(data.error?.message);
@@ -125,7 +144,7 @@ export function EditBrandModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md bg-palette-bg border-palette-accent-3">
+      <DialogContent className="max-h-[85dvh] w-[calc(100vw-2rem)] max-w-md overflow-y-auto bg-palette-bg border-palette-accent-3 p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="text-palette-text">Edit Brand</DialogTitle>
         </DialogHeader>
@@ -198,7 +217,7 @@ export function EditBrandModal({
                     : "Select categories..."}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-full p-0 bg-palette-bg border-palette-accent-3">
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-2rem)] p-0 bg-palette-bg border-palette-accent-3">
                 <Command className="bg-palette-bg">
                   <CommandInput
                     placeholder="Search categories..."
@@ -209,7 +228,7 @@ export function EditBrandModal({
                   </CommandEmpty>
                   <CommandList>
                     <CommandGroup>
-                      {categoriesData?.data?.map((category: any) => (
+                      {categoriesData?.data?.map((category) => (
                         <CommandItem
                           key={category._id}
                           value={category.name}
@@ -255,7 +274,7 @@ export function EditBrandModal({
           </div>
 
           {/* Actions */}
-          <div className="flex gap-2 justify-end pt-4">
+          <div className="flex flex-col-reverse gap-2 pt-4 sm:flex-row sm:justify-end">
             <Button
               type="button"
               variant="outline"
@@ -276,7 +295,4 @@ export function EditBrandModal({
       </DialogContent>
     </Dialog>
   );
-}
-function onRefresh() {
-  throw new Error("Function not implemented.");
 }

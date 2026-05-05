@@ -187,7 +187,7 @@ export function CreateCategoryModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-palette-bg border-palette-accent-3">
+      <DialogContent className="max-h-[85dvh] w-[calc(100vw-2rem)] max-w-2xl overflow-y-auto bg-palette-bg border-palette-accent-3 p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="text-palette-text">
             Create Category
@@ -266,7 +266,7 @@ export function CreateCategoryModal({
             <Label className="text-palette-text">Subcategories</Label>
 
             {/* Add New SubMain */}
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <Input
                 value={currentSubInput}
                 onChange={(e) => setCurrentSubInput(e.target.value)}
@@ -279,7 +279,7 @@ export function CreateCategoryModal({
               <Button
                 type="button"
                 onClick={handleAddSubMain}
-                className="bg-palette-btn text-white hover:opacity-90"
+                className="bg-palette-btn text-white hover:opacity-90 sm:w-auto"
               >
                 <Plus size={16} />
               </Button>
@@ -293,7 +293,7 @@ export function CreateCategoryModal({
                   className="border border-palette-accent-3 rounded-lg p-4 space-y-3"
                 >
                   {/* SubMain Header */}
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <h4 className="font-medium text-palette-text">
                       {subMain.SubMain}
                     </h4>
@@ -309,7 +309,7 @@ export function CreateCategoryModal({
                   </div>
 
                   {/* Add SubCategory Items */}
-                  <div className="flex gap-2">
+                  <div className="flex flex-col gap-2 sm:flex-row">
                     <Input
                       value={currentSubCategoryInputs[subMainIndex] || ""}
                       onChange={(e) =>
@@ -329,7 +329,7 @@ export function CreateCategoryModal({
                       type="button"
                       size="sm"
                       onClick={() => handleAddSubCategory(subMainIndex)}
-                      className="bg-palette-btn/80 text-white hover:opacity-90"
+                      className="bg-palette-btn/80 text-white hover:opacity-90 sm:w-auto"
                     >
                       <Plus size={14} />
                     </Button>
@@ -363,7 +363,7 @@ export function CreateCategoryModal({
           </div>
 
           {/* Actions */}
-          <div className="flex gap-2 justify-end pt-4">
+          <div className="flex flex-col-reverse gap-2 pt-4 sm:flex-row sm:justify-end">
             <Button
               type="button"
               variant="outline"

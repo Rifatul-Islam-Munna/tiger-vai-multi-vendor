@@ -236,7 +236,7 @@ export default function EditProductPage() {
   const images = (formData.images as ProductImage[]) || [];
   return (
     <div
-      className="min-h-screen p-6"
+      className="min-h-screen p-3 sm:p-6"
       style={{
         backgroundColor: "var(--palette-bg)",
         color: "var(--palette-text)",
@@ -244,16 +244,16 @@ export default function EditProductPage() {
     >
       <div className="max-w-5xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
             <Link href={returnHref}>
               <button className="p-2 hover:bg-white/10 rounded transition">
                 <ArrowLeft size={24} />
               </button>
             </Link>
-            <div>
-              <h1 className="text-3xl font-bold">Edit Product</h1>
-              <p style={{ color: "var(--palette-accent-3)" }}>
+            <div className="min-w-0">
+              <h1 className="text-2xl font-bold sm:text-3xl">Edit Product</h1>
+              <p className="truncate" style={{ color: "var(--palette-accent-3)" }}>
                 {formData.name}
               </p>
             </div>
@@ -261,7 +261,7 @@ export default function EditProductPage() {
           <Button
             onClick={handleSave}
             disabled={isSubmitting}
-            className="flex items-center gap-2 text-white"
+            className="flex w-full items-center justify-center gap-2 text-white sm:w-auto"
             style={{ backgroundColor: "var(--palette-btn)" }}
           >
             <Save size={20} />
@@ -401,16 +401,16 @@ export default function EditProductPage() {
                   </div>
 
                   {/* Category */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <label
                           className="block text-sm font-semibold"
                           style={{ color: "var(--palette-accent-1)" }}
                         >
                           Main Category
                         </label>
-                        <div className="flex gap-1">
+                        <div className="flex flex-wrap gap-1">
                           <Button
                             type="button"
                             variant="ghost"
@@ -561,8 +561,8 @@ export default function EditProductPage() {
                   {/* Brand */}
                   <div>
                     {/* Toggle Switch */}
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
+                    <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex min-w-0 items-center gap-2">
                         <Switch
                           id="brand-mode"
                           checked={isBrandInputMode}
@@ -583,7 +583,7 @@ export default function EditProductPage() {
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="h-6 text-xs px-2"
+                          className="h-7 w-fit text-xs px-2"
                           onClick={() => setIsCreateBrandOpen(true)}
                         >
                           <Plus size={12} className="mr-1" /> Add Brand
@@ -1370,10 +1370,11 @@ export default function EditProductPage() {
             Delete Product
           </Button>
 
-          <div className="flex justify-end gap-3">
-            <Link href={returnHref}>
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <Link href={returnHref} className="w-full sm:w-auto">
               <Button
                 variant="outline"
+                className="w-full sm:w-auto"
                 style={{ borderColor: "var(--palette-accent-3)" }}
               >
                 Cancel
@@ -1382,7 +1383,7 @@ export default function EditProductPage() {
             <Button
               onClick={handleSave}
               disabled={isSubmitting}
-              className="flex items-center gap-2 text-white"
+              className="flex w-full items-center justify-center gap-2 text-white sm:w-auto"
               style={{ backgroundColor: "var(--palette-btn)" }}
             >
               <Save size={20} />

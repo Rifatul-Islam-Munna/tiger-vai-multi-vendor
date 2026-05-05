@@ -185,14 +185,14 @@ export default function StepBasicInfo() {
 
       {/* Main Category */}
       <div>
-        <div className="flex items-center justify-between mb-2">
+        <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <label
             className="block text-sm font-semibold"
             style={{ color: "var(--palette-accent-1)" }}
           >
             Main Category *
           </label>
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-1">
             <Button
               type="button"
               variant="ghost"
@@ -325,8 +325,8 @@ export default function StepBasicInfo() {
       {/* Brand */}
       <div>
         {/* Toggle Switch */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
+        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-2">
             <Switch
               id="brand-mode"
               checked={isBrandInputMode}
@@ -345,7 +345,7 @@ export default function StepBasicInfo() {
               type="button"
               variant="ghost"
               size="sm"
-              className="h-6 text-xs px-2"
+              className="h-7 w-fit text-xs px-2"
               onClick={() => setIsCreateBrandOpen(true)}
             >
               <Plus size={12} className="mr-1" /> Add Brand

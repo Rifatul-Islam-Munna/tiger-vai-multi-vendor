@@ -91,7 +91,7 @@ export function CreateBrandModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md bg-palette-bg border-palette-accent-3">
+      <DialogContent className="max-h-[85dvh] w-[calc(100vw-2rem)] max-w-md overflow-y-auto bg-palette-bg border-palette-accent-3 p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="text-palette-text">Create Brand</DialogTitle>
         </DialogHeader>
@@ -170,7 +170,7 @@ export function CreateBrandModal({
           </div>
 
           {/* Actions */}
-          <div className="flex gap-2 justify-end pt-2">
+          <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
             <Button
               type="button"
               variant="outline"

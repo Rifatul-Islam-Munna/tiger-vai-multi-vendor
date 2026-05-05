@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Eye, Edit2, Plus } from "lucide-react";
+import { ArrowLeft, Edit2, Eye, Plus } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ViewProductModal } from "@/components/ui/custom/admin/create-edit-product/ViewProductModal";
@@ -27,32 +27,21 @@ import { Product, ProductApiResponse } from "@/@types/short-product";
 import { CategoryResponse } from "@/@types/category-brand";
 import { CreateCategoryModal } from "@/components/ui/custom/admin/category/CreateCategoryModal";
 import { EditCategoryModal } from "@/components/ui/custom/admin/category/EditCategoryModal";
-import { ArrowLeft, Package, Layers, Tag, ShoppingCart, Star, Zap, Heart, Gift, BookOpen, Music, Camera, Coffee, Home, Car, Smartphone } from "lucide-react";
 
-const CATEGORY_ICONS = [Package, Layers, Tag, ShoppingCart, Star, Zap, Heart, Gift, BookOpen, Music, Camera, Coffee, Home, Car, Smartphone];
+const getCategoryDescription = (category: CategoryItem) => {
+  const groups = category.sub?.map((item) => item.SubMain).filter(Boolean) || [];
 
-const getRandomIcon = (name: string) => {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const index = Math.abs(hash) % CATEGORY_ICONS.length;
-  return CATEGORY_ICONS[index];
+  if (groups.length === 0) return "Products inside this category";
+
+  const preview = groups.slice(0, 3).join(", ");
+  return groups.length > 3 ? `${preview}, more` : preview;
 };
 
-const ICON_COLORS = [
-  "#ee4a23", "#342f2c", "#c43d1d", "#ff8566", "#86929c",
-  "#6366f1", "#8b5cf6", "#ec4899", "#14b8a6", "#f59e0b",
-  "#10b981", "#3b82f6", "#ef4444", "#f97316", "#06b6d4",
-];
-
-const getIconColor = (name: string) => {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return ICON_COLORS[Math.abs(hash) % ICON_COLORS.length];
-};
+const getCategoryItemCount = (category: CategoryItem) =>
+  category.sub?.reduce(
+    (total, group) => total + (group.subCategory?.length || 0),
+    0
+  ) || 0;
 
 interface CategoryItem {
   _id: string;
@@ -63,6 +52,30 @@ interface CategoryItem {
     subCategory: string[];
   }[];
   isTop?: boolean;
+}
+
+function CategoryPreviewBox({
+  name,
+  logoUrl,
+}: {
+  name: string;
+  logoUrl?: string;
+}) {
+  return (
+    <div className="aspect-square w-full overflow-hidden rounded-lg bg-gray-50">
+      {logoUrl ? (
+        <img
+          src={logoUrl}
+          alt={name}
+          className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center bg-palette-btn/10 text-3xl font-bold text-palette-btn">
+          {name.charAt(0).toUpperCase()}
+        </div>
+      )}
+    </div>
+  );
 }
 
 type CategoryViewLevel = "main" | "subGroup" | "subCategory";
@@ -88,7 +101,15 @@ export default function ProductManagementPage() {
   );
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [viewLevel, setViewLevel] = useState<CategoryViewLevel>("main");
+  const [viewLevel, setViewLevel] = useState<CategoryViewLevel>(() => {
+    if (searchParams.get("category") || searchParams.get("subMain")) {
+      return "subCategory";
+    }
+
+    if (searchParams.get("main")) return "subGroup";
+
+    return "main";
+  });
   const query = new URLSearchParams();
   query.set("page", page.toString());
   query.set("limit", limit.toString());
@@ -130,9 +151,6 @@ export default function ProductManagementPage() {
   const selectedSubGroup = selectedMainCategory?.sub?.find(
     (item) => item.SubMain === selectedSubMain
   );
-  const visibleCategories = selectedMainCategory
-    ? [selectedMainCategory]
-    : categoriesData?.data || [];
   const selectedLabel = [selectedMain, selectedSubMain, selectedCategory]
     .filter(Boolean)
     .join(" > ");
@@ -190,14 +208,6 @@ export default function ProductManagementPage() {
     setPage(1);
   };
 
-  const getBreadcrumbs = () => {
-    const parts: string[] = [];
-    if (selectedMain) parts.push(selectedMain);
-    if (selectedSubMain) parts.push(selectedSubMain);
-    if (selectedCategory) parts.push(selectedCategory);
-    return parts.join(" > ");
-  };
-
   const handleCategoryChangeSuccess = (
     category?: CategoryItem,
     action?: "update" | "delete"
@@ -225,22 +235,25 @@ export default function ProductManagementPage() {
       }}
     >
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between gap-3 mb-6">
-          <h1 className="text-3xl font-bold">Product & Category</h1>
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-2xl font-bold sm:text-3xl">
+            Add new category & products
+          </h1>
           <Button
             onClick={() => setIsCreateCategoryOpen(true)}
-            className="text-white"
+            className="w-full gap-2 text-white sm:w-auto"
             style={{ backgroundColor: "var(--palette-btn)" }}
           >
-            Create Category
+            <Plus size={18} />
+            Add Category
           </Button>
         </div>
 
+        {selectedMain && (
         <div
-          className="mb-6 rounded-lg border p-4"
+          className="mb-6"
           style={{
             backgroundColor: "var(--palette-bg)",
-            borderColor: "var(--palette-accent-3)",
           }}
         >
           <div className="mb-3 flex items-center justify-between gap-3">
@@ -317,63 +330,72 @@ export default function ProductManagementPage() {
           )}
 
           {viewLevel === "subGroup" && selectedMainCategory && (
-            <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10">
-              {selectedMainCategory.sub.map((sub, index) => {
-                const IconComponent = getRandomIcon(sub.SubMain);
-                const iconColor = getIconColor(sub.SubMain);
-                return (
-                  <button
-                    key={index}
-                    onClick={() => selectSubMain(sub.SubMain)}
-                    className={`group flex flex-col items-center rounded-lg border overflow-hidden hover:shadow-sm transition-all duration-200 h-20 ${
-                      selectedSubMain === sub.SubMain
-                        ? "border-palette-btn bg-palette-btn/5"
-                        : "border-gray-200 bg-white hover:border-palette-btn"
-                    }`}
-                  >
-                    <div className="w-full flex-1 flex items-center justify-center bg-gray-50">
-                      <IconComponent size={20} style={{ color: iconColor }} />
-                    </div>
-                    <div className="w-full px-1 py-1 text-center">
-                      <p className="text-[9px] font-medium text-gray-700 truncate group-hover:text-palette-btn">
-                        {sub.SubMain}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              {selectedMainCategory.sub.map((sub, index) => (
+                <button
+                  key={index}
+                  onClick={() => selectSubMain(sub.SubMain)}
+                  className={`group rounded-lg bg-white p-3 text-center shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+                    selectedSubMain === sub.SubMain ? "bg-palette-btn/5" : ""
+                  }`}
+                >
+                  <CategoryPreviewBox name={sub.SubMain} />
+                  <p className="mt-3 truncate text-sm font-semibold text-gray-800 sm:text-base">
+                    {sub.SubMain}
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {sub.subCategory?.length || 0} item
+                    {(sub.subCategory?.length || 0) !== 1 && "s"}
+                  </p>
+                </button>
+              ))}
+              <button
+                onClick={() => setEditingCategory(selectedMainCategory)}
+                className="group flex min-h-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-white p-4 text-center text-palette-btn transition-all duration-200 hover:border-palette-btn hover:bg-palette-btn/5"
+              >
+                <div className="flex aspect-square w-full max-w-24 items-center justify-center rounded-lg border border-palette-btn/30 text-4xl leading-none">
+                  +
+                </div>
+                <p className="mt-3 text-sm font-semibold sm:text-base">
+                  Add Category
+                </p>
+              </button>
             </div>
           )}
 
           {viewLevel === "subCategory" && selectedSubGroup && (
-            <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10">
-              {selectedSubGroup.subCategory.map((subCategory, index) => {
-                const IconComponent = getRandomIcon(subCategory);
-                const iconColor = getIconColor(subCategory);
-                return (
-                  <button
-                    key={index}
-                    onClick={() => selectCategory(subCategory)}
-                    className={`group flex flex-col items-center rounded-lg border overflow-hidden hover:shadow-sm transition-all duration-200 h-20 ${
-                      selectedCategory === subCategory
-                        ? "border-palette-btn bg-palette-btn/5"
-                        : "border-gray-200 bg-white hover:border-palette-btn"
-                    }`}
-                  >
-                    <div className="w-full flex-1 flex items-center justify-center bg-gray-50">
-                      <IconComponent size={20} style={{ color: iconColor }} />
-                    </div>
-                    <div className="w-full px-1 py-1 text-center">
-                      <p className="text-[9px] font-medium text-gray-700 truncate group-hover:text-palette-btn">
-                        {subCategory}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              {selectedSubGroup.subCategory.map((subCategory, index) => (
+                <button
+                  key={index}
+                  onClick={() => selectCategory(subCategory)}
+                  className={`group rounded-lg bg-white p-3 text-center shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+                    selectedCategory === subCategory ? "bg-palette-btn/5" : ""
+                  }`}
+                >
+                  <CategoryPreviewBox name={subCategory} />
+                  <p className="mt-3 truncate text-sm font-semibold text-gray-800 sm:text-base">
+                    {subCategory}
+                  </p>
+                </button>
+              ))}
+              {selectedMainCategory && (
+                <button
+                  onClick={() => setEditingCategory(selectedMainCategory)}
+                  className="group flex min-h-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-white p-4 text-center text-palette-btn transition-all duration-200 hover:border-palette-btn hover:bg-palette-btn/5"
+                >
+                  <div className="flex aspect-square w-full max-w-24 items-center justify-center rounded-lg border border-palette-btn/30 text-4xl leading-none">
+                    +
+                  </div>
+                  <p className="mt-3 text-sm font-semibold sm:text-base">
+                    Add Category
+                  </p>
+                </button>
+              )}
             </div>
           )}
         </div>
+        )}
 
         {selectedMain ? (
           <>
@@ -381,9 +403,9 @@ export default function ProductManagementPage() {
               <h2 className="text-xl font-semibold">
                 {selectedLabel} Products
               </h2>
-              <Link href={addProductHref}>
+              <Link href={addProductHref} className="w-full sm:w-auto">
                 <Button
-                  className="flex items-center gap-2 text-white"
+                  className="flex w-full items-center justify-center gap-2 text-white sm:w-auto"
                   style={{ backgroundColor: "var(--palette-btn)" }}
                 >
                   <Plus size={20} />
@@ -392,8 +414,8 @@ export default function ProductManagementPage() {
               </Link>
             </div>
 
-            <div className="flex gap-4 mb-6 items-center">
-              <div className="flex-1">
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="w-full sm:flex-1">
                 <label
                   className="text-sm mb-1 block"
                   style={{ color: "var(--palette-accent-3)" }}
@@ -425,7 +447,7 @@ export default function ProductManagementPage() {
                 </Select>
               </div>
 
-              <div className="flex-1">
+              <div className="w-full sm:flex-1">
                 <label
                   className="text-sm mb-1 block"
                   style={{ color: "var(--palette-accent-3)" }}
@@ -460,7 +482,7 @@ export default function ProductManagementPage() {
                 </Select>
               </div>
 
-              <div className="flex-1">
+              <div className="w-full sm:flex-1">
                 <label
                   className="text-sm mb-1 block"
                   style={{ color: "var(--palette-accent-3)" }}
@@ -497,7 +519,7 @@ export default function ProductManagementPage() {
 
         {/* Table */}
         <div
-          className="rounded-lg border overflow-hidden"
+          className="overflow-x-auto rounded-lg border"
           style={{ borderColor: "var(--palette-accent-3)" }}
         >
           <Table>
@@ -627,12 +649,12 @@ export default function ProductManagementPage() {
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-between items-center mt-6">
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div style={{ color: "var(--palette-accent-3)" }}>
             Showing {(page - 1) * limit + 1} to {Math.min(page * limit, total)}{" "}
             of {total}
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               onClick={() => setPage(Math.max(page - 1, 1))}
               disabled={page === 1}
@@ -674,8 +696,88 @@ export default function ProductManagementPage() {
         </div>
           </>
         ) : (
-          <div className="rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-palette-accent-3">
-            Select a category to view and add products.
+          <div className="mx-auto max-w-5xl">
+            <div className="mb-6">
+              <h2 className="text-3xl font-bold">My Products</h2>
+              <p
+                className="mt-3 text-lg"
+                style={{ color: "var(--palette-btn)" }}
+              >
+                What type of product are you managing?
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {(categoriesData?.data || []).map((category) => {
+                const itemCount = getCategoryItemCount(category);
+
+                return (
+                  <div
+                    key={category._id}
+                    className="group relative rounded-lg border-2 bg-white transition-all duration-200 hover:shadow-md"
+                    style={{ borderColor: "var(--palette-btn)" }}
+                  >
+                    <button
+                      onClick={() => selectMainCategory(category.name)}
+                      className="flex w-full items-center gap-4 p-4 text-left sm:gap-5 sm:p-5"
+                    >
+                      <div
+                        className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg sm:h-20 sm:w-20"
+                        style={{
+                          backgroundColor: category.logoUrl
+                            ? "rgba(238, 74, 35, 0.08)"
+                            : "var(--palette-btn)",
+                        }}
+                      >
+                        {category.logoUrl ? (
+                          <img
+                            src={category.logoUrl}
+                            alt={category.name}
+                            className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                          />
+                        ) : (
+                          <span className="text-2xl font-bold text-white sm:text-3xl">
+                            {category.name.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1 pr-10">
+                        <h3 className="text-xl font-bold leading-tight text-palette-text sm:text-2xl">
+                          {category.name}
+                        </h3>
+                        <p
+                          className="mt-2 line-clamp-2 text-sm sm:text-base"
+                          style={{ color: "var(--palette-btn)" }}
+                        >
+                          {getCategoryDescription(category)}
+                        </p>
+                        <p className="mt-1 text-xs text-gray-500 sm:text-sm">
+                          {category.sub?.length || 0} sub group
+                          {(category.sub?.length || 0) !== 1 && "s"}{" - "}
+                          {itemCount} item{itemCount !== 1 && "s"}
+                        </p>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => setEditingCategory(category)}
+                      className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/80 text-white opacity-100 transition hover:bg-black sm:opacity-0 sm:group-hover:opacity-100"
+                      title="Update Category"
+                      aria-label={`Update ${category.name}`}
+                    >
+                      <Edit2 size={17} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            {categoriesData?.data?.length === 0 && (
+              <div className="rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-palette-accent-3">
+                No categories found.
+              </div>
+            )}
           </div>
         )}
       </div>
