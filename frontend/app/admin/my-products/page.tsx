@@ -143,6 +143,22 @@ function CategorySelectionCard({
   );
 }
 
+function AddCategoryCard({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="group flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-palette-btn/40 bg-white p-3 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-palette-btn hover:bg-palette-btn/5 hover:shadow-md"
+    >
+      <div className="flex h-full w-full flex-col items-center justify-center">
+        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-palette-btn/10 text-palette-btn transition group-hover:bg-palette-btn/20">
+          <Plus size={24} />
+        </div>
+        <p className="text-sm font-semibold text-palette-btn">Add Categories</p>
+      </div>
+    </button>
+  );
+}
+
 export default function ProductManagementPage() {
   const searchParams = useSearchParams();
   const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
@@ -519,6 +535,9 @@ export default function ProductManagementPage() {
                         />
                       );
                     })}
+                  {!selectedMain && (
+                    <AddCategoryCard onClick={() => setIsCreateCategoryOpen(true)} />
+                  )}
                   {selectedMain &&
                     !selectedSubMain &&
                     selectedMainCategory?.sub.map((sub, index) => (
@@ -532,6 +551,9 @@ export default function ProductManagementPage() {
                         onSelect={() => selectSubMain(sub.SubMain)}
                       />
                     ))}
+                  {selectedMain && !selectedSubMain && selectedMainCategory && (
+                    <AddCategoryCard onClick={() => setIsCreateCategoryOpen(true)} />
+                  )}
                   {selectedSubMain &&
                     selectedSubGroup &&
                     selectedSubGroup.subCategory.map((subCategory, index) => (
@@ -542,6 +564,9 @@ export default function ProductManagementPage() {
                         onSelect={() => selectCategory(subCategory)}
                       />
                     ))}
+                  {selectedSubMain && selectedSubGroup && (
+                    <AddCategoryCard onClick={() => setIsCreateCategoryOpen(true)} />
+                  )}
                 </div>
                 {categoriesData?.data?.length === 0 && !selectedMain && (
                   <div className="mt-4 rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-palette-accent-3">
